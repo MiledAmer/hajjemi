@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 const cityFilters = ["Sousse", "Sfax"];
 const serviceFilters = ["Coiffure", "Barbe"];
 
@@ -97,13 +99,19 @@ function BarberCard({ barber }: { barber: Barber }) {
           ))}
         </div>
         {barber.primaryCta ? (
-          <button className="font-label-md text-label-md bg-primary hover:bg-primary-fixed mt-2 w-full rounded-lg py-3 font-bold text-[#121212] shadow-[0_4px_12px_rgba(212,175,55,0.2)] transition-colors">
+          <Link
+            href="/profil-barber"
+            className="font-label-md text-label-md bg-primary hover:bg-primary-fixed mt-2 block w-full rounded-lg py-3 text-center font-bold text-[#121212] shadow-[0_4px_12px_rgba(212,175,55,0.2)] transition-colors"
+          >
             Voir profil
-          </button>
+          </Link>
         ) : (
-          <button className="font-label-md text-label-md border-outline text-on-surface hover:bg-surface-container-highest mt-2 w-full rounded-lg border py-3 transition-colors">
+          <Link
+            href="/profil-barber"
+            className="font-label-md text-label-md border-outline text-on-surface hover:bg-surface-container-highest mt-2 block w-full rounded-lg border py-3 text-center transition-colors"
+          >
             Voir profil
-          </button>
+          </Link>
         )}
       </div>
     </article>
