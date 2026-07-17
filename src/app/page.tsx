@@ -67,7 +67,10 @@ export default function HomePage() {
             </Link>
 
             {/* Professional Action */}
-            <button className="group border-outline-variant bg-surface-container text-on-surface active:bg-surface-container-high flex w-full items-center justify-between rounded-xl border px-6 py-4 transition-all active:scale-95">
+            <Link
+              href="/plans"
+              className="group border-outline-variant bg-surface-container text-on-surface active:bg-surface-container-high flex w-full items-center justify-between rounded-xl border px-6 py-4 transition-all active:scale-95"
+            >
               <div className="flex items-center gap-3">
                 <span
                   className="material-symbols-outlined text-primary"
@@ -87,7 +90,7 @@ export default function HomePage() {
               <span className="material-symbols-outlined text-primary transform transition-transform group-active:translate-x-1">
                 arrow_forward
               </span>
-            </button>
+            </Link>
           </div>
 
           {/* Footer Links */}
