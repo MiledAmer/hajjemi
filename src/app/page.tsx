@@ -41,7 +41,7 @@ export default function HomePage() {
           <div className="gap-stack-md flex w-full flex-col">
             {/* Client Action */}
             <Link
-              href="/trouver-un-coiffeur"
+              href="/search"
               className="group bg-primary-container text-on-primary-container relative flex w-full items-center justify-between overflow-hidden rounded-xl px-6 py-4 shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-all active:scale-95"
             >
               <div className="relative z-10 flex items-center gap-3">

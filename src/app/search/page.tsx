@@ -100,14 +100,14 @@ function BarberCard({ barber }: { barber: Barber }) {
         </div>
         {barber.primaryCta ? (
           <Link
-            href="/profil-barber"
+            href="/barber"
             className="font-label-md text-label-md bg-primary hover:bg-primary-fixed mt-2 block w-full rounded-lg py-3 text-center font-bold text-[#121212] shadow-[0_4px_12px_rgba(212,175,55,0.2)] transition-colors"
           >
             Voir profil
           </Link>
         ) : (
           <Link
-            href="/profil-barber"
+            href="/barber"
             className="font-label-md text-label-md border-outline text-on-surface hover:bg-surface-container-highest mt-2 block w-full rounded-lg border py-3 text-center transition-colors"
           >
             Voir profil
