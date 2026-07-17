@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+
+  /* Hajjem "Nocturnal Premium" design system (see .stitch/modern_grooming_authority/DESIGN.md) */
+  --color-surface: #121415;
+  --color-surface-container-lowest: #0c0e10;
+  --color-on-surface: #e2e2e4;
+  --color-on-surface-variant: #d0c5af;
+  --color-surface-variant: #333537;
+  --color-surface-container: #1e2021;
+  --color-surface-container-high: #282a2c;
+  --color-outline-variant: #4d4635;
+  --color-primary: #f2ca50;
+  --color-primary-container: #d4af37;
+  --color-on-primary-container: #554300;
+
+  --radius-xl: 0.5rem;
+
+  --spacing-container-margin: 20px;
+  --spacing-section-gap: 32px;
+  --spacing-stack-md: 12px;
+  --spacing-stack-sm: 4px;
+
+  --font-display-lg: var(--font-hanken);
+  --font-headline-lg-mobile: var(--font-hanken);
+  --font-body-md: var(--font-hanken);
+  --font-label-md: var(--font-hanken);
+  --font-label-sm: var(--font-hanken);
+
+  --text-display-lg: 48px;
+  --text-display-lg--line-height: 56px;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-lg--font-weight: 700;
+
+  --text-headline-lg-mobile: 28px;
+  --text-headline-lg-mobile--line-height: 36px;
+  --text-headline-lg-mobile--font-weight: 600;
+
+  --text-body-md: 16px;
+  --text-body-md--line-height: 24px;
+  --text-body-md--font-weight: 400;
+
+  --text-label-md: 14px;
+  --text-label-md--line-height: 20px;
+  --text-label-md--letter-spacing: 0.05em;
+  --text-label-md--font-weight: 500;
+
+  --text-label-sm: 12px;
+  --text-label-sm--line-height: 16px;
+  --text-label-sm--font-weight: 600;
+}
+
+.hero-gradient {
+  background: linear-gradient(
+    180deg,
+    rgba(18, 20, 21, 0) 0%,
+    rgba(18, 20, 21, 0.8) 50%,
+    rgba(18, 20, 21, 1) 100%
+  );
+}
