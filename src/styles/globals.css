@@ -19,13 +19,19 @@
   --color-outline: #99907c;
   --color-outline-variant: #4d4635;
   --color-primary: #f2ca50;
+  --color-on-primary: #3c2f00;
   --color-primary-fixed: #e9c349;
   --color-primary-container: #d4af37;
   --color-on-primary-container: #554300;
+  --color-secondary: #c8c6c5;
+  --color-secondary-container: #4a4949;
+  --color-on-secondary-container: #bab8b7;
+  --color-tertiary-container: #b4b2b4;
 
   --radius-lg: 0.25rem;
   --radius-xl: 0.5rem;
 
+  --spacing-base: 8px;
   --spacing-container-margin: 20px;
   --spacing-section-gap: 32px;
   --spacing-gutter: 16px;
@@ -50,6 +56,10 @@
   --text-headline-lg-mobile: 28px;
   --text-headline-lg-mobile--line-height: 36px;
   --text-headline-lg-mobile--font-weight: 600;
+
+  --text-body-lg: 18px;
+  --text-body-lg--line-height: 28px;
+  --text-body-lg--font-weight: 400;
 
   --text-body-md: 16px;
   --text-body-md--line-height: 24px;
@@ -84,7 +94,7 @@
 }
 
 .pb-safe {
-  padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom, 20px);
 }
 
 .hide-scrollbar::-webkit-scrollbar {
@@ -98,6 +108,11 @@
 
 html {
   scroll-behavior: smooth;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: none;
 }
 
 .glass-panel {
