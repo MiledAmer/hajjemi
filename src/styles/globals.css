@@ -6,26 +6,38 @@
 
   /* Hajjem "Nocturnal Premium" design system (see .stitch/modern_grooming_authority/DESIGN.md) */
   --color-surface: #121415;
+  --color-background: #121415;
+  --color-on-background: #e2e2e4;
   --color-surface-container-lowest: #0c0e10;
+  --color-surface-container-low: #1a1c1d;
   --color-on-surface: #e2e2e4;
   --color-on-surface-variant: #d0c5af;
   --color-surface-variant: #333537;
   --color-surface-container: #1e2021;
   --color-surface-container-high: #282a2c;
+  --color-surface-container-highest: #333537;
+  --color-outline: #99907c;
   --color-outline-variant: #4d4635;
   --color-primary: #f2ca50;
+  --color-primary-fixed: #e9c349;
   --color-primary-container: #d4af37;
   --color-on-primary-container: #554300;
 
+  --radius-lg: 0.25rem;
   --radius-xl: 0.5rem;
 
   --spacing-container-margin: 20px;
   --spacing-section-gap: 32px;
+  --spacing-gutter: 16px;
+  --spacing-stack-lg: 24px;
   --spacing-stack-md: 12px;
   --spacing-stack-sm: 4px;
 
   --font-display-lg: var(--font-hanken);
+  --font-headline-lg: var(--font-hanken);
   --font-headline-lg-mobile: var(--font-hanken);
+  --font-headline-md: var(--font-hanken);
+  --font-body-lg: var(--font-hanken);
   --font-body-md: var(--font-hanken);
   --font-label-md: var(--font-hanken);
   --font-label-sm: var(--font-hanken);
@@ -51,6 +63,15 @@
   --text-label-sm: 12px;
   --text-label-sm--line-height: 16px;
   --text-label-sm--font-weight: 600;
+
+  --text-headline-md: 24px;
+  --text-headline-md--line-height: 32px;
+  --text-headline-md--font-weight: 600;
+
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 40px;
+  --text-headline-lg--letter-spacing: -0.01em;
+  --text-headline-lg--font-weight: 600;
 }
 
 .hero-gradient {
@@ -60,4 +81,57 @@
     rgba(18, 20, 21, 0.8) 50%,
     rgba(18, 20, 21, 1) 100%
   );
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+.glass-panel {
+  background: rgba(28, 28, 30, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.shadow-ambient {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
 }

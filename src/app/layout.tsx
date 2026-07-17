@@ -26,7 +26,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="flex min-h-screen flex-col overflow-x-hidden bg-surface font-body-md text-on-surface selection:bg-primary-container selection:text-on-primary-container md:items-center md:justify-center md:bg-surface-container-lowest md:py-12">
+      <body className="bg-surface font-body-md text-on-surface selection:bg-primary-container selection:text-on-primary-container min-h-screen overflow-x-hidden">
         {children}
       </body>
     </html>
