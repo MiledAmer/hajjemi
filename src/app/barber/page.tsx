@@ -177,7 +177,7 @@ export default function ProfilBarberPage() {
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8RnBDDOInkPBTpKHz20kPiDPiWAhtUZl1OfkKpupS9dQJ4OFvP6VbnoVMSCgQjdE8pDDFTi2i13A_2p8Ra3yX9ypb1v4ou5hxXE-KVlfahvJt1Kjs1VD61zwh986SCHrwx_zwwXGI_OphXP9IprhC1Pgxj7TTx0dDuTtE-AAVG5Atyurq91bmH-vrBcPAzqakLScgbmZ55IFjxZQgrkEql8OgEAWd090nyY3bFZ5pi14QxjAhqa_5m-Id06cVdgh2dy-oT6L3nydA"
             />
             {/* Gradient Overlay for Text Readability on Mobile */}
-            <div className="from-background via-background/40 absolute inset-0 bg-gradient-to-t to-transparent md:hidden" />
+            <div className="from-background via-background/40 absolute inset-0 bg-linear-to-t to-transparent md:hidden" />
             {/* Barber Name & Specialty Overlay (Mobile Only) */}
             <div className="p-container-margin absolute bottom-0 left-0 w-full md:hidden">
               <h1 className="font-headline-lg-mobile text-headline-lg-mobile mb-stack-sm text-on-surface drop-shadow-md">

@@ -95,7 +95,11 @@ export default function HomePage() {
 
           <div className="mb-section-gap text-center md:text-left">
             <h2 className="font-headline-lg-mobile text-headline-lg-mobile mb-stack-sm text-on-surface md:mb-stack-md md:max-w-lg md:text-[56px] md:leading-[1.1] md:font-extrabold md:tracking-tight">
-              L&apos;Élite du Grooming.
+              <span className="md:hidden">L&apos;Élite du Grooming.</span>
+              <span className="hidden md:inline">L&apos;Élite du </span>
+              <span className="from-primary to-primary-fixed-dim hidden bg-linear-to-r bg-clip-text text-transparent md:inline">
+                Grooming.
+              </span>
             </h2>
             <p className="font-body-md text-body-md text-on-surface-variant mx-auto max-w-xs md:mx-0 md:max-w-md md:text-lg">
               Réservez votre coupe en un clic. Précision, style et excellence à
@@ -111,7 +115,7 @@ export default function HomePage() {
             {/* Client Action */}
             <Link
               href="/search"
-              className="group bg-primary-container text-on-primary-container relative flex w-full items-center justify-between overflow-hidden rounded-xl px-6 py-4 shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-all active:scale-95"
+              className="group bg-primary-container text-on-primary-container relative flex w-full items-center justify-between overflow-hidden rounded-xl px-6 py-4 shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-all active:scale-95 md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_24px_rgba(212,175,55,0.35)]"
             >
               <div className="relative z-10 flex items-center gap-3">
                 <span
@@ -138,7 +142,7 @@ export default function HomePage() {
             {/* Professional Action */}
             <Link
               href="/plans"
-              className="group border-outline-variant bg-surface-container text-on-surface active:bg-surface-container-high flex w-full items-center justify-between rounded-xl border px-6 py-4 transition-all active:scale-95"
+              className="group border-outline-variant bg-surface-container text-on-surface active:bg-surface-container-high flex w-full items-center justify-between rounded-xl border px-6 py-4 transition-all active:scale-95 md:hover:-translate-y-0.5 md:hover:border-primary/50 md:hover:shadow-lg"
             >
               <div className="flex items-center gap-3">
                 <span
@@ -203,6 +207,72 @@ export default function HomePage() {
           </div>
         </div>
       </main>
+
+      {/* How it works (desktop only) */}
+      <section className="border-surface-container-high bg-surface-container-lowest hidden border-t py-20 md:block">
+        <div className="px-container-margin mx-auto max-w-7xl">
+          <div className="mx-auto mb-14 max-w-xl text-center">
+            <h2 className="font-headline-lg text-headline-lg text-on-surface mb-3 font-bold">
+              Réserver n&apos;a jamais été aussi simple
+            </h2>
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              Trois étapes pour votre prochaine coupe, où que vous soyez en
+              Tunisie.
+            </p>
+          </div>
+          <div className="gap-gutter grid grid-cols-3">
+            {[
+              {
+                icon: "search",
+                title: "Trouvez",
+                text: "Explorez les meilleurs barbiers près de chez vous, filtrés par ville et service.",
+              },
+              {
+                icon: "calendar_month",
+                title: "Réservez",
+                text: "Choisissez un créneau disponible et confirmez votre rendez-vous en un clic.",
+              },
+              {
+                icon: "content_cut",
+                title: "Profitez",
+                text: "Présentez-vous à l'heure et profitez d'un service haut de gamme, sans attente.",
+              },
+            ].map((step) => (
+              <div
+                key={step.title}
+                className="border-surface-container-high bg-surface relative flex flex-col items-start gap-4 rounded-2xl border p-8 transition-all hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+              >
+                <div className="bg-primary-container/20 flex h-12 w-12 items-center justify-center rounded-xl">
+                  <span
+                    className="material-symbols-outlined text-primary"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    {step.icon}
+                  </span>
+                </div>
+                <h3 className="font-headline-md text-headline-md text-on-surface font-bold">
+                  {step.title}
+                </h3>
+                <p className="font-body-md text-body-md text-on-surface-variant">
+                  {step.text}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Footer (desktop only) */}
+      <footer className="border-surface-container-high bg-surface hidden border-t py-8 md:block">
+        <div className="px-container-margin mx-auto flex max-w-7xl items-center justify-between">
+          <span className="font-headline-md text-headline-md text-on-surface font-bold tracking-tighter opacity-50">
+            HAJJEM
+          </span>
+          <p className="font-label-sm text-label-sm text-on-surface-variant">
+            © 2024 Hajjem. L&apos;élite du grooming en Tunisie.
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
