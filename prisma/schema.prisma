@@ -11,9 +11,11 @@ generator client {
   output   = "../generated/prisma"
 }
 
+// Connection URL now lives in prisma.config.ts (Migrate) and is passed via
+// the @prisma/adapter-pg driver adapter to the PrismaClient constructor
+// (src/server/db.ts) — Prisma 7 no longer reads `url` from this block.
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // ---------------------------------------------------------------------------
