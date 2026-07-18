@@ -1,21 +1,314 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
+//
+// Domain: Hajjem, a barber-booking marketplace for the Tunisian market.
+// Two user roles share the User table (CLIENT, BARBER); a BARBER additionally
+// owns exactly one BarberProfile, which is where all shop-facing data lives
+// (services, availability, appointments, subscription).
 
 generator client {
-    provider = "prisma-client-js"
-    output   = "../generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
 }
 
 datasource db {
-    provider = "postgresql"
-    url      = env("DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
 
-    @@index([name])
+enum Role {
+  CLIENT
+  BARBER
+}
+
+/// Tunisia's 24 governorates. Fixed, small, and unlikely to change — an enum
+/// gives cheap validation and fast equality filtering (vs. a free-text city
+/// column that needs normalization to search reliably).
+enum Governorate {
+  TUNIS
+  ARIANA
+  BEN_AROUS
+  MANOUBA
+  NABEUL
+  ZAGHOUAN
+  BIZERTE
+  BEJA
+  JENDOUBA
+  KEF
+  SILIANA
+  SOUSSE
+  MONASTIR
+  MAHDIA
+  SFAX
+  KAIROUAN
+  KASSERINE
+  SIDI_BOUZID
+  GABES
+  MEDENINE
+  TATAOUINE
+  GAFSA
+  TOZEUR
+  KEBILI
+}
+
+/// Matches the filter chips on the search screen ("Populaire", "Coupes",
+/// "Barbe", "Soins"). A Service can carry several tags, so it's modeled as
+/// an enum array on Service rather than a join table — the tag set is small,
+/// platform-defined, and doesn't need its own lifecycle/metadata.
+enum ServiceCategory {
+  POPULAR
+  HAIRCUT
+  BEARD
+  CARE
+  COLORING
+}
+
+enum DayOfWeek {
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
+  SUNDAY
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum PlanType {
+  BASIC
+  PRO
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELLED
+  EXPIRED
+  PAST_DUE
+}
+
+// ---------------------------------------------------------------------------
+// Identity
+// ---------------------------------------------------------------------------
+
+/// Account shared by both roles. Auth strategy (NextAuth, custom JWT, etc.)
+/// is intentionally not modeled here — this repo has no auth wired up yet
+/// (see CLAUDE.md); bolt the provider-specific tables on separately once
+/// that's decided instead of guessing now.
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  phone        String?  @unique
+  passwordHash String
+  name         String
+  avatarUrl    String?
+  role         Role     @default(CLIENT)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  /// Present only when role = BARBER. Kept as a separate model instead of
+  /// nullable columns on User so client accounts don't carry a wagon of
+  /// barber-only fields (services, plan, availability, ...).
+  barberProfile BarberProfile?
+
+  /// Bookings made by this user as a client.
+  appointmentsAsClient Appointment[] @relation("ClientAppointments")
+
+  /// Reviews this user has authored (always as a client).
+  reviews Review[]
+
+  @@map("users")
+}
+
+/// One-to-one extension of User for the BARBER role — the shop's public
+/// profile plus everything needed to run it (services, hours, bookings,
+/// subscription).
+model BarberProfile {
+  id            String      @id @default(cuid())
+  userId        String      @unique
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName  String
+  bio           String?
+  governorate   Governorate
+  address       String?
+  avatarUrl     String?
+  coverImageUrl String?
+
+  /// Denormalized rating snapshot, recomputed whenever a Review is
+  /// created/updated. Search/listing pages sort and filter by rating
+  /// constantly; aggregating live over the reviews table on every request
+  /// would be needlessly expensive for data that changes rarely.
+  avgRating   Float @default(0)
+  reviewCount Int   @default(0)
+
+  /// Mirrors the barber's current Subscription for a cheap read on
+  /// profile/search pages, avoiding a join for the common case of "what
+  /// plan is this barber on". Subscription remains the source of truth
+  /// and billing history.
+  planType PlanType @default(BASIC)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  services      Service[]
+  availability  BarberAvailability[]
+  appointments  Appointment[]
+  subscriptions Subscription[]
+  reviews       Review[]
+
+  // Search screen filters by city and sorts by rating — composite index
+  // covers "barbers in city X, best rated first" directly.
+  @@index([governorate, avgRating])
+  @@map("barber_profiles")
+}
+
+// ---------------------------------------------------------------------------
+// Catalog
+// ---------------------------------------------------------------------------
+
+model Service {
+  id              String            @id @default(cuid())
+  barberId        String
+  barber          BarberProfile     @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  name            String
+  description     String?
+  durationMinutes Int
+  /// Tunisian Dinar's minor unit is the millime (1 TND = 1000 millimes),
+  /// not a cent — stored as an integer to avoid float rounding on money.
+  priceMillimes   Int
+  categories      ServiceCategory[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  appointmentServices AppointmentService[]
+
+  @@index([barberId])
+  @@map("services")
+}
+
+/// A recurring weekly opening window. Deliberately simple (one row per
+/// day/range) rather than a full exception calendar — split/holiday hours
+/// can be layered on later if the product needs them.
+model BarberAvailability {
+  id          String        @id @default(cuid())
+  barberId    String
+  barber      BarberProfile @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  dayOfWeek   DayOfWeek
+  /// Minutes since midnight (0-1439) — cheaper to compare/index than
+  /// TIME/string parsing, and avoids timezone ambiguity entirely.
+  startMinute Int
+  endMinute   Int
+
+  @@index([barberId, dayOfWeek])
+  @@map("barber_availability")
+}
+
+// ---------------------------------------------------------------------------
+// Bookings
+// ---------------------------------------------------------------------------
+
+model Appointment {
+  id       String        @id @default(cuid())
+  clientId String
+  client   User          @relation("ClientAppointments", fields: [clientId], references: [id], onDelete: Cascade)
+  barberId String
+  barber   BarberProfile @relation(fields: [barberId], references: [id], onDelete: Cascade)
+
+  startAt DateTime
+  endAt   DateTime
+  status  AppointmentStatus @default(PENDING)
+
+  /// Snapshot of the sum of its line items at booking time — service
+  /// prices can change later, but a confirmed booking's total shouldn't.
+  totalPriceMillimes Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  services AppointmentService[]
+  review   Review?
+
+  // The barber's dashboard/calendar is the hottest read path: "this
+  // barber's appointments around this time".
+  @@index([barberId, startAt])
+  @@index([clientId])
+  @@index([status])
+  @@map("appointments")
+}
+
+/// Explicit many-to-many join between Appointment and Service (an
+/// appointment usually bundles several services, as in the profile
+/// screen's multi-select booking flow). Line items snapshot name/price/
+/// duration so appointment history stays accurate even if the underlying
+/// Service is later edited or removed.
+model AppointmentService {
+  id                      String      @id @default(cuid())
+  appointmentId           String
+  appointment             Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  /// Nullable + SetNull: losing the catalog link on Service deletion is
+  /// fine because the snapshot fields below preserve what the client
+  /// actually booked.
+  serviceId               String?
+  service                 Service?    @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  nameSnapshot            String
+  priceMillimesSnapshot   Int
+  durationMinutesSnapshot Int
+
+  @@unique([appointmentId, serviceId])
+  @@index([serviceId])
+  @@map("appointment_services")
+}
+
+/// One review per appointment, written by the client after the fact.
+/// barberId is denormalized from appointment.barberId so "all reviews for
+/// this barber" doesn't require joining through Appointment.
+model Review {
+  id            String        @id @default(cuid())
+  appointmentId String        @unique
+  appointment   Appointment   @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  authorId      String
+  author        User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  barberId      String
+  barber        BarberProfile @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  /// 1-5; Prisma has no CHECK constraint support, so this range is
+  /// enforced in the application layer (e.g. a Zod schema at the API
+  /// boundary).
+  rating        Int
+  comment       String?
+
+  createdAt DateTime @default(now())
+
+  @@index([barberId, rating])
+  @@map("reviews")
+}
+
+// ---------------------------------------------------------------------------
+// Billing
+// ---------------------------------------------------------------------------
+
+/// Plan history/billing record for a barber. Kept separate from
+/// BarberProfile.planType so upgrades/downgrades/cancellations have an
+/// audit trail instead of overwriting a single column.
+model Subscription {
+  id        String             @id @default(cuid())
+  barberId  String
+  barber    BarberProfile      @relation(fields: [barberId], references: [id], onDelete: Cascade)
+  planType  PlanType
+  status    SubscriptionStatus @default(ACTIVE)
+  startedAt DateTime           @default(now())
+  endsAt    DateTime?
+  createdAt DateTime           @default(now())
+
+  @@index([barberId, status])
+  @@map("subscriptions")
 }
