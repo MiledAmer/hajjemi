@@ -341,7 +341,7 @@ export default function PlansPage() {
 
             <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-2">
               {/* Basic Plan */}
-              <div className="border-surface-container-high bg-surface-container-low hover:border-outline-variant relative flex flex-col overflow-hidden rounded-2xl border p-8 transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+              <div className="border-surface-container-high bg-surface-container-low hover:border-outline-variant relative flex flex-col overflow-hidden rounded-2xl border-2 p-8 transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
                 <div className="mb-8">
                   <span className="font-label-sm text-label-sm border-outline-variant/30 bg-surface-container text-on-surface-variant mb-4 inline-block rounded-sm border px-3 py-1 tracking-wider uppercase">
                     Démarrage
@@ -389,7 +389,7 @@ export default function PlansPage() {
               </div>
 
               {/* Pro Plan */}
-              <div className="border-primary bg-surface relative flex -translate-y-4 transform flex-col overflow-hidden rounded-2xl border-2 p-8 shadow-[0_8px_32px_rgba(212,175,55,0.15)]">
+              <div className="border-primary bg-surface relative flex  transform flex-col overflow-hidden rounded-2xl border-2 p-8 shadow-[0_8px_32px_rgba(212,175,55,0.15)]">
                 <div className="font-label-sm text-label-sm bg-primary text-on-primary absolute top-0 right-0 rounded-bl-lg px-6 py-1.5 font-bold tracking-wider uppercase">
                   Recommandé
                 </div>
