@@ -1,10 +1,5 @@
 import Link from "next/link";
 
-const navLinks = [
-  { label: "Trouver un coiffeur", href: "/search" },
-  { label: "Espace Barber", href: "/plans" },
-];
-
 const trustAvatars = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuDTWDCkUKtW-7MxWuiE-b6tyOHlSB9EQ9XqoSQ7XMY1jbHUhbOUhYVu5X_SiWUVTEicg9T67UTvToJki7KKVEMWP8ZvAPBx3Grq_3xL2L8lZ4H1HkAszeI9pL6esdohlFQ5yqZXrtOMA8dBISwKrVhtlfoHN3z8q-honH_D79yPL8zulU1BZ8XevZ15NSS0lqkybu-7T49Hz7IUp1pknvb8N_LmgICAZRa-Z6vwCLL3kbHmHjaJSmYh16zoudZtulaCeFW6ZsboddpD",
   "https://lh3.googleusercontent.com/aida-public/AB6AXuDesfnmPXOCocgm8rd-lzrDR1aj5wy3JjlWPMyKU3c8D048g0vC4r903I2oRkMkfSpDDxnpVJsAmyFmBG0BatC06hzTY_8Qqmbx9ZedVWcvOgSzieT1pxyPfJ8DHAv9V3--VJ8-HayiqwV7-C3cQTfV2StevxfbqjtBlgkurZbbmM1h8lp1JfK1bP7CmsY9N8x2NICs7iWcw6Ufc1JrbwQKqiPIsur_IUh_k4YOnULgYdoxniEEnMk374l_YVMVlOAB0LyYtCy8lEHJ",
@@ -21,15 +16,6 @@ export default function HomePage() {
             HAJJEM
           </span>
           <div className="gap-stack-lg flex items-center">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
             <a
               className="font-label-md text-label-md text-on-surface hover:text-primary font-semibold transition-colors"
               href="#"
