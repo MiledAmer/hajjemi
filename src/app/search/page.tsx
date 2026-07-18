@@ -1,9 +1,12 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
 const navLinks = [
-  { label: "Accueil", href: "/" },
-  { label: "Trouver un coiffeur", href: "/search" },
-  { label: "Espace Barber", href: "/plans" },
+  { label: "Accueil", href: "/", icon: "home" },
+  { label: "Trouver un coiffeur", href: "/search", icon: "search" },
+  { label: "Espace Barber", href: "/plans", icon: "storefront" },
 ];
 
 const cityFilters = ["Sousse", "Sfax"];
@@ -125,12 +128,25 @@ function BarberCard({ barber }: { barber: Barber }) {
 }
 
 export default function TrouverUnCoiffeurPage() {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  useEffect(() => {
+    document.body.style.overflow = isDrawerOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isDrawerOpen]);
+
   return (
     <div className="bg-surface font-body-lg text-on-surface min-h-screen pb-24">
       {/* TopAppBar */}
       <header className="bg-surface sticky top-0 z-40 w-full shadow-sm">
         <div className="px-container-margin mx-auto flex h-16 w-full max-w-7xl items-center justify-between">
-          <button className="text-primary hover:bg-surface-container-high flex items-center justify-center rounded-full p-2 transition-colors duration-150 active:scale-95 md:hidden">
+          <button
+            aria-label="Menu"
+            onClick={() => setIsDrawerOpen(true)}
+            className="text-primary hover:bg-surface-container-high flex items-center justify-center rounded-full p-2 transition-colors duration-150 active:scale-95 md:hidden"
+          >
             <span className="material-symbols-outlined">menu</span>
           </button>
           <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold tracking-tighter md:hidden">
@@ -163,6 +179,58 @@ export default function TrouverUnCoiffeurPage() {
           </div>
         </div>
       </header>
+
+      {/* Mobile Navigation Drawer */}
+      <div
+        className={`fixed inset-0 z-50 bg-black/60 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
+          isDrawerOpen ? "opacity-100" : "pointer-events-none opacity-0"
+        }`}
+        onClick={() => setIsDrawerOpen(false)}
+      />
+      <nav
+        className={`gap-base bg-surface-container-low p-gutter fixed top-0 left-0 z-50 flex h-full w-80 flex-col shadow-lg transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] md:hidden ${
+          isDrawerOpen ? "translate-x-0" : "-translate-x-full"
+        }`}
+      >
+        <div className="mt-4 mb-8 flex items-center justify-between">
+          <span className="font-headline-lg text-headline-lg text-primary font-bold tracking-tighter">
+            HAJJEM
+          </span>
+          <button
+            aria-label="Fermer"
+            className="text-on-surface-variant hover:bg-surface-container-highest rounded-full p-2 transition-colors"
+            onClick={() => setIsDrawerOpen(false)}
+          >
+            <span className="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        <div className="flex flex-grow flex-col gap-2">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setIsDrawerOpen(false)}
+              className={
+                link.href === "/search"
+                  ? "bg-secondary-container text-on-secondary-container flex items-center gap-4 rounded-lg px-4 py-3 font-bold transition-opacity active:opacity-80"
+                  : "text-on-surface-variant hover:bg-surface-container-highest flex items-center gap-4 rounded-lg px-4 py-3 transition-colors active:opacity-80"
+              }
+            >
+              <span
+                className="material-symbols-outlined"
+                style={
+                  link.href === "/search"
+                    ? { fontVariationSettings: "'FILL' 1" }
+                    : undefined
+                }
+              >
+                {link.icon}
+              </span>
+              <span className="font-body-md text-body-md">{link.label}</span>
+            </Link>
+          ))}
+        </div>
+      </nav>
 
       <main className="gap-stack-lg px-container-margin pt-stack-md flex flex-col">
         {/* Search Bar */}
