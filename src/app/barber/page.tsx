@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const navLinks = [
   { label: "Accueil", href: "/" },
@@ -108,6 +111,8 @@ function ServiceItem({ service }: { service: Service }) {
 }
 
 export default function ProfilBarberPage() {
+  const router = useRouter();
+
   return (
     <div className="bg-background text-on-background flex min-h-screen flex-col pb-24 antialiased md:pb-0">
       {/* Top Navigation (Web View - Hidden on Mobile to prioritize Hero) */}
@@ -115,6 +120,7 @@ export default function ProfilBarberPage() {
         <div className="flex items-center gap-4">
           <button
             aria-label="Retour"
+            onClick={() => router.back()}
             className="text-on-surface-variant hover:text-primary transition-colors focus:outline-none"
           >
             <span
@@ -157,6 +163,7 @@ export default function ProfilBarberPage() {
           <div className="glass-panel absolute top-4 left-4 z-10 flex h-10 w-10 items-center justify-center rounded-full md:hidden">
             <button
               aria-label="Retour"
+              onClick={() => router.back()}
               className="text-on-surface focus:outline-none"
             >
               <span
