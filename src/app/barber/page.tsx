@@ -1,3 +1,11 @@
+import Link from "next/link";
+
+const navLinks = [
+  { label: "Accueil", href: "/" },
+  { label: "Trouver un coiffeur", href: "/search" },
+  { label: "Espace Barber", href: "/plans" },
+];
+
 type Service = {
   name: string;
   description: string;
@@ -119,6 +127,17 @@ export default function ProfilBarberPage() {
           <span className="font-headline-lg text-headline-lg text-primary font-bold tracking-tighter">
             HAJJEM
           </span>
+        </div>
+        <div className="gap-stack-lg flex items-center">
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
+            >
+              {link.label}
+            </Link>
+          ))}
         </div>
         <button className="bg-surface-container-high focus:ring-primary h-10 w-10 overflow-hidden rounded-full focus:ring-2 focus:outline-none">
           {/* eslint-disable-next-line @next/next/no-img-element */}

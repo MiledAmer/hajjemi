@@ -1,5 +1,11 @@
 import Link from "next/link";
 
+const navLinks = [
+  { label: "Accueil", href: "/" },
+  { label: "Trouver un coiffeur", href: "/search" },
+  { label: "Espace Barber", href: "/plans" },
+];
+
 const cityFilters = ["Sousse", "Sfax"];
 const serviceFilters = ["Coiffure", "Barbe"];
 
@@ -124,12 +130,29 @@ export default function TrouverUnCoiffeurPage() {
       {/* TopAppBar */}
       <header className="bg-surface sticky top-0 z-40 w-full shadow-sm">
         <div className="px-container-margin mx-auto flex h-16 w-full max-w-7xl items-center justify-between">
-          <button className="text-primary hover:bg-surface-container-high flex items-center justify-center rounded-full p-2 transition-colors duration-150 active:scale-95">
+          <button className="text-primary hover:bg-surface-container-high flex items-center justify-center rounded-full p-2 transition-colors duration-150 active:scale-95 md:hidden">
             <span className="material-symbols-outlined">menu</span>
           </button>
-          <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold tracking-tighter">
+          <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold tracking-tighter md:hidden">
             HAJJEM
           </h1>
+          <div className="gap-stack-lg hidden items-center md:flex">
+            <Link
+              href="/"
+              className="font-headline-md text-headline-md text-primary font-bold tracking-tighter"
+            >
+              HAJJEM
+            </Link>
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
           <div className="border-outline-variant bg-surface-container-high h-10 w-10 flex-shrink-0 cursor-pointer overflow-hidden rounded-full border transition-opacity hover:opacity-80">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

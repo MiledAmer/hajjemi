@@ -64,14 +64,32 @@ export default function TableauDeBordBarberPage() {
         <div className="px-container-margin mx-auto flex h-16 w-full max-w-7xl items-center justify-between">
           <button
             aria-label="Menu"
-            className="text-primary hover:bg-surface-container-high -ml-2 rounded-full p-2 transition-colors duration-150 active:scale-95"
+            className="text-primary hover:bg-surface-container-high -ml-2 rounded-full p-2 transition-colors duration-150 active:scale-95 md:hidden"
             onClick={() => setIsDrawerOpen(true)}
           >
             <span className="material-symbols-outlined">menu</span>
           </button>
-          <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold tracking-tighter">
+          <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold tracking-tighter md:hidden">
             HAJJEM
           </h1>
+          <div className="gap-stack-lg hidden items-center md:flex">
+            <span className="font-headline-md text-headline-md text-primary font-bold tracking-tighter">
+              HAJJEM
+            </span>
+            {drawerLinks.map((link) => (
+              <a
+                key={link.label}
+                href="#"
+                className={
+                  link.active
+                    ? "font-label-md text-label-md text-primary font-bold"
+                    : "font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
+                }
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
           <div className="border-surface-container-highest hover:bg-surface-container-high h-10 w-10 cursor-pointer overflow-hidden rounded-full border-2 transition-colors duration-150 active:scale-95">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
