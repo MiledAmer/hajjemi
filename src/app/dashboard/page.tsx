@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 const drawerLinks = [
@@ -41,10 +42,10 @@ const planFeatures = [
 ];
 
 const bottomNavItems = [
-  { label: "Accueil", icon: "home", active: true },
-  { label: "Explorer", icon: "search", active: false },
-  { label: "Rendez-vous", icon: "event_upcoming", active: false },
-  { label: "Compte", icon: "person", active: false },
+  { label: "Accueil", icon: "home", active: true, href: "/dashboard" },
+  { label: "Explorer", icon: "search", active: false, href: null },
+  { label: "Rendez-vous", icon: "event_upcoming", active: false, href: null },
+  { label: "Compte", icon: "person", active: false, href: null },
 ];
 
 export default function TableauDeBordBarberPage() {
@@ -344,31 +345,46 @@ export default function TableauDeBordBarberPage() {
       {/* BottomNavBar */}
       <nav className="bg-surface-container fixed bottom-0 z-50 w-full rounded-t-xl shadow-[0_-4px_12px_rgba(0,0,0,0.5)] md:hidden">
         <div className="pb-safe flex h-20 items-center justify-around px-4">
-          {bottomNavItems.map((item) => (
-            <a
-              key={item.label}
-              href="#"
-              className={
-                item.active
-                  ? "bg-primary-container text-on-primary-container hover:text-primary flex flex-col items-center justify-center rounded-full px-4 py-1 transition-all duration-200 active:translate-y-0.5"
-                  : "text-on-surface-variant hover:text-primary flex flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
-              }
-            >
-              <span
-                className="material-symbols-outlined"
-                style={
+          {bottomNavItems.map((item) =>
+            item.href ? (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={
                   item.active
-                    ? { fontVariationSettings: "'FILL' 1" }
-                    : undefined
+                    ? "bg-primary-container text-on-primary-container hover:text-primary flex flex-col items-center justify-center rounded-full px-4 py-1 transition-all duration-200 active:translate-y-0.5"
+                    : "text-on-surface-variant hover:text-primary flex flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
                 }
               >
-                {item.icon}
-              </span>
-              <span className="font-label-sm text-label-sm mt-1">
-                {item.label}
-              </span>
-            </a>
-          ))}
+                <span
+                  className="material-symbols-outlined"
+                  style={
+                    item.active
+                      ? { fontVariationSettings: "'FILL' 1" }
+                      : undefined
+                  }
+                >
+                  {item.icon}
+                </span>
+                <span className="font-label-sm text-label-sm mt-1">
+                  {item.label}
+                </span>
+              </Link>
+            ) : (
+              <button
+                key={item.label}
+                disabled
+                aria-disabled="true"
+                title="Bientôt disponible"
+                className="text-on-surface-variant flex flex-col items-center justify-center opacity-40"
+              >
+                <span className="material-symbols-outlined">{item.icon}</span>
+                <span className="font-label-sm text-label-sm mt-1">
+                  {item.label}
+                </span>
+              </button>
+            ),
+          )}
         </div>
       </nav>
     </div>
