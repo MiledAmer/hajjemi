@@ -68,9 +68,15 @@ not as source code to run as-is.
 manage their business. Mockup screens, one folder per screen (`code.html` + `screen.png`):
 
 - `hajjem_accueil` — client home/landing screen
+- `connexion_hajjem` — login screen (shared client/barber)
+- `inscription_client_hajjem` — client signup screen
+- `inscription_barbier_hajjem` — barber signup screen
 - `trouver_un_coiffeur` — client search/discovery ("Rechercher par ville ou nom...", nearby barber list)
 - `profil_barber` — public barber profile (services list + prices, booking flow)
-- `tableau_de_bord_barber` — barber's dashboard (today's / upcoming appointments)
+- `gestion_des_rendez_vous` — client's appointments list ("Mes Rendez-vous")
+- `tableau_de_bord_barber` — barber's dashboard (today's / upcoming appointments), desktop layout
+- `tableau_de_bord_barber_mobile` — barber's dashboard, mobile layout
+- `mon_profil_professionnel` — barber's own profile editor
 - `espace_barber_plans` — barber subscription/pricing plans (Basic / Pro tiers)
 
 `modern_grooming_authority/DESIGN.md` is the design system backing all screens: "Nocturnal Premium" —
