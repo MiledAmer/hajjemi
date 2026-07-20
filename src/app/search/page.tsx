@@ -169,7 +169,7 @@ export default function TrouverUnCoiffeurPage() {
               </Link>
             ))}
           </div>
-          <div className="border-outline-variant bg-surface-container-high h-10 w-10 flex-shrink-0 cursor-pointer overflow-hidden rounded-full border transition-opacity hover:opacity-80">
+          <div className="border-outline-variant bg-surface-container-high h-10 w-10 shrink-0 cursor-pointer overflow-hidden rounded-full border transition-opacity hover:opacity-80">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               alt="Portrait de profil de l'utilisateur"
@@ -188,7 +188,7 @@ export default function TrouverUnCoiffeurPage() {
         onClick={() => setIsDrawerOpen(false)}
       />
       <nav
-        className={`gap-base bg-surface-container-low p-gutter fixed top-0 left-0 z-50 flex h-full w-80 flex-col shadow-lg transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] md:hidden ${
+        className={`gap-base bg-surface-container-low p-gutter fixed top-0 left-0 z-50 flex h-full w-80 flex-col shadow-lg transition-transform duration-300 ease-in-out md:hidden ${
           isDrawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -204,7 +204,7 @@ export default function TrouverUnCoiffeurPage() {
             <span className="material-symbols-outlined">close</span>
           </button>
         </div>
-        <div className="flex flex-grow flex-col gap-2">
+        <div className="flex grow flex-col gap-2">
           {navLinks.map((link) => (
             <Link
               key={link.href}

@@ -141,7 +141,7 @@ export default function InscriptionClientPage() {
       </main>
 
       {/* Footer Decorative Line */}
-      <div className="via-primary fixed bottom-0 left-0 h-1 w-full bg-gradient-to-r from-transparent to-transparent opacity-30" />
+      <div className="via-primary fixed bottom-0 left-0 h-1 w-full bg-linear-to-r from-transparent to-transparent opacity-30" />
     </div>
   );
 }

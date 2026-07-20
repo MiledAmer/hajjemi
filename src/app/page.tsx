@@ -26,9 +26,9 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="md:px-container-margin relative flex min-h-[884px] w-full flex-1 flex-col md:mx-auto md:min-h-0 md:max-w-7xl md:flex-row md:items-center md:gap-12 md:py-16">
+      <main className="md:px-container-margin relative flex min-h-221 w-full flex-1 flex-col md:mx-auto md:min-h-0 md:max-w-7xl md:flex-row md:items-center md:gap-12 md:py-16">
         {/* Hero Image Background */}
-        <div className="absolute inset-0 z-0 h-[574px] w-full md:static md:h-[600px] md:w-1/2">
+        <div className="absolute inset-0 z-0 h-143.5 w-full md:static md:h-150 md:w-1/2">
           {/* Decorative glow (desktop only) */}
           <div className="bg-primary/10 absolute -top-10 -right-10 hidden h-64 w-64 rounded-full blur-3xl md:block" />
           <div className="bg-secondary/10 absolute -bottom-10 -left-10 hidden h-40 w-40 rounded-full blur-2xl md:block" />

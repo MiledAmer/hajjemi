@@ -108,13 +108,13 @@ export default function PlansPage() {
 
       <main className="pt-16 pb-32">
         {/* Hero Section */}
-        <section className="relative flex min-h-[795px] items-center justify-center overflow-hidden">
+        <section className="relative flex min-h-198.75 items-center justify-center overflow-hidden">
           {/* Background Image */}
           <div className="absolute inset-0 z-0">
-            <div className="from-background via-background/90 to-background/40 absolute inset-0 z-10 bg-gradient-to-r" />
-            <div className="from-background to-background/50 absolute inset-0 z-10 bg-gradient-to-t via-transparent" />
+            <div className="from-background via-background/90 to-background/40 absolute inset-0 z-10 bg-linear-to-r" />
+            <div className="from-background to-background/50 absolute inset-0 z-10 bg-linear-to-t via-transparent" />
             <div
-              className="h-full w-full bg-cover bg-center bg-no-repeat opacity-40 grayscale-[30%]"
+              className="h-full w-full bg-cover bg-center bg-no-repeat opacity-40 grayscale-30"
               style={{
                 backgroundImage:
                   "url('https://lh3.googleusercontent.com/aida-public/AB6AXuC7sg4pEDXaVaV9wt3ByzFcXPcouzasNHEQ01z-4_i1XeyJuaNOHhopQRqm1P4P3oU4m1CiIU2fGnDm0A1njFZn9CGOMgXcsogk1mFNUbxW-BLJNp-MHRaBjCybdld-Woq_rn_YolZKALJwRCv9X-IJ1B3PGPJFdNZVmn3jiOU9B1utZAijs6Pmb1Yy8gCUJiSSb4C6Jx8ndqdu_zRqUPpaVi136q9JbzoPFDDp5VTiF-755UfQC6jl6eHj_cgDuPr_nWU_-2zo-Djw')",
@@ -130,9 +130,9 @@ export default function PlansPage() {
                   Espace Professionnel
                 </span>
               </div>
-              <h1 className="font-display-lg text-display-lg text-on-surface font-extrabold tracking-tight md:text-[64px] md:leading-[72px]">
+              <h1 className="font-display-lg text-display-lg text-on-surface font-extrabold tracking-tight md:text-[64px] md:leading-18">
                 Rejoignez{" "}
-                <span className="from-primary to-primary-fixed-dim bg-gradient-to-r bg-clip-text text-transparent">
+                <span className="from-primary to-primary-fixed-dim bg-linear-to-r bg-clip-text text-transparent">
                   l&apos;élite du grooming
                 </span>{" "}
                 en Tunisie.
@@ -185,7 +185,7 @@ export default function PlansPage() {
               <div className="bg-primary/10 absolute -top-10 -right-10 h-64 w-64 rounded-full blur-3xl" />
               <div className="bg-secondary/10 absolute bottom-10 -left-10 h-40 w-40 rounded-full blur-2xl" />
               <div className="border-outline-variant/30 bg-surface-container-low relative w-full max-w-sm overflow-hidden rounded-[2rem] border p-2 shadow-[0_20px_50px_rgba(0,0,0,0.7)]">
-                <div className="border-surface-container-high bg-surface relative flex h-[600px] w-full flex-col overflow-hidden rounded-[1.5rem] border">
+                <div className="border-surface-container-high bg-surface relative flex h-150 w-full flex-col overflow-hidden rounded-[1.5rem] border">
                   {/* Status bar fake */}
                   <div className="flex h-6 w-full items-center justify-between px-4 pt-1">
                     <span className="text-on-surface text-[10px]">9:41</span>
