@@ -1,4 +1,34 @@
 import Link from "next/link";
+import {
+  ArrowRight,
+  Calendar,
+  Scissors,
+  Search,
+  Star,
+  Store,
+} from "lucide-react";
+
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Card } from "@/components/ui/card";
+
+const steps = [
+  {
+    icon: Search,
+    title: "Trouvez",
+    text: "Explorez les meilleurs barbiers près de chez vous, filtrés par ville et service.",
+  },
+  {
+    icon: Calendar,
+    title: "Réservez",
+    text: "Choisissez un créneau disponible et confirmez votre rendez-vous en un clic.",
+  },
+  {
+    icon: Scissors,
+    title: "Profitez",
+    text: "Présentez-vous à l'heure et profitez d'un service haut de gamme, sans attente.",
+  },
+];
 
 const trustAvatars = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuDTWDCkUKtW-7MxWuiE-b6tyOHlSB9EQ9XqoSQ7XMY1jbHUhbOUhYVu5X_SiWUVTEicg9T67UTvToJki7KKVEMWP8ZvAPBx3Grq_3xL2L8lZ4H1HkAszeI9pL6esdohlFQ5yqZXrtOMA8dBISwKrVhtlfoHN3z8q-honH_D79yPL8zulU1BZ8XevZ15NSS0lqkybu-7T49Hz7IUp1pknvb8N_LmgICAZRa-Z6vwCLL3kbHmHjaJSmYh16zoudZtulaCeFW6ZsboddpD",
@@ -44,13 +74,8 @@ export default function HomePage() {
           </div>
 
           {/* Floating rating card (desktop only) */}
-          <div className="border-surface-variant bg-surface-container-high absolute -bottom-6 -left-6 z-10 hidden items-center gap-3 rounded-xl border px-5 py-4 shadow-2xl md:flex">
-            <span
-              className="material-symbols-outlined text-primary text-[28px]"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              star
-            </span>
+          <Card className="border-surface-variant bg-surface-container-high absolute -bottom-6 -left-6 z-10 hidden flex-row items-center gap-3 rounded-xl border px-5 py-4 shadow-2xl md:flex">
+            <Star className="text-primary size-7 fill-current" />
             <div>
               <p className="font-headline-md text-headline-md text-on-surface">
                 4.9/5
@@ -59,7 +84,7 @@ export default function HomePage() {
                 +2000 avis clients
               </p>
             </div>
-          </div>
+          </Card>
         </div>
 
         {/* Top Navigation / Brand (Mobile Only Overlay) */}
@@ -72,12 +97,15 @@ export default function HomePage() {
         {/* Content Container */}
         <div className="px-container-margin relative z-10 mt-auto mb-8 flex flex-1 flex-col justify-end md:mt-0 md:mb-0 md:w-1/2 md:justify-center md:px-0">
           {/* Badge (desktop only) */}
-          <div className="border-primary/30 bg-primary-container/10 mb-stack-md hidden w-fit items-center gap-2 rounded-full border px-3 py-1.5 backdrop-blur-sm md:inline-flex">
+          <Badge
+            variant="outline"
+            className="border-primary/30 bg-primary-container/10 mb-stack-md hidden w-fit gap-2 rounded-full px-3 py-1.5 backdrop-blur-sm md:inline-flex"
+          >
             <span className="bg-primary h-2 w-2 animate-pulse rounded-full" />
             <span className="font-label-sm text-label-sm text-primary tracking-wider uppercase">
               Réservation instantanée
             </span>
-          </div>
+          </Badge>
 
           <div className="mb-section-gap text-center md:text-left">
             <h2 className="font-headline-lg-mobile text-headline-lg-mobile mb-stack-sm text-on-surface md:mb-stack-md md:max-w-lg md:text-[56px] md:leading-[1.1] md:font-extrabold md:tracking-tight">
@@ -104,12 +132,7 @@ export default function HomePage() {
               className="group bg-primary-container text-on-primary-container relative flex w-full items-center justify-between overflow-hidden rounded-xl px-6 py-4 shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-all active:scale-95 md:hover:-translate-y-0.5 md:hover:shadow-[0_8px_24px_rgba(212,175,55,0.35)]"
             >
               <div className="relative z-10 flex items-center gap-3">
-                <span
-                  className="material-symbols-outlined text-on-primary-container"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  content_cut
-                </span>
+                <Scissors className="text-on-primary-container size-5" />
                 <div className="flex flex-col text-left">
                   <span className="font-label-md text-label-md font-bold tracking-wider uppercase">
                     Trouver un coiffeur
@@ -119,9 +142,7 @@ export default function HomePage() {
                   </span>
                 </div>
               </div>
-              <span className="material-symbols-outlined relative z-10 transform transition-transform group-active:translate-x-1">
-                arrow_forward
-              </span>
+              <ArrowRight className="relative z-10 size-5 transform transition-transform group-active:translate-x-1" />
               <div className="absolute inset-0 bg-black opacity-0 transition-opacity group-active:opacity-10" />
             </Link>
 
@@ -131,12 +152,7 @@ export default function HomePage() {
               className="group border-outline-variant bg-surface-container text-on-surface active:bg-surface-container-high md:hover:border-primary/50 flex w-full items-center justify-between rounded-xl border px-6 py-4 transition-all active:scale-95 md:hover:-translate-y-0.5 md:hover:shadow-lg"
             >
               <div className="flex items-center gap-3">
-                <span
-                  className="material-symbols-outlined text-primary"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  storefront
-                </span>
+                <Store className="text-primary size-5" />
                 <div className="flex flex-col text-left">
                   <span className="font-label-md text-label-md text-primary font-bold tracking-wider uppercase">
                     Espace Barber
@@ -146,9 +162,7 @@ export default function HomePage() {
                   </span>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-primary transform transition-transform group-active:translate-x-1">
-                arrow_forward
-              </span>
+              <ArrowRight className="text-primary size-5 transform transition-transform group-active:translate-x-1" />
             </Link>
           </div>
 
@@ -156,13 +170,12 @@ export default function HomePage() {
           <div className="border-surface-container-highest/50 mt-10 hidden max-w-md items-center gap-4 border-t pt-6 md:flex">
             <div className="flex -space-x-3">
               {trustAvatars.map((src) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <Avatar
                   key={src}
-                  alt="Client satisfait de Hajjem"
-                  className="border-background h-10 w-10 rounded-full border-2 object-cover grayscale"
-                  src={src}
-                />
+                  className="border-background size-10 border-2 grayscale"
+                >
+                  <AvatarImage alt="Client satisfait de Hajjem" src={src} />
+                </Avatar>
               ))}
             </div>
             <div className="flex flex-col">
@@ -207,34 +220,13 @@ export default function HomePage() {
             </p>
           </div>
           <div className="gap-gutter grid grid-cols-3">
-            {[
-              {
-                icon: "search",
-                title: "Trouvez",
-                text: "Explorez les meilleurs barbiers près de chez vous, filtrés par ville et service.",
-              },
-              {
-                icon: "calendar_month",
-                title: "Réservez",
-                text: "Choisissez un créneau disponible et confirmez votre rendez-vous en un clic.",
-              },
-              {
-                icon: "content_cut",
-                title: "Profitez",
-                text: "Présentez-vous à l'heure et profitez d'un service haut de gamme, sans attente.",
-              },
-            ].map((step) => (
-              <div
+            {steps.map((step) => (
+              <Card
                 key={step.title}
-                className="border-surface-container-high bg-surface relative flex flex-col items-start gap-4 rounded-2xl border p-8 transition-all hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
+                className="border-surface-container-high bg-surface relative gap-4 rounded-2xl border p-8 transition-all hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
               >
                 <div className="bg-primary-container/20 flex h-12 w-12 items-center justify-center rounded-xl">
-                  <span
-                    className="material-symbols-outlined text-primary"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    {step.icon}
-                  </span>
+                  <step.icon className="text-primary size-6" />
                 </div>
                 <h3 className="font-headline-md text-headline-md text-on-surface font-bold">
                   {step.title}
@@ -242,7 +234,7 @@ export default function HomePage() {
                 <p className="font-body-md text-body-md text-on-surface-variant">
                   {step.text}
                 </p>
-              </div>
+              </Card>
             ))}
           </div>
         </div>
