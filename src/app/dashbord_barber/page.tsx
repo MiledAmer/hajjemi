@@ -8,9 +8,7 @@ import {
   Eraser,
   LayoutDashboard,
   LogOut,
-  Pencil,
   Phone,
-  Plus,
   Scissors,
   Share2,
   Smile,
@@ -23,6 +21,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { AddServiceDialog } from "./_components/add-service-dialog";
+import { EditServiceDialog } from "./_components/edit-service-dialog";
 
 const BARBER_AVATAR =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAdrTXJGg8DazrU0p10zIpPYOPEaelASF8XNHGnzqCJrMws5gmTWuP4crJC3MJbz6CQ6y7rwO2LUzW4-l-X8Wkjr9kQ9lzIxNBpUx_iBgvBcGKv1cr4HPz2KXQ7cAau5NA5OV95ius9ruL7Pmo_GL-N54LY5NYrh7nDtkATP2XfiTF3vIyU3Dg-8K6p6lxFOQ8kP6P7TgsfWlklVaXKoXpHDfIWaWAVyTlWkszYSN-koPLGJ40ZVIfWdPMCaPeJ3c3cqqCCoUfVV04D";
@@ -59,7 +59,14 @@ const bookings: Booking[] = [
   { name: "Yassine K.", service: "Coupe Enfant", time: "08:30", status: "done" },
 ];
 
-const services = [
+type Service = {
+  name: string;
+  duration: string;
+  price: string;
+  icon: typeof Scissors;
+};
+
+const initialServices: Service[] = [
   { name: "Coupe Classique", duration: "30 min", price: "25 DT", icon: Scissors },
   { name: "Barbe VIP", duration: "20 min", price: "15 DT", icon: Smile },
   { name: "Teinture Barbe", duration: "45 min", price: "40 DT", icon: Eraser },
@@ -67,6 +74,7 @@ const services = [
 
 export default function TableauDeBordBarberMobilePage() {
   const [view, setView] = useState<ViewId>("dashboard");
+  const [services, setServices] = useState<Service[]>(initialServices);
 
   return (
     <div className="bg-background text-on-background min-h-screen overflow-x-hidden">
@@ -255,10 +263,14 @@ export default function TableauDeBordBarberMobilePage() {
               <h1 className="font-headline-lg-mobile text-headline-lg-mobile">
                 Mes Services
               </h1>
-              <Button className="bg-primary-container text-on-primary-container h-auto gap-1 rounded-lg px-4 py-2">
-                <Plus className="size-4.5" />
-                <span className="font-label-md">Ajouter</span>
-              </Button>
+              <AddServiceDialog
+                onAdd={(newService) =>
+                  setServices((prev) => [
+                    ...prev,
+                    { ...newService, icon: Scissors },
+                  ])
+                }
+              />
             </div>
             <div className="gap-gutter space-y-gutter md:grid md:grid-cols-2 md:space-y-0 lg:grid-cols-3">
               {services.map((service) => (
@@ -280,14 +292,18 @@ export default function TableauDeBordBarberMobilePage() {
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    <Button
-                      aria-label="Modifier"
-                      variant="ghost"
-                      size="icon"
-                      className="text-on-surface-variant hover:text-primary size-10"
-                    >
-                      <Pencil className="size-5" />
-                    </Button>
+                    <EditServiceDialog
+                      service={service}
+                      onSave={(updated) =>
+                        setServices((prev) =>
+                          prev.map((s) =>
+                            s.name === service.name
+                              ? { ...s, ...updated }
+                              : s,
+                          ),
+                        )
+                      }
+                    />
                     <Button
                       aria-label="Supprimer"
                       variant="ghost"
