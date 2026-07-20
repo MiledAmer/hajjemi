@@ -180,14 +180,12 @@ model Service {
   /// Tunisian Dinar's minor unit is the millime (1 TND = 1000 millimes),
   /// not a cent — stored as an integer to avoid float rounding on money.
   priceMillimes   Int
-  categories      ServiceCategory[]
   createdAt       DateTime          @default(now())
   updatedAt       DateTime          @updatedAt
 
   appointmentServices AppointmentService[]
 
   @@index([barberId])
-  @@map("services")
 }
 
 /// A recurring weekly opening window. Deliberately simple (one row per
