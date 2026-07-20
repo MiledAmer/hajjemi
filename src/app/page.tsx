@@ -16,12 +16,12 @@ export default function HomePage() {
             HAJJEM
           </span>
           <div className="gap-stack-lg flex items-center">
-            <a
+            <Link
               className="font-label-md text-label-md text-on-surface hover:text-primary font-semibold transition-colors"
-              href="#"
+              href="/connexion"
             >
               Connexion
-            </a>
+            </Link>
           </div>
         </div>
       </header>
@@ -177,12 +177,12 @@ export default function HomePage() {
 
           {/* Footer Links */}
           <div className="mt-8 flex justify-center gap-6 text-center md:hidden">
-            <a
+            <Link
               className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors"
-              href="#"
+              href="/connexion"
             >
               Connexion
-            </a>
+            </Link>
             <span className="text-surface-variant">•</span>
             <a
               className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors"

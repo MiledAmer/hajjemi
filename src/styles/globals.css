@@ -85,6 +85,14 @@
   --text-headline-lg--font-weight: 600;
 }
 
+.gold-glow:focus-within {
+  box-shadow: 0 0 15px rgba(242, 202, 80, 0.2);
+}
+
+.btn-active:active {
+  transform: scale(0.98);
+}
+
 .hero-gradient {
   background: linear-gradient(
     180deg,
