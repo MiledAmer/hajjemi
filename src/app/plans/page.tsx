@@ -1,3 +1,22 @@
+import {
+  ArrowRight,
+  BadgeCheck,
+  Calendar,
+  CheckCircle2,
+  LayoutDashboard,
+  LineChart,
+  Menu,
+  TrendingUp,
+  User,
+  Users,
+  X,
+} from "lucide-react";
+
+import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+
 const navLinks = ["Avantages", "Tarifs"];
 
 const trustAvatars = [
@@ -50,17 +69,17 @@ const basicFeatures = [
 ];
 
 const proFeatures = [
-  { label: "Rendez-vous illimités", icon: "check_circle", emphasis: true },
-  { label: "Profil Premium certifié", icon: "check_circle" },
-  { label: "Catalogue de services illimité", icon: "check_circle" },
+  { label: "Rendez-vous illimités", icon: CheckCircle2, emphasis: true },
+  { label: "Profil Premium certifié", icon: CheckCircle2 },
+  { label: "Catalogue de services illimité", icon: CheckCircle2 },
   {
     label: "Statistiques avancées & rapports",
-    icon: "insights",
+    icon: LineChart,
     emphasis: true,
   },
   {
     label: "Visibilité boostée (Algorithme)",
-    icon: "trending_up",
+    icon: TrendingUp,
     emphasis: true,
     accent: true,
   },
@@ -96,13 +115,17 @@ export default function PlansPage() {
             >
               Se connecter
             </a>
-            <button className="font-label-md text-label-md bg-primary text-on-primary hover:bg-primary-fixed-dim rounded-lg px-6 py-2 font-bold shadow-[0_4px_12px_rgba(212,175,55,0.2)] transition-all active:scale-95">
+            <Button className="font-label-md text-label-md bg-primary text-on-primary hover:bg-primary-fixed-dim h-auto rounded-lg px-6 py-2 font-bold shadow-[0_4px_12px_rgba(212,175,55,0.2)]">
               Rejoindre
-            </button>
+            </Button>
           </div>
-          <button className="text-primary p-2 md:hidden">
-            <span className="material-symbols-outlined">menu</span>
-          </button>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-primary md:hidden"
+          >
+            <Menu className="size-5" />
+          </Button>
         </div>
       </header>
 
@@ -143,30 +166,30 @@ export default function PlansPage() {
                 autorité avec la plateforme numéro un pour les barbiers premium.
               </p>
               <div className="gap-stack-md pt-stack-sm mt-4 flex flex-col sm:flex-row">
-                <button className="bg-primary text-on-primary hover:bg-primary-fixed-dim flex w-full items-center justify-center gap-2 rounded-lg px-8 py-4 text-center font-bold shadow-[0_4px_12px_rgba(212,175,55,0.3)] transition-all active:scale-95 sm:w-auto">
+                <Button className="bg-primary text-on-primary hover:bg-primary-fixed-dim h-auto w-full gap-2 rounded-lg px-8 py-4 text-center font-bold shadow-[0_4px_12px_rgba(212,175,55,0.3)] sm:w-auto">
                   <span className="font-label-md text-label-md">
                     Créer mon compte professionnel
                   </span>
-                  <span className="material-symbols-outlined">
-                    arrow_forward
-                  </span>
-                </button>
-                <button className="border-outline-variant bg-surface-container text-on-surface hover:border-primary/50 hover:bg-surface-container-high w-full rounded-lg border px-8 py-4 text-center font-bold transition-all active:scale-95 sm:w-auto">
+                  <ArrowRight className="size-5" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="border-outline-variant bg-surface-container text-on-surface hover:border-primary/50 hover:bg-surface-container-high h-auto w-full rounded-lg px-8 py-4 text-center font-bold sm:w-auto"
+                >
                   <span className="font-label-md text-label-md">
                     Se connecter
                   </span>
-                </button>
+                </Button>
               </div>
               <div className="border-surface-container-highest/50 mt-8 flex items-center gap-4 border-t pt-6">
                 <div className="flex -space-x-3">
                   {trustAvatars.map((avatar) => (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <Avatar
                       key={avatar.src}
-                      alt={avatar.alt}
-                      className="border-background h-10 w-10 rounded-full border-2 object-cover grayscale"
-                      src={avatar.src}
-                    />
+                      className="border-background size-10 border-2 grayscale"
+                    >
+                      <AvatarImage alt={avatar.alt} src={avatar.src} />
+                    </Avatar>
                   ))}
                 </div>
                 <div className="flex flex-col">
@@ -204,9 +227,7 @@ export default function PlansPage() {
                       </p>
                     </div>
                     <div className="bg-surface-container-high flex h-8 w-8 items-center justify-center rounded-full">
-                      <span className="material-symbols-outlined text-primary text-[18px]">
-                        calendar_today
-                      </span>
+                      <Calendar className="text-primary size-[18px]" />
                     </div>
                   </div>
                   {/* Mock UI Content */}
@@ -293,27 +314,16 @@ export default function PlansPage() {
                   {/* Mock Bottom Nav */}
                   <div className="border-surface-container-high bg-surface-container flex h-16 items-center justify-around border-t px-4 pb-2">
                     <div className="text-primary flex flex-col items-center">
-                      <span
-                        className="material-symbols-outlined text-[20px]"
-                        style={{ fontVariationSettings: "'FILL' 1" }}
-                      >
-                        dashboard
-                      </span>
+                      <LayoutDashboard className="size-5" />
                     </div>
                     <div className="text-on-surface-variant flex flex-col items-center">
-                      <span className="material-symbols-outlined text-[20px]">
-                        calendar_month
-                      </span>
+                      <Calendar className="size-5" />
                     </div>
                     <div className="text-on-surface-variant flex flex-col items-center">
-                      <span className="material-symbols-outlined text-[20px]">
-                        people
-                      </span>
+                      <Users className="size-5" />
                     </div>
                     <div className="text-on-surface-variant flex flex-col items-center">
-                      <span className="material-symbols-outlined text-[20px]">
-                        person
-                      </span>
+                      <User className="size-5" />
                     </div>
                   </div>
                 </div>
@@ -341,11 +351,14 @@ export default function PlansPage() {
 
             <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-2">
               {/* Basic Plan */}
-              <div className="border-surface-container-high bg-surface-container-low hover:border-outline-variant relative flex flex-col overflow-hidden rounded-2xl border-2 p-8 transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+              <Card className="border-surface-container-high bg-surface-container-low hover:border-outline-variant relative gap-0 overflow-hidden rounded-2xl border-2 p-8 transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
                 <div className="mb-8">
-                  <span className="font-label-sm text-label-sm border-outline-variant/30 bg-surface-container text-on-surface-variant mb-4 inline-block rounded-sm border px-3 py-1 tracking-wider uppercase">
+                  <Badge
+                    variant="outline"
+                    className="font-label-sm text-label-sm border-outline-variant/30 bg-surface-container text-on-surface-variant mb-4 inline-block rounded-sm tracking-wider uppercase"
+                  >
                     Démarrage
-                  </span>
+                  </Badge>
                   <h3 className="font-headline-md text-headline-md text-on-surface mb-2 font-bold">
                     Basic
                   </h3>
@@ -369,11 +382,11 @@ export default function PlansPage() {
                         key={feature.label}
                         className={`flex items-start gap-3 ${feature.included ? "" : "opacity-40"}`}
                       >
-                        <span
-                          className={`material-symbols-outlined mt-0.5 text-[20px] ${feature.included ? "text-secondary" : "text-on-surface-variant"}`}
-                        >
-                          {feature.included ? "check_circle" : "close"}
-                        </span>
+                        {feature.included ? (
+                          <CheckCircle2 className="text-secondary mt-0.5 size-5" />
+                        ) : (
+                          <X className="text-on-surface-variant mt-0.5 size-5" />
+                        )}
                         <span
                           className={`font-body-md text-body-md ${feature.included ? "text-on-surface" : "text-on-surface-variant line-through"}`}
                         >
@@ -383,21 +396,27 @@ export default function PlansPage() {
                     ))}
                   </ul>
                 </div>
-                <button className="font-label-md text-label-md border-outline-variant bg-surface-container text-on-surface hover:bg-surface-container-high w-full rounded-lg border px-6 py-4 font-bold transition-colors duration-150 active:scale-95">
+                <Button
+                  variant="outline"
+                  className="font-label-md text-label-md border-outline-variant bg-surface-container text-on-surface hover:bg-surface-container-high h-auto w-full rounded-lg px-6 py-4 font-bold"
+                >
                   S&apos;inscrire gratuitement
-                </button>
-              </div>
+                </Button>
+              </Card>
 
               {/* Pro Plan */}
-              <div className="border-primary bg-surface relative flex transform flex-col overflow-hidden rounded-2xl border-2 p-8 shadow-[0_8px_32px_rgba(212,175,55,0.15)]">
+              <Card className="border-primary bg-surface relative transform gap-0 overflow-hidden rounded-2xl border-2 p-8 shadow-[0_8px_32px_rgba(212,175,55,0.15)]">
                 <div className="font-label-sm text-label-sm bg-primary text-on-primary absolute top-0 right-0 rounded-bl-lg px-6 py-1.5 font-bold tracking-wider uppercase">
                   Recommandé
                 </div>
                 <div className="bg-primary/20 pointer-events-none absolute top-0 right-0 h-32 w-32 rounded-full blur-3xl" />
                 <div className="relative z-10 mb-8">
-                  <span className="font-label-sm text-label-sm border-primary/30 bg-primary-container/20 text-primary mb-4 inline-block rounded-sm border px-3 py-1 tracking-wider uppercase">
+                  <Badge
+                    variant="outline"
+                    className="font-label-sm text-label-sm border-primary/30 bg-primary-container/20 text-primary mb-4 inline-block rounded-sm tracking-wider uppercase"
+                  >
                     Excellence
-                  </span>
+                  </Badge>
                   <h3 className="font-headline-md text-headline-md text-on-surface mb-2 font-bold">
                     Pro
                   </h3>
@@ -421,12 +440,7 @@ export default function PlansPage() {
                         key={feature.label}
                         className="flex items-start gap-3"
                       >
-                        <span
-                          className="material-symbols-outlined text-primary mt-0.5 text-[20px]"
-                          style={{ fontVariationSettings: "'FILL' 1" }}
-                        >
-                          {feature.icon}
-                        </span>
+                        <feature.icon className="text-primary mt-0.5 size-5" />
                         <span
                           className={`font-body-md text-body-md text-on-surface ${feature.emphasis ? "font-semibold" : ""} ${feature.accent ? "text-primary" : ""}`}
                         >
@@ -436,13 +450,11 @@ export default function PlansPage() {
                     ))}
                   </ul>
                 </div>
-                <button className="font-label-md text-label-md bg-primary text-on-primary hover:bg-primary-fixed-dim relative z-10 flex w-full items-center justify-center gap-2 rounded-lg px-6 py-4 font-bold shadow-[0_4px_12px_rgba(212,175,55,0.3)] transition-all duration-150 active:scale-95">
+                <Button className="font-label-md text-label-md bg-primary text-on-primary hover:bg-primary-fixed-dim relative z-10 h-auto w-full gap-2 rounded-lg px-6 py-4 font-bold shadow-[0_4px_12px_rgba(212,175,55,0.3)]">
                   Passer au niveau Pro
-                  <span className="material-symbols-outlined">
-                    workspace_premium
-                  </span>
-                </button>
-              </div>
+                  <BadgeCheck className="size-5" />
+                </Button>
+              </Card>
             </div>
           </div>
         </section>

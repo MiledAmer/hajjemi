@@ -2,6 +2,20 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  Clock,
+  MapPin,
+  Plus,
+  Star,
+} from "lucide-react";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 
 const navLinks = [
   { label: "Accueil", href: "/" },
@@ -53,7 +67,7 @@ const serviceCategories = ["Populaire", "Coupes", "Barbe", "Soins"];
 
 function ServiceItem({ service }: { service: Service }) {
   return (
-    <div className="group border-surface-variant p-stack-md hover:bg-surface-container-high relative flex items-center justify-between rounded-xl border bg-[#1C1C1E] transition-colors">
+    <Card className="group border-surface-variant p-stack-md hover:bg-surface-container-high relative flex-row items-center justify-between gap-0 rounded-xl border bg-[#1C1C1E] transition-colors">
       {service.selected && (
         <div className="bg-primary absolute top-0 bottom-0 left-0 w-1" />
       )}
@@ -65,12 +79,7 @@ function ServiceItem({ service }: { service: Service }) {
           {service.description}
         </p>
         <div className="mt-2 flex items-center gap-2">
-          <span
-            className="material-symbols-outlined text-primary text-[14px]"
-            style={{ fontVariationSettings: "'FILL' 0" }}
-          >
-            schedule
-          </span>
+          <Clock className="text-primary size-3.5" />
           <span className="font-label-sm text-label-sm text-on-surface-variant">
             {service.duration}
           </span>
@@ -81,32 +90,25 @@ function ServiceItem({ service }: { service: Service }) {
           {service.price}
         </span>
         {service.selected ? (
-          <button
+          <Button
             aria-label="Retirer service"
-            className="bg-primary text-background flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+            size="icon"
+            className="bg-primary text-background size-8 rounded-full"
           >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontVariationSettings: "'FILL' 0" }}
-            >
-              check
-            </span>
-          </button>
+            <Check className="size-4" />
+          </Button>
         ) : (
-          <button
+          <Button
             aria-label="Ajouter service"
-            className="bg-surface-variant text-on-surface group-hover:bg-primary group-hover:text-background flex h-8 w-8 items-center justify-center rounded-full transition-colors"
+            variant="secondary"
+            size="icon"
+            className="bg-surface-variant text-on-surface group-hover:bg-primary group-hover:text-background size-8 rounded-full"
           >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontVariationSettings: "'FILL' 0" }}
-            >
-              add
-            </span>
-          </button>
+            <Plus className="size-4" />
+          </Button>
         )}
       </div>
-    </div>
+    </Card>
   );
 }
 
@@ -118,18 +120,15 @@ export default function ProfilBarberPage() {
       {/* Top Navigation (Web View - Hidden on Mobile to prioritize Hero) */}
       <header className="bg-surface px-container-margin sticky top-0 z-50 mx-auto hidden h-16 w-full max-w-7xl items-center justify-between shadow-sm md:flex">
         <div className="flex items-center gap-4">
-          <button
+          <Button
             aria-label="Retour"
+            variant="ghost"
+            size="icon"
+            className="text-on-surface-variant hover:text-primary"
             onClick={() => router.back()}
-            className="text-on-surface-variant hover:text-primary transition-colors focus:outline-none"
           >
-            <span
-              className="material-symbols-outlined"
-              style={{ fontVariationSettings: "'FILL' 0" }}
-            >
-              arrow_back
-            </span>
-          </button>
+            <ArrowLeft className="size-5" />
+          </Button>
           <span className="font-headline-lg text-headline-lg text-primary font-bold tracking-tighter">
             HAJJEM
           </span>
@@ -145,14 +144,13 @@ export default function ProfilBarberPage() {
             </Link>
           ))}
         </div>
-        <button className="bg-surface-container-high focus:ring-primary h-10 w-10 overflow-hidden rounded-full focus:ring-2 focus:outline-none">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+        <Avatar className="bg-surface-container-high focus-visible:ring-primary size-10 focus-visible:ring-2">
+          <AvatarImage
             alt="Portrait d'Ahmed, barbier, coupe fondu nette et barbe soignée."
-            className="h-full w-full object-cover"
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvZAHjelVw0NlTkX0cvlHwDy3cyY-vKWW1QS_JP5tTMOLNLvzcgpieDgitP8iB9Mc3NNsexf_PtNYw9QOuNxv4g7-SbDr0AH3Ur_P0OdAqccmorYq3CZyDFrcGozOoKKNiWbD5eyUlerThHkKoEItiJDaScSlLvXPQguTk-BG94b_wHkN8YubJ7e5If4jkf2wnqywLNVJRtjNuDSshngEv9vfzKXdOG3sHMRY9g2eW2UKWf9M2rbSK8Sv_E-vDnpM_gjjoXrsms-HO"
           />
-        </button>
+          <AvatarFallback>A</AvatarFallback>
+        </Avatar>
       </header>
 
       {/* Main Content */}
@@ -161,18 +159,15 @@ export default function ProfilBarberPage() {
         <section className="md:sticky md:top-24 md:col-span-5 md:h-fit">
           {/* Mobile Back Button Overlay */}
           <div className="glass-panel absolute top-4 left-4 z-10 flex h-10 w-10 items-center justify-center rounded-full md:hidden">
-            <button
+            <Button
               aria-label="Retour"
+              variant="ghost"
+              size="icon"
+              className="text-on-surface"
               onClick={() => router.back()}
-              className="text-on-surface focus:outline-none"
             >
-              <span
-                className="material-symbols-outlined"
-                style={{ fontVariationSettings: "'FILL' 0" }}
-              >
-                arrow_back
-              </span>
-            </button>
+              <ArrowLeft className="size-5" />
+            </Button>
           </div>
 
           {/* Hero Image */}
@@ -206,28 +201,24 @@ export default function ProfilBarberPage() {
             </p>
             {/* Rating & Location Badges */}
             <div className="mb-stack-lg gap-stack-md flex">
-              <div className="border-surface-variant bg-surface-container flex items-center gap-2 rounded-full border px-3 py-1">
-                <span
-                  className="material-symbols-outlined text-primary text-[16px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  star
-                </span>
+              <Badge
+                variant="outline"
+                className="border-surface-variant bg-surface-container gap-2 rounded-full px-3 py-1"
+              >
+                <Star className="text-primary size-4 fill-current" />
                 <span className="font-label-sm text-label-sm text-on-surface">
                   4.9 (128 avis)
                 </span>
-              </div>
-              <div className="border-surface-variant bg-surface-container flex items-center gap-2 rounded-full border px-3 py-1">
-                <span
-                  className="material-symbols-outlined text-on-surface-variant text-[16px]"
-                  style={{ fontVariationSettings: "'FILL' 0" }}
-                >
-                  location_on
-                </span>
+              </Badge>
+              <Badge
+                variant="outline"
+                className="border-surface-variant bg-surface-container gap-2 rounded-full px-3 py-1"
+              >
+                <MapPin className="text-on-surface-variant size-4" />
                 <span className="font-label-sm text-label-sm text-on-surface-variant">
                   Tunis, Centre Ville
                 </span>
-              </div>
+              </Badge>
             </div>
             {/* About Barber */}
             <p className="font-body-md text-body-md mb-stack-lg text-on-surface-variant leading-relaxed">
@@ -241,39 +232,33 @@ export default function ProfilBarberPage() {
           <div className="fade-in-up px-container-margin pt-stack-md md:hidden">
             {/* Rating & Location Badges */}
             <div className="mb-stack-md gap-stack-sm flex flex-wrap">
-              <div className="border-surface-variant bg-surface-container flex items-center gap-1 rounded-full border px-3 py-1">
-                <span
-                  className="material-symbols-outlined text-primary text-[14px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  star
-                </span>
+              <Badge
+                variant="outline"
+                className="border-surface-variant bg-surface-container gap-1 rounded-full px-3 py-1"
+              >
+                <Star className="text-primary size-3.5 fill-current" />
                 <span className="font-label-sm text-label-sm text-on-surface">
                   4.9 (128)
                 </span>
-              </div>
-              <div className="border-surface-variant bg-surface-container flex items-center gap-1 rounded-full border px-3 py-1">
-                <span
-                  className="material-symbols-outlined text-on-surface-variant text-[14px]"
-                  style={{ fontVariationSettings: "'FILL' 0" }}
-                >
-                  location_on
-                </span>
+              </Badge>
+              <Badge
+                variant="outline"
+                className="border-surface-variant bg-surface-container gap-1 rounded-full px-3 py-1"
+              >
+                <MapPin className="text-on-surface-variant size-3.5" />
                 <span className="font-label-sm text-label-sm text-on-surface-variant">
                   Tunis
                 </span>
-              </div>
-              <div className="border-surface-variant bg-surface-container flex items-center gap-1 rounded-full border px-3 py-1">
-                <span
-                  className="material-symbols-outlined text-on-surface-variant text-[14px]"
-                  style={{ fontVariationSettings: "'FILL' 0" }}
-                >
-                  schedule
-                </span>
+              </Badge>
+              <Badge
+                variant="outline"
+                className="border-surface-variant bg-surface-container gap-1 rounded-full px-3 py-1"
+              >
+                <Clock className="text-on-surface-variant size-3.5" />
                 <span className="font-label-sm text-label-sm text-on-surface-variant">
                   Ouv.
                 </span>
-              </div>
+              </Badge>
             </div>
           </div>
         </section>
@@ -284,24 +269,28 @@ export default function ProfilBarberPage() {
             <h2 className="font-headline-md text-headline-md text-on-surface">
               Services
             </h2>
-            <button className="font-label-md text-label-md text-primary hover:underline focus:outline-none">
+            <Button
+              variant="ghost"
+              className="font-label-md text-label-md text-primary h-auto p-0 hover:underline"
+            >
               Voir tout
-            </button>
+            </Button>
           </div>
 
           {/* Service Categories (Chips) */}
           <div className="hide-scrollbar mb-stack-md gap-stack-sm pb-stack-sm flex overflow-x-auto">
             {serviceCategories.map((category, index) => (
-              <button
+              <Button
                 key={category}
+                variant={index === 0 ? "default" : "outline"}
                 className={
                   index === 0
-                    ? "font-label-md text-label-md bg-primary-container text-on-primary-container rounded-full px-4 py-2 whitespace-nowrap transition-colors focus:outline-none"
-                    : "font-label-md text-label-md border-surface-variant bg-surface-container text-on-surface-variant hover:bg-surface-variant rounded-full border px-4 py-2 whitespace-nowrap transition-colors focus:outline-none"
+                    ? "font-label-md text-label-md bg-primary-container text-on-primary-container h-auto rounded-full px-4 py-2 whitespace-nowrap"
+                    : "font-label-md text-label-md border-surface-variant bg-surface-container text-on-surface-variant hover:bg-surface-variant h-auto rounded-full px-4 py-2 whitespace-nowrap"
                 }
               >
                 {category}
-              </button>
+              </Button>
             ))}
           </div>
 
@@ -327,20 +316,15 @@ export default function ProfilBarberPage() {
             15 DT
           </span>
         </div>
-        <button className="shadow-ambient bg-primary font-headline-md text-background flex w-full items-center justify-center gap-2 rounded-lg py-3 text-[18px] transition-transform active:scale-[0.98]">
+        <Button className="shadow-ambient bg-primary font-headline-md text-background h-auto w-full gap-2 rounded-lg py-3 text-[18px]">
           Réserver maintenant
-          <span
-            className="material-symbols-outlined"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
-            arrow_forward
-          </span>
-        </button>
+          <ArrowRight className="size-5" />
+        </Button>
       </div>
 
       {/* Desktop Floating Action Area (Hidden on mobile) */}
       <div className="fixed right-8 bottom-8 z-50 hidden md:block">
-        <div className="fade-in-up shadow-ambient border-surface-variant bg-surface-container-high w-80 rounded-xl border p-4 delay-200">
+        <Card className="fade-in-up shadow-ambient border-surface-variant bg-surface-container-high w-80 gap-0 rounded-xl border p-4 delay-200">
           <h3 className="font-headline-md border-surface-variant text-on-surface mb-2 border-b pb-2 text-[18px]">
             Votre Réservation
           </h3>
@@ -360,10 +344,10 @@ export default function ProfilBarberPage() {
               15 DT
             </span>
           </div>
-          <button className="font-label-md text-label-md bg-primary text-background mt-4 w-full rounded-lg py-3 shadow-sm transition-opacity hover:opacity-90">
+          <Button className="font-label-md text-label-md bg-primary text-background mt-4 h-auto w-full rounded-lg py-3 shadow-sm hover:opacity-90">
             Réserver maintenant
-          </button>
-        </div>
+          </Button>
+        </Card>
       </div>
     </div>
   );
