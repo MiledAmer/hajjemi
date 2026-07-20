@@ -61,13 +61,6 @@ enum Governorate {
 /// "Barbe", "Soins"). A Service can carry several tags, so it's modeled as
 /// an enum array on Service rather than a join table — the tag set is small,
 /// platform-defined, and doesn't need its own lifecycle/metadata.
-enum ServiceCategory {
-  POPULAR
-  HAIRCUT
-  BEARD
-  CARE
-  COLORING
-}
 
 enum DayOfWeek {
   MONDAY
@@ -109,7 +102,6 @@ enum SubscriptionStatus {
 /// that's decided instead of guessing now.
 model User {
   id           String   @id @default(cuid())
-  email        String   @unique
   phone        String?  @unique
   passwordHash String
   name         String
