@@ -26,7 +26,7 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="relative flex min-h-[884px] w-full flex-1 flex-col md:min-h-0 md:flex-row md:items-center md:gap-12 md:px-container-margin md:mx-auto md:max-w-7xl md:py-16">
+      <main className="md:px-container-margin relative flex min-h-[884px] w-full flex-1 flex-col md:mx-auto md:min-h-0 md:max-w-7xl md:flex-row md:items-center md:gap-12 md:py-16">
         {/* Hero Image Background */}
         <div className="absolute inset-0 z-0 h-[574px] w-full md:static md:h-[600px] md:w-1/2">
           {/* Decorative glow (desktop only) */}
@@ -128,7 +128,7 @@ export default function HomePage() {
             {/* Professional Action */}
             <Link
               href="/plans"
-              className="group border-outline-variant bg-surface-container text-on-surface active:bg-surface-container-high flex w-full items-center justify-between rounded-xl border px-6 py-4 transition-all active:scale-95 md:hover:-translate-y-0.5 md:hover:border-primary/50 md:hover:shadow-lg"
+              className="group border-outline-variant bg-surface-container text-on-surface active:bg-surface-container-high md:hover:border-primary/50 flex w-full items-center justify-between rounded-xl border px-6 py-4 transition-all active:scale-95 md:hover:-translate-y-0.5 md:hover:shadow-lg"
             >
               <div className="flex items-center gap-3">
                 <span

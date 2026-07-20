@@ -389,7 +389,7 @@ export default function PlansPage() {
               </div>
 
               {/* Pro Plan */}
-              <div className="border-primary bg-surface relative flex  transform flex-col overflow-hidden rounded-2xl border-2 p-8 shadow-[0_8px_32px_rgba(212,175,55,0.15)]">
+              <div className="border-primary bg-surface relative flex transform flex-col overflow-hidden rounded-2xl border-2 p-8 shadow-[0_8px_32px_rgba(212,175,55,0.15)]">
                 <div className="font-label-sm text-label-sm bg-primary text-on-primary absolute top-0 right-0 rounded-bl-lg px-6 py-1.5 font-bold tracking-wider uppercase">
                   Recommandé
                 </div>
