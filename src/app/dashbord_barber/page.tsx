@@ -31,14 +31,73 @@ const BARBER_PROFILE_PORTRAIT =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCJ1PSYFJcFErbgTa0UBXq-bgLu_ZCGgqoc9PWO0dlc367UVNuHC4oFdM5MGt2VIhxXkE2c2rKE2flwFbtaGvQ00mBC9r0OZlYDTSzUnqWyVwehQmYqXQU9jPB6U6s6vmb8owjEzXRbqAv24l_gGulYJ2fxGIsTwtCD7rBPV3U6G4t6u-6nCVTS6jPCGLKE3-90yC7uWOQ24AtjsgkIrPwJ3NbHz3qvycKSWKrszDxSQnaurTy3lQDUUT3VH2iW7BZ4aKNcjP_RaO1v";
 
 type ViewId = "dashboard" | "bookings" | "services" | "profile";
+type Lang = "fr" | "tn";
 
-const navItems: { id: ViewId; label: string; icon: typeof LayoutDashboard }[] =
-  [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { id: "bookings", label: "RDV", icon: Calendar },
-    { id: "services", label: "Services", icon: Scissors },
-    { id: "profile", label: "Profil", icon: User },
-  ];
+const dashboardContent = {
+  fr: {
+    switchTo: "TN",
+    nav: { dashboard: "Dashboard", bookings: "RDV", services: "Services", profile: "Profil" },
+    greeting: "Bonjour, Khalil",
+    todayCount: "RDV Aujourd'hui",
+    upcomingTitle: "Prochains Rendez-vous",
+    seeAll: "Voir tout",
+    confirmed: "Confirmé",
+    bookingsTitle: "Rendez-vous",
+    pending: "En attente",
+    accept: "Accepter",
+    decline: "Décliner",
+    done: "Terminé",
+    myServices: "Mes Services",
+    myProfile: "Mon Profil",
+    masterBarber: "Maître Barbier",
+    bio: "Spécialiste en coupes classiques et entretien de barbe premium. Plus de 10 ans d'expérience au service de l'élégance masculine à Tunis.",
+    callAria: "Appeler",
+    shareAria: "Partager",
+    editProfileAria: "Modifier le profil",
+    editServiceAria: "Modifier",
+    deleteAria: "Supprimer",
+    hours: "Horaires d'ouverture",
+    weekdays: "Lundi - Samedi",
+    sunday: "Dimanche",
+    closed: "Fermé",
+    logout: "Déconnexion",
+  },
+  tn: {
+    switchTo: "FR",
+    nav: { dashboard: "Dashboard", bookings: "RDV", services: "Services", profile: "Profil" },
+    greeting: "Ahla, Khalil",
+    todayCount: "RDV Lyoum",
+    upcomingTitle: "Rendez-vous Jeyin",
+    seeAll: "Chouf kol",
+    confirmed: "Mou2akad",
+    bookingsTitle: "Mawa3id",
+    pending: "Fi intidhar",
+    accept: "9bal",
+    decline: "Rfed",
+    done: "Kamel",
+    myServices: "Les Services mte3i",
+    myProfile: "Profil mte3i",
+    masterBarber: "Kbir El Hjjama",
+    bio: "Mkhtass fi 9assat classique w e3tina bel le7ya premium. Aktar men 10 snin khebra fi khedmet l2anaka rjeli fi Tounes.",
+    callAria: "3ayet",
+    shareAria: "9assem",
+    editProfileAria: "Badel Profil",
+    editServiceAria: "Badel",
+    deleteAria: "Ma7i",
+    hours: "Wa9t El Khedma",
+    weekdays: "Ethnin - Sebt",
+    sunday: "El Had",
+    closed: "Ma3lou9",
+    logout: "Khrouj",
+  },
+} as const satisfies Record<Lang, unknown>;
+
+const navItems: { id: ViewId; icon: typeof LayoutDashboard }[] = [
+  { id: "dashboard", icon: LayoutDashboard },
+  { id: "bookings", icon: Calendar },
+  { id: "services", icon: Scissors },
+  { id: "profile", icon: User },
+];
 
 const upcomingAppointments = [
   { name: "Ahmed Z.", service: "Coupe Classique + Barbe", time: "09:30" },
@@ -75,6 +134,8 @@ const initialServices: Service[] = [
 export default function TableauDeBordBarberMobilePage() {
   const [view, setView] = useState<ViewId>("dashboard");
   const [services, setServices] = useState<Service[]>(initialServices);
+  const [lang, setLang] = useState<Lang>("fr");
+  const t = dashboardContent[lang];
 
   return (
     <div className="bg-background text-on-background min-h-screen overflow-x-hidden">
@@ -101,18 +162,27 @@ export default function TableauDeBordBarberMobilePage() {
                     : "font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
                 }
               >
-                {item.label}
+                {t.nav[item.id]}
               </button>
             ))}
           </nav>
-          <Button
-            aria-label="Notifications"
-            variant="ghost"
-            size="icon"
-            className="text-on-surface-variant"
-          >
-            <Bell className="size-5" />
-          </Button>
+          <div className="gap-stack-md flex items-center">
+            <button
+              type="button"
+              onClick={() => setLang(lang === "fr" ? "tn" : "fr")}
+              className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary border-outline-variant rounded-full border px-3 py-1 transition-colors"
+            >
+              {t.switchTo}
+            </button>
+            <Button
+              aria-label="Notifications"
+              variant="ghost"
+              size="icon"
+              className="text-on-surface-variant"
+            >
+              <Bell className="size-5" />
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -121,13 +191,13 @@ export default function TableauDeBordBarberMobilePage() {
         {view === "dashboard" && (
           <section>
             <h1 className="font-headline-lg-mobile text-headline-lg-mobile mb-stack-lg">
-              Bonjour, Khalil
+              {t.greeting}
             </h1>
 
             <div className="gap-gutter mb-section-gap grid grid-cols-2">
               <Card className="border-primary/10 bg-surface-container/80 gap-base p-stack-lg rounded-xl border backdrop-blur-sm">
                 <span className="text-on-surface-variant font-label-sm tracking-wider uppercase">
-                  RDV Aujourd&apos;hui
+                  {t.todayCount}
                 </span>
                 <span className="text-display-lg font-display-lg text-primary">
                   12
@@ -137,14 +207,14 @@ export default function TableauDeBordBarberMobilePage() {
 
             <div className="mb-stack-md flex items-center justify-between">
               <h2 className="font-headline-md text-headline-md">
-                Prochains Rendez-vous
+                {t.upcomingTitle}
               </h2>
               <Button
                 variant="ghost"
                 className="text-primary font-label-md h-auto p-0"
                 onClick={() => setView("bookings")}
               >
-                Voir tout
+                {t.seeAll}
               </Button>
             </div>
 
@@ -167,7 +237,7 @@ export default function TableauDeBordBarberMobilePage() {
                       {appointment.time}
                     </p>
                     <p className="text-on-surface-variant font-label-sm">
-                      Confirmé
+                      {t.confirmed}
                     </p>
                   </div>
                 </Card>
@@ -180,7 +250,7 @@ export default function TableauDeBordBarberMobilePage() {
         {view === "bookings" && (
           <section>
             <h1 className="font-headline-lg-mobile text-headline-lg-mobile mb-stack-lg">
-              Rendez-vous
+              {t.bookingsTitle}
             </h1>
             <div className="gap-stack-lg space-y-stack-lg md:grid md:grid-cols-2 md:space-y-0 lg:grid-cols-3">
               {bookings.map((booking) => (
@@ -199,7 +269,7 @@ export default function TableauDeBordBarberMobilePage() {
                       <div className="mb-stack-md flex items-start justify-between">
                         <div>
                           <Badge className="bg-primary/20 text-primary mb-2 inline-block rounded-sm uppercase">
-                            En attente
+                            {t.pending}
                           </Badge>
                           <p className="font-headline-md text-headline-md">
                             {booking.name}
@@ -214,13 +284,13 @@ export default function TableauDeBordBarberMobilePage() {
                       </div>
                       <div className="gap-gutter flex">
                         <Button className="bg-primary text-on-primary h-auto flex-1 rounded-lg py-3 font-bold">
-                          Accepter
+                          {t.accept}
                         </Button>
                         <Button
                           variant="outline"
                           className="border-outline text-on-surface h-auto flex-1 rounded-lg py-3 font-bold"
                         >
-                          Décliner
+                          {t.decline}
                         </Button>
                       </div>
                     </>
@@ -245,7 +315,7 @@ export default function TableauDeBordBarberMobilePage() {
                         <span
                           className={`text-label-sm ${booking.status === "done" ? "" : "text-secondary"}`}
                         >
-                          {booking.status === "done" ? "Terminé" : "Confirmé"}
+                          {booking.status === "done" ? t.done : t.confirmed}
                         </span>
                       </div>
                     </div>
@@ -261,9 +331,10 @@ export default function TableauDeBordBarberMobilePage() {
           <section>
             <div className="mb-stack-lg flex items-center justify-between">
               <h1 className="font-headline-lg-mobile text-headline-lg-mobile">
-                Mes Services
+                {t.myServices}
               </h1>
               <AddServiceDialog
+                lang={lang}
                 onAdd={(newService) =>
                   setServices((prev) => [
                     ...prev,
@@ -293,6 +364,7 @@ export default function TableauDeBordBarberMobilePage() {
                   </div>
                   <div className="flex gap-2">
                     <EditServiceDialog
+                      lang={lang}
                       service={service}
                       onSave={(updated) =>
                         setServices((prev) =>
@@ -305,7 +377,7 @@ export default function TableauDeBordBarberMobilePage() {
                       }
                     />
                     <Button
-                      aria-label="Supprimer"
+                      aria-label={t.deleteAria}
                       variant="ghost"
                       size="icon"
                       className="text-on-surface-variant hover:text-destructive size-10"
@@ -323,7 +395,7 @@ export default function TableauDeBordBarberMobilePage() {
         {view === "profile" && (
           <section className="md:mx-auto md:max-w-xl">
             <h1 className="font-headline-lg-mobile text-headline-lg-mobile mb-stack-lg">
-              Mon Profil
+              {t.myProfile}
             </h1>
             <Card className="p-gutter gap-stack-lg mb-section-gap relative overflow-hidden rounded-2xl">
               <div className="bg-primary/10 pointer-events-none absolute top-0 right-0 -mt-16 -mr-16 h-32 w-32 rounded-full blur-3xl" />
@@ -340,19 +412,17 @@ export default function TableauDeBordBarberMobilePage() {
                     Khalil B.
                   </h2>
                   <p className="text-primary font-label-md tracking-widest uppercase">
-                    Maître Barbier
+                    {t.masterBarber}
                   </p>
                 </div>
               </div>
               <div className="space-y-stack-md relative z-10">
                 <p className="text-on-surface-variant font-body-md px-4 text-center">
-                  Spécialiste en coupes classiques et entretien de barbe
-                  premium. Plus de 10 ans d&apos;expérience au service de
-                  l&apos;élégance masculine à Tunis.
+                  {t.bio}
                 </p>
                 <div className="gap-gutter mt-stack-lg flex justify-center">
                   <Button
-                    aria-label="Appeler"
+                    aria-label={t.callAria}
                     variant="secondary"
                     size="icon"
                     className="bg-surface-variant text-primary size-11 rounded-full"
@@ -360,7 +430,7 @@ export default function TableauDeBordBarberMobilePage() {
                     <Phone className="size-5" />
                   </Button>
                   <Button
-                    aria-label="Partager"
+                    aria-label={t.shareAria}
                     variant="secondary"
                     size="icon"
                     className="bg-surface-variant text-primary size-11 rounded-full"
@@ -368,7 +438,7 @@ export default function TableauDeBordBarberMobilePage() {
                     <Share2 className="size-5" />
                   </Button>
                   <Button
-                    aria-label="Modifier le profil"
+                    aria-label={t.editProfileAria}
                     variant="secondary"
                     size="icon"
                     className="bg-surface-variant text-primary size-11 rounded-full"
@@ -382,18 +452,18 @@ export default function TableauDeBordBarberMobilePage() {
             <Card className="bg-surface-container p-gutter mb-gutter gap-stack-md rounded-xl">
               <h3 className="font-headline-md text-headline-md flex items-center gap-2">
                 <Clock className="text-primary size-5" />
-                Horaires d&apos;ouverture
+                {t.hours}
               </h3>
               <div className="space-y-2">
                 <div className="text-body-md flex justify-between">
                   <span className="text-on-surface-variant">
-                    Lundi - Samedi
+                    {t.weekdays}
                   </span>
                   <span className="font-bold">09:00 - 19:00</span>
                 </div>
                 <div className="text-body-md flex justify-between">
-                  <span className="text-on-surface-variant">Dimanche</span>
-                  <span className="text-destructive">Fermé</span>
+                  <span className="text-on-surface-variant">{t.sunday}</span>
+                  <span className="text-destructive">{t.closed}</span>
                 </div>
               </div>
             </Card>
@@ -403,7 +473,7 @@ export default function TableauDeBordBarberMobilePage() {
               className="text-destructive bg-destructive/10 mt-stack-lg h-auto w-full gap-2 rounded-xl py-4 font-bold"
             >
               <LogOut className="size-5" />
-              Déconnexion
+              {t.logout}
             </Button>
           </section>
         )}
@@ -422,7 +492,9 @@ export default function TableauDeBordBarberMobilePage() {
             }
           >
             <item.icon className="size-5" />
-            <span className="font-label-sm text-label-sm">{item.label}</span>
+            <span className="font-label-sm text-label-sm">
+              {t.nav[item.id]}
+            </span>
           </button>
         ))}
       </nav>

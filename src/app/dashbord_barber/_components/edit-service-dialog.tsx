@@ -22,13 +22,37 @@ export type EditableService = {
   price: string;
 };
 
+const strings = {
+  fr: {
+    editAria: "Modifier",
+    title: "Modifier le service",
+    name: "Nom",
+    duration: "Durée",
+    price: "Prix",
+    cancel: "Annuler",
+    save: "Enregistrer",
+  },
+  tn: {
+    editAria: "Badel",
+    title: "Badel Service",
+    name: "Esm",
+    duration: "Mouda",
+    price: "Se3r",
+    cancel: "Batel",
+    save: "7afedh",
+  },
+} as const;
+
 export function EditServiceDialog({
+  lang = "fr",
   service,
   onSave,
 }: {
+  lang?: "fr" | "tn";
   service: EditableService;
   onSave: (service: EditableService) => void;
 }) {
+  const s = strings[lang];
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(service.name);
   const [duration, setDuration] = useState(service.duration);
@@ -55,7 +79,7 @@ export function EditServiceDialog({
       <DialogTrigger
         render={
           <Button
-            aria-label="Modifier"
+            aria-label={s.editAria}
             variant="ghost"
             size="icon"
             className="text-on-surface-variant hover:text-primary size-10"
@@ -68,12 +92,14 @@ export function EditServiceDialog({
         <form onSubmit={handleSubmit} className="gap-stack-md flex flex-col">
           <DialogHeader>
             <DialogTitle className="font-headline-md text-headline-md">
-              Modifier le service
+              {s.title}
             </DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor={`edit-service-name-${service.name}`}>Nom</Label>
+            <Label htmlFor={`edit-service-name-${service.name}`}>
+              {s.name}
+            </Label>
             <Input
               id={`edit-service-name-${service.name}`}
               value={name}
@@ -83,7 +109,7 @@ export function EditServiceDialog({
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor={`edit-service-duration-${service.name}`}>
-              Durée
+              {s.duration}
             </Label>
             <Input
               id={`edit-service-duration-${service.name}`}
@@ -93,7 +119,9 @@ export function EditServiceDialog({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor={`edit-service-price-${service.name}`}>Prix</Label>
+            <Label htmlFor={`edit-service-price-${service.name}`}>
+              {s.price}
+            </Label>
             <Input
               id={`edit-service-price-${service.name}`}
               value={price}
@@ -104,10 +132,10 @@ export function EditServiceDialog({
 
           <DialogFooter>
             <DialogClose render={<Button type="button" variant="outline" />}>
-              Annuler
+              {s.cancel}
             </DialogClose>
             <Button type="submit" className="font-bold">
-              Enregistrer
+              {s.save}
             </Button>
           </DialogFooter>
         </form>

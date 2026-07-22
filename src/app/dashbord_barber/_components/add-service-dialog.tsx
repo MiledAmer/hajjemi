@@ -22,11 +22,33 @@ export type NewService = {
   price: string;
 };
 
+const strings = {
+  fr: {
+    add: "Ajouter",
+    title: "Nouveau service",
+    name: "Nom",
+    duration: "Durée",
+    price: "Prix",
+    cancel: "Annuler",
+  },
+  tn: {
+    add: "Zid",
+    title: "Service jdid",
+    name: "Esm",
+    duration: "Mouda",
+    price: "Se3r",
+    cancel: "Batel",
+  },
+} as const;
+
 export function AddServiceDialog({
+  lang = "fr",
   onAdd,
 }: {
+  lang?: "fr" | "tn";
   onAdd: (service: NewService) => void;
 }) {
+  const s = strings[lang];
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [duration, setDuration] = useState("");
@@ -58,7 +80,7 @@ export function AddServiceDialog({
         render={
           <Button className="bg-primary-container text-on-primary-container h-auto gap-1 rounded-lg px-4 py-2">
             <Plus className="size-4.5" />
-            <span className="font-label-md">Ajouter</span>
+            <span className="font-label-md">{s.add}</span>
           </Button>
         }
       />
@@ -66,12 +88,12 @@ export function AddServiceDialog({
         <form onSubmit={handleSubmit} className="gap-stack-md flex flex-col">
           <DialogHeader>
             <DialogTitle className="font-headline-md text-headline-md">
-              Nouveau service
+              {s.title}
             </DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="add-service-name">Nom</Label>
+            <Label htmlFor="add-service-name">{s.name}</Label>
             <Input
               id="add-service-name"
               value={name}
@@ -81,7 +103,7 @@ export function AddServiceDialog({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="add-service-duration">Durée</Label>
+            <Label htmlFor="add-service-duration">{s.duration}</Label>
             <Input
               id="add-service-duration"
               value={duration}
@@ -91,7 +113,7 @@ export function AddServiceDialog({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="add-service-price">Prix</Label>
+            <Label htmlFor="add-service-price">{s.price}</Label>
             <Input
               id="add-service-price"
               value={price}
@@ -103,10 +125,10 @@ export function AddServiceDialog({
 
           <DialogFooter>
             <DialogClose render={<Button type="button" variant="outline" />}>
-              Annuler
+              {s.cancel}
             </DialogClose>
             <Button type="submit" className="font-bold">
-              Ajouter
+              {s.add}
             </Button>
           </DialogFooter>
         </form>
