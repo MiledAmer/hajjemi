@@ -118,8 +118,6 @@ model User {
   /// Bookings made by this user as a client.
   appointmentsAsClient Appointment[] @relation("ClientAppointments")
 
-  /// Reviews this user has authored (always as a client).
-  reviews Review[]
 
   @@map("users")
 }
@@ -138,13 +136,6 @@ model BarberProfile {
   avatarUrl     String?
   coverImageUrl String?
 
-  /// Denormalized rating snapshot, recomputed whenever a Review is
-  /// created/updated. Search/listing pages sort and filter by rating
-  /// constantly; aggregating live over the reviews table on every request
-  /// would be needlessly expensive for data that changes rarely.
-  avgRating   Float @default(0)
-  reviewCount Int   @default(0)
-
   /// Mirrors the barber's current Subscription for a cheap read on
   /// profile/search pages, avoiding a join for the common case of "what
   /// plan is this barber on". Subscription remains the source of truth
@@ -154,15 +145,10 @@ model BarberProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  services      Service[]
   availability  BarberAvailability[]
   appointments  Appointment[]
   subscriptions Subscription[]
-  reviews       Review[]
 
-  // Search screen filters by city and sorts by rating — composite index
-  // covers "barbers in city X, best rated first" directly.
-  @@index([governorate, avgRating])
   @@map("barber_profiles")
 }
 
@@ -170,23 +156,7 @@ model BarberProfile {
 // Catalog
 // ---------------------------------------------------------------------------
 
-model Service {
-  id              String            @id @default(cuid())
-  barberId        String
-  barber          BarberProfile     @relation(fields: [barberId], references: [id], onDelete: Cascade)
-  name            String
-  description     String?
-  durationMinutes Int
-  /// Tunisian Dinar's minor unit is the millime (1 TND = 1000 millimes),
-  /// not a cent — stored as an integer to avoid float rounding on money.
-  priceMillimes   Int
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
 
-  appointmentServices AppointmentService[]
-
-  @@index([barberId])
-}
 
 /// A recurring weekly opening window. Deliberately simple (one row per
 /// day/range) rather than a full exception calendar — split/holiday hours
@@ -227,9 +197,6 @@ model Appointment {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  services AppointmentService[]
-  review   Review?
-
   // The barber's dashboard/calendar is the hottest read path: "this
   // barber's appointments around this time".
   @@index([barberId, startAt])
@@ -243,46 +210,12 @@ model Appointment {
 /// screen's multi-select booking flow). Line items snapshot name/price/
 /// duration so appointment history stays accurate even if the underlying
 /// Service is later edited or removed.
-model AppointmentService {
-  id                      String      @id @default(cuid())
-  appointmentId           String
-  appointment             Appointment @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
-  /// Nullable + SetNull: losing the catalog link on Service deletion is
-  /// fine because the snapshot fields below preserve what the client
-  /// actually booked.
-  serviceId               String?
-  service                 Service?    @relation(fields: [serviceId], references: [id], onDelete: SetNull)
-  nameSnapshot            String
-  priceMillimesSnapshot   Int
-  durationMinutesSnapshot Int
 
-  @@unique([appointmentId, serviceId])
-  @@index([serviceId])
-  @@map("appointment_services")
-}
 
 /// One review per appointment, written by the client after the fact.
 /// barberId is denormalized from appointment.barberId so "all reviews for
 /// this barber" doesn't require joining through Appointment.
-model Review {
-  id            String        @id @default(cuid())
-  appointmentId String        @unique
-  appointment   Appointment   @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
-  authorId      String
-  author        User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  barberId      String
-  barber        BarberProfile @relation(fields: [barberId], references: [id], onDelete: Cascade)
-  /// 1-5; Prisma has no CHECK constraint support, so this range is
-  /// enforced in the application layer (e.g. a Zod schema at the API
-  /// boundary).
-  rating        Int
-  comment       String?
 
-  createdAt DateTime @default(now())
-
-  @@index([barberId, rating])
-  @@map("reviews")
-}
 
 // ---------------------------------------------------------------------------
 // Billing
