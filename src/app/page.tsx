@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -12,23 +15,89 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 
-const steps = [
-  {
-    icon: Search,
-    title: "Trouvez",
-    text: "Explorez les meilleurs barbiers près de chez vous, filtrés par ville et service.",
+type Lang = "fr" | "tn";
+
+const content = {
+  fr: {
+    switchTo: "TN",
+    connexion: "Connexion",
+    badge: "Réservation instantanée",
+    headlineMobile: "L'Élite du Grooming.",
+    headlineDesktop1: "L'Élite du ",
+    headlineDesktop2: "Grooming.",
+    subtitle:
+      "Réservez votre coupe en un clic. Précision, style et excellence à portée de main.",
+    subtitleAccent: "احجز موعدك الآن",
+    ctaClientTitle: "Trouver un coiffeur",
+    ctaClientSub: "Pour les clients",
+    ctaProTitle: "Espace Barber",
+    ctaProSub: "Pour les professionnels",
+    trustCount: "+2000 clients",
+    trustSub: "réservent déjà via Hajjem",
+    guest: "Explorer en invité",
+    ratingSub: "+2000 avis clients",
+    howTitle: "Réserver n'a jamais été aussi simple",
+    howSub:
+      "Trois étapes pour votre prochaine coupe, où que vous soyez en Tunisie.",
+    steps: [
+      {
+        icon: Search,
+        title: "Trouvez",
+        text: "Explorez les meilleurs barbiers près de chez vous, filtrés par ville et service.",
+      },
+      {
+        icon: Calendar,
+        title: "Réservez",
+        text: "Choisissez un créneau disponible et confirmez votre rendez-vous en un clic.",
+      },
+      {
+        icon: Scissors,
+        title: "Profitez",
+        text: "Présentez-vous à l'heure et profitez d'un service haut de gamme, sans attente.",
+      },
+    ],
+    copyright: "© 2026 Hajjem. L'élite du grooming en Tunisie.",
   },
-  {
-    icon: Calendar,
-    title: "Réservez",
-    text: "Choisissez un créneau disponible et confirmez votre rendez-vous en un clic.",
+  tn: {
+    switchTo: "FR",
+    connexion: "Dkhol",
+    badge: "Rzervation",
+    headlineMobile: "L'Elite mta3 Grooming.",
+    headlineDesktop1: "L'Elite mta3 ",
+    headlineDesktop2: "Grooming.",
+    subtitle:
+      "Rzervi hjemtek b click wa7ed. Thi9a, style w excellence been yeddek.",
+    subtitleAccent: "A7jez maw3dek tawa",
+    ctaClientTitle: "Lawaj coiffeur",
+    ctaClientSub: "Lel clients",
+    ctaProTitle: "Espace Barber",
+    ctaProSub: "Lel professionnels",
+    trustCount: "+2000 client",
+    trustSub: "rzerviw  Hajjem",
+    guest: "Chouf men 8ir ma tsajjel",
+    ratingSub: "+2000 avis mta3 clients",
+    howTitle: "Rzervi hjjemtek 3ad sahla",
+    howSub: "Thlatha khatawet lel hjjama lijeya mte3ek, win ma tkoun fi Tounes.",
+    steps: [
+      {
+        icon: Search,
+        title: "Lawej",
+        text: "Chouf ahsen hajjem 9rib menek, filtration b belled w service.",
+      },
+      {
+        icon: Calendar,
+        title: "Rzervi",
+        text: "Ekhtar wa9t disponible w confirmi maw3dek b click wa7ed.",
+      },
+      {
+        icon: Scissors,
+        title: "Tmatta3",
+        text: "Ejri fel wa9t w tmatta3 b service top, bla ma testenna.",
+      },
+    ],
+    copyright: "© 2026 Hajjem. L'elite mta3 grooming fi Tounes.",
   },
-  {
-    icon: Scissors,
-    title: "Profitez",
-    text: "Présentez-vous à l'heure et profitez d'un service haut de gamme, sans attente.",
-  },
-];
+} as const satisfies Record<Lang, unknown>;
 
 const trustAvatars = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuDTWDCkUKtW-7MxWuiE-b6tyOHlSB9EQ9XqoSQ7XMY1jbHUhbOUhYVu5X_SiWUVTEicg9T67UTvToJki7KKVEMWP8ZvAPBx3Grq_3xL2L8lZ4H1HkAszeI9pL6esdohlFQ5yqZXrtOMA8dBISwKrVhtlfoHN3z8q-honH_D79yPL8zulU1BZ8XevZ15NSS0lqkybu-7T49Hz7IUp1pknvb8N_LmgICAZRa-Z6vwCLL3kbHmHjaJSmYh16zoudZtulaCeFW6ZsboddpD",
@@ -37,6 +106,19 @@ const trustAvatars = [
 ];
 
 export default function HomePage() {
+  const [lang, setLang] = useState<Lang>("fr");
+  const t = content[lang];
+
+  const langSwitch = (
+    <button
+      type="button"
+      onClick={() => setLang(lang === "fr" ? "tn" : "fr")}
+      className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary border-outline-variant rounded-full border px-3 py-1 transition-colors"
+    >
+      {t.switchTo}
+    </button>
+  );
+
   return (
     <div className="bg-background min-h-screen">
       {/* Desktop Nav */}
@@ -50,8 +132,9 @@ export default function HomePage() {
               className="font-label-md text-label-md text-on-surface hover:text-primary font-semibold transition-colors"
               href="/connexion"
             >
-              Connexion
+              {t.connexion}
             </Link>
+            {langSwitch}
           </div>
         </div>
       </header>
@@ -81,17 +164,19 @@ export default function HomePage() {
                 4.9/5
               </p>
               <p className="font-label-sm text-label-sm text-on-surface-variant">
-                +2000 avis clients
+                {t.ratingSub}
               </p>
             </div>
           </Card>
         </div>
 
         {/* Top Navigation / Brand (Mobile Only Overlay) */}
-        <header className="px-container-margin relative z-10 flex w-full items-center justify-center pt-8 pb-4 md:hidden">
+        <header className="px-container-margin relative z-10 flex w-full items-center justify-between pt-8 pb-4 md:hidden">
+          <span className="w-14" />
           <h1 className="font-display-lg text-display-lg text-primary tracking-tighter uppercase">
             HAJJEM
           </h1>
+          {langSwitch}
         </header>
 
         {/* Content Container */}
@@ -103,23 +188,22 @@ export default function HomePage() {
           >
             <span className="bg-primary h-2 w-2 animate-pulse rounded-full" />
             <span className="font-label-sm text-label-sm text-primary tracking-wider uppercase">
-              Réservation instantanée
+              {t.badge}
             </span>
           </Badge>
 
           <div className="mb-section-gap text-center md:text-left">
             <h2 className="font-headline-lg-mobile text-headline-lg-mobile mb-stack-sm text-on-surface md:mb-stack-md md:max-w-lg md:text-[56px] md:leading-[1.1] md:font-extrabold md:tracking-tight">
-              <span className="md:hidden">L&apos;Élite du Grooming.</span>
-              <span className="hidden md:inline">L&apos;Élite du </span>
+              <span className="md:hidden">{t.headlineMobile}</span>
+              <span className="hidden md:inline">{t.headlineDesktop1}</span>
               <span className="from-primary to-primary-fixed-dim hidden bg-linear-to-r bg-clip-text text-transparent md:inline">
-                Grooming.
+                {t.headlineDesktop2}
               </span>
             </h2>
             <p className="font-body-md text-body-md text-on-surface-variant mx-auto max-w-xs md:mx-0 md:max-w-md md:text-lg">
-              Réservez votre coupe en un clic. Précision, style et excellence à
-              portée de main.{" "}
+              {t.subtitle}{" "}
               <span className="font-label-md text-label-md text-primary-container mt-1 block">
-                احجز موعدك الآن
+                {t.subtitleAccent}
               </span>
             </p>
           </div>
@@ -135,10 +219,10 @@ export default function HomePage() {
                 <Scissors className="text-on-primary-container size-5" />
                 <div className="flex flex-col text-left">
                   <span className="font-label-md text-label-md font-bold tracking-wider uppercase">
-                    Trouver un coiffeur
+                    {t.ctaClientTitle}
                   </span>
                   <span className="font-label-sm text-label-sm opacity-80">
-                    Pour les clients
+                    {t.ctaClientSub}
                   </span>
                 </div>
               </div>
@@ -155,10 +239,10 @@ export default function HomePage() {
                 <Store className="text-primary size-5" />
                 <div className="flex flex-col text-left">
                   <span className="font-label-md text-label-md text-primary font-bold tracking-wider uppercase">
-                    Espace Barber
+                    {t.ctaProTitle}
                   </span>
                   <span className="font-label-sm text-label-sm text-on-surface-variant">
-                    Pour les professionnels
+                    {t.ctaProSub}
                   </span>
                 </div>
               </div>
@@ -180,10 +264,10 @@ export default function HomePage() {
             </div>
             <div className="flex flex-col">
               <span className="font-label-sm text-label-sm text-on-surface font-bold">
-                +2000 clients
+                {t.trustCount}
               </span>
               <span className="font-label-sm text-label-sm text-on-surface-variant font-normal">
-                réservent déjà via Hajjem
+                {t.trustSub}
               </span>
             </div>
           </div>
@@ -194,14 +278,14 @@ export default function HomePage() {
               className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors"
               href="/connexion"
             >
-              Connexion
+              {t.connexion}
             </Link>
             <span className="text-surface-variant">•</span>
             <a
               className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors"
               href="#"
             >
-              Explorer en invité
+              {t.guest}
             </a>
           </div>
         </div>
@@ -212,15 +296,14 @@ export default function HomePage() {
         <div className="px-container-margin mx-auto max-w-7xl">
           <div className="mx-auto mb-14 max-w-xl text-center">
             <h2 className="font-headline-lg text-headline-lg text-on-surface mb-3 font-bold">
-              Réserver n&apos;a jamais été aussi simple
+              {t.howTitle}
             </h2>
             <p className="font-body-md text-body-md text-on-surface-variant">
-              Trois étapes pour votre prochaine coupe, où que vous soyez en
-              Tunisie.
+              {t.howSub}
             </p>
           </div>
           <div className="gap-gutter grid grid-cols-3">
-            {steps.map((step) => (
+            {t.steps.map((step) => (
               <Card
                 key={step.title}
                 className="border-surface-container-high bg-surface relative gap-4 rounded-2xl border p-8 transition-all hover:-translate-y-1 hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]"
@@ -247,7 +330,7 @@ export default function HomePage() {
             HAJJEM
           </span>
           <p className="font-label-sm text-label-sm text-on-surface-variant">
-            © 2024 Hajjem. L&apos;élite du grooming en Tunisie.
+            {t.copyright}
           </p>
         </div>
       </footer>
