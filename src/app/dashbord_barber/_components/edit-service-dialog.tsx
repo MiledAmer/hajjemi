@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { type Lang, editServiceDialog as strings } from "@/lib/tounsi";
 
 export type EditableService = {
   name: string;
@@ -22,33 +23,12 @@ export type EditableService = {
   price: string;
 };
 
-const strings = {
-  fr: {
-    editAria: "Modifier",
-    title: "Modifier le service",
-    name: "Nom",
-    duration: "Durée",
-    price: "Prix",
-    cancel: "Annuler",
-    save: "Enregistrer",
-  },
-  tn: {
-    editAria: "Badel",
-    title: "Badel Service",
-    name: "Esm",
-    duration: "Mouda",
-    price: "Se3r",
-    cancel: "Batel",
-    save: "7afedh",
-  },
-} as const;
-
 export function EditServiceDialog({
   lang = "fr",
   service,
   onSave,
 }: {
-  lang?: "fr" | "tn";
+  lang?: Lang;
   service: EditableService;
   onSave: (service: EditableService) => void;
 }) {

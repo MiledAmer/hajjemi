@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { type Lang, addServiceDialog as strings } from "@/lib/tounsi";
 
 export type NewService = {
   name: string;
@@ -22,30 +23,11 @@ export type NewService = {
   price: string;
 };
 
-const strings = {
-  fr: {
-    add: "Ajouter",
-    title: "Nouveau service",
-    name: "Nom",
-    duration: "Durée",
-    price: "Prix",
-    cancel: "Annuler",
-  },
-  tn: {
-    add: "Zid",
-    title: "Service jdid",
-    name: "Esm",
-    duration: "Mouda",
-    price: "Se3r",
-    cancel: "Batel",
-  },
-} as const;
-
 export function AddServiceDialog({
   lang = "fr",
   onAdd,
 }: {
-  lang?: "fr" | "tn";
+  lang?: Lang;
   onAdd: (service: NewService) => void;
 }) {
   const s = strings[lang];

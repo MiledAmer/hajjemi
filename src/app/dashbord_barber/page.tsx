@@ -21,6 +21,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { dashboard as dashboardContent, useLang } from "@/lib/tounsi";
 import { AddServiceDialog } from "./_components/add-service-dialog";
 import { EditServiceDialog } from "./_components/edit-service-dialog";
 
@@ -31,66 +32,6 @@ const BARBER_PROFILE_PORTRAIT =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCJ1PSYFJcFErbgTa0UBXq-bgLu_ZCGgqoc9PWO0dlc367UVNuHC4oFdM5MGt2VIhxXkE2c2rKE2flwFbtaGvQ00mBC9r0OZlYDTSzUnqWyVwehQmYqXQU9jPB6U6s6vmb8owjEzXRbqAv24l_gGulYJ2fxGIsTwtCD7rBPV3U6G4t6u-6nCVTS6jPCGLKE3-90yC7uWOQ24AtjsgkIrPwJ3NbHz3qvycKSWKrszDxSQnaurTy3lQDUUT3VH2iW7BZ4aKNcjP_RaO1v";
 
 type ViewId = "dashboard" | "bookings" | "services" | "profile";
-type Lang = "fr" | "tn";
-
-const dashboardContent = {
-  fr: {
-    switchTo: "TN",
-    nav: { dashboard: "Dashboard", bookings: "RDV", services: "Services", profile: "Profil" },
-    greeting: "Bonjour, Khalil",
-    todayCount: "RDV Aujourd'hui",
-    upcomingTitle: "Prochains Rendez-vous",
-    seeAll: "Voir tout",
-    confirmed: "Confirmé",
-    bookingsTitle: "Rendez-vous",
-    pending: "En attente",
-    accept: "Accepter",
-    decline: "Décliner",
-    done: "Terminé",
-    myServices: "Mes Services",
-    myProfile: "Mon Profil",
-    masterBarber: "Maître Barbier",
-    bio: "Spécialiste en coupes classiques et entretien de barbe premium. Plus de 10 ans d'expérience au service de l'élégance masculine à Tunis.",
-    callAria: "Appeler",
-    shareAria: "Partager",
-    editProfileAria: "Modifier le profil",
-    editServiceAria: "Modifier",
-    deleteAria: "Supprimer",
-    hours: "Horaires d'ouverture",
-    weekdays: "Lundi - Samedi",
-    sunday: "Dimanche",
-    closed: "Fermé",
-    logout: "Déconnexion",
-  },
-  tn: {
-    switchTo: "FR",
-    nav: { dashboard: "Dashboard", bookings: "RDV", services: "Services", profile: "Profil" },
-    greeting: "Ahla, Khalil",
-    todayCount: "RDV Lyoum",
-    upcomingTitle: "Rendez-vous Jeyin",
-    seeAll: "Chouf kol",
-    confirmed: "Mou2akad",
-    bookingsTitle: "Rendez-vous",
-    pending: "Fil intidhar",
-    accept: "E9bel",
-    decline: "Orfodh",
-    done: "Kamel",
-    myServices: "Les Services mte3i",
-    myProfile: "Profil mte3i",
-    masterBarber: "El M3alem ",
-    bio: "Mokhtass fi 9assat classique w e3tina bel le7ya. Aktar men 10 snin khebra fi khedmet l2anaka rjeli fi Tounes.",
-    callAria: "3ayet",
-    shareAria: "9assem",
-    editProfileAria: "Badel Profil",
-    editServiceAria: "Badel",
-    deleteAria: "Na7i",
-    hours: "Wa9t El Khedma",
-    weekdays: "Ethnin - Sebt",
-    sunday: "El Ahad",
-    closed: "Ma8lou9",
-    logout: "Khrouj",
-  },
-} as const satisfies Record<Lang, unknown>;
 
 const navItems: { id: ViewId; icon: typeof LayoutDashboard }[] = [
   { id: "dashboard", icon: LayoutDashboard },
@@ -134,7 +75,7 @@ const initialServices: Service[] = [
 export default function TableauDeBordBarberMobilePage() {
   const [view, setView] = useState<ViewId>("dashboard");
   const [services, setServices] = useState<Service[]>(initialServices);
-  const [lang, setLang] = useState<Lang>("tn");
+  const { lang, toggleLang } = useLang();
   const t = dashboardContent[lang];
 
   return (
@@ -169,7 +110,7 @@ export default function TableauDeBordBarberMobilePage() {
           <div className="gap-stack-md flex items-center">
             <button
               type="button"
-              onClick={() => setLang(lang === "fr" ? "tn" : "fr")}
+              onClick={toggleLang}
               className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary border-outline-variant rounded-full border px-3 py-1 transition-colors"
             >
               {t.switchTo}

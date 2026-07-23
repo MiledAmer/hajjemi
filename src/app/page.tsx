@@ -1,103 +1,12 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Calendar,
-  Scissors,
-  Search,
-  Star,
-  Store,
-} from "lucide-react";
+import { ArrowRight, Scissors, Star, Store } from "lucide-react";
 
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-
-type Lang = "fr" | "tn";
-
-const content = {
-  fr: {
-    switchTo: "TN",
-    connexion: "Connexion",
-    badge: "Réservation instantanée",
-    headlineMobile: "L'Élite du Grooming.",
-    headlineDesktop1: "L'Élite du ",
-    headlineDesktop2: "Grooming.",
-    subtitle:
-      "Réservez votre coupe en un clic. Précision, style et excellence à portée de main.",
-    subtitleAccent: "احجز موعدك الآن",
-    ctaClientTitle: "Trouver un coiffeur",
-    ctaClientSub: "Pour les clients",
-    ctaProTitle: "Espace Barber",
-    ctaProSub: "Pour les professionnels",
-    trustCount: "+2000 clients",
-    trustSub: "réservent déjà via Hajjem",
-    guest: "Explorer en invité",
-    ratingSub: "+2000 avis clients",
-    howTitle: "Réserver n'a jamais été aussi simple",
-    howSub:
-      "Trois étapes pour votre prochaine coupe, où que vous soyez en Tunisie.",
-    steps: [
-      {
-        icon: Search,
-        title: "Trouvez",
-        text: "Explorez les meilleurs barbiers près de chez vous, filtrés par ville et service.",
-      },
-      {
-        icon: Calendar,
-        title: "Réservez",
-        text: "Choisissez un créneau disponible et confirmez votre rendez-vous en un clic.",
-      },
-      {
-        icon: Scissors,
-        title: "Profitez",
-        text: "Présentez-vous à l'heure et profitez d'un service haut de gamme, sans attente.",
-      },
-    ],
-    copyright: "© 2026 Hajjem. L'élite du grooming en Tunisie.",
-  },
-  tn: {
-    switchTo: "FR",
-    connexion: "Dkhol",
-    badge: "Rzervation",
-    headlineMobile: "L'Elite mta3 Grooming.",
-    headlineDesktop1: "L'Elite mta3 ",
-    headlineDesktop2: "Grooming.",
-    subtitle:
-      "Rzervi hjemtek b click wa7ed. Thi9a, style w excellence been yeddek.",
-    subtitleAccent: "A7jez maw3dek tawa",
-    ctaClientTitle: "Lawaj coiffeur",
-    ctaClientSub: "Lel clients",
-    ctaProTitle: "Espace Barber",
-    ctaProSub: "Lel professionnels",
-    trustCount: "+2000 client",
-    trustSub: "rzerviw  Hajjem",
-    guest: "Chouf men 8ir ma tsajjel",
-    ratingSub: "+2000 avis mta3 clients",
-    howTitle: "Rzervi hjjemtek 3ad sahla",
-    howSub: "Thlatha khatawet lel hjjama lijeya mte3ek, win ma tkoun fi Tounes.",
-    steps: [
-      {
-        icon: Search,
-        title: "Lawej",
-        text: "Chouf ahsen hajjem 9rib menek, filtration b belled w service.",
-      },
-      {
-        icon: Calendar,
-        title: "Rzervi",
-        text: "Ekhtar wa9t disponible w confirmi maw3dek b click wa7ed.",
-      },
-      {
-        icon: Scissors,
-        title: "Tmatta3",
-        text: "Ejri fel wa9t w tmatta3 b service top, bla ma testenna.",
-      },
-    ],
-    copyright: "© 2026 Hajjem. L'elite mta3 grooming fi Tounes.",
-  },
-} as const satisfies Record<Lang, unknown>;
+import { home as content, useLang } from "@/lib/tounsi";
 
 const trustAvatars = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuDTWDCkUKtW-7MxWuiE-b6tyOHlSB9EQ9XqoSQ7XMY1jbHUhbOUhYVu5X_SiWUVTEicg9T67UTvToJki7KKVEMWP8ZvAPBx3Grq_3xL2L8lZ4H1HkAszeI9pL6esdohlFQ5yqZXrtOMA8dBISwKrVhtlfoHN3z8q-honH_D79yPL8zulU1BZ8XevZ15NSS0lqkybu-7T49Hz7IUp1pknvb8N_LmgICAZRa-Z6vwCLL3kbHmHjaJSmYh16zoudZtulaCeFW6ZsboddpD",
@@ -106,13 +15,13 @@ const trustAvatars = [
 ];
 
 export default function HomePage() {
-  const [lang, setLang] = useState<Lang>("tn");
+  const { lang, toggleLang } = useLang();
   const t = content[lang];
 
   const langSwitch = (
     <button
       type="button"
-      onClick={() => setLang(lang === "fr" ? "tn" : "fr")}
+      onClick={toggleLang}
       className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary border-outline-variant rounded-full border px-3 py-1 transition-colors"
     >
       {t.switchTo}
