@@ -106,7 +106,7 @@ const trustAvatars = [
 ];
 
 export default function HomePage() {
-  const [lang, setLang] = useState<Lang>("fr");
+  const [lang, setLang] = useState<Lang>("tn");
   const t = content[lang];
 
   const langSwitch = (

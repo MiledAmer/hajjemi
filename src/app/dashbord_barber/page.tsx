@@ -70,24 +70,24 @@ const dashboardContent = {
     upcomingTitle: "Rendez-vous Jeyin",
     seeAll: "Chouf kol",
     confirmed: "Mou2akad",
-    bookingsTitle: "Mawa3id",
-    pending: "Fi intidhar",
-    accept: "9bal",
-    decline: "Rfed",
+    bookingsTitle: "Rendez-vous",
+    pending: "Fil intidhar",
+    accept: "E9bel",
+    decline: "Orfodh",
     done: "Kamel",
     myServices: "Les Services mte3i",
     myProfile: "Profil mte3i",
-    masterBarber: "Kbir El Hjjama",
-    bio: "Mkhtass fi 9assat classique w e3tina bel le7ya premium. Aktar men 10 snin khebra fi khedmet l2anaka rjeli fi Tounes.",
+    masterBarber: "El M3alem ",
+    bio: "Mokhtass fi 9assat classique w e3tina bel le7ya. Aktar men 10 snin khebra fi khedmet l2anaka rjeli fi Tounes.",
     callAria: "3ayet",
     shareAria: "9assem",
     editProfileAria: "Badel Profil",
     editServiceAria: "Badel",
-    deleteAria: "Ma7i",
+    deleteAria: "Na7i",
     hours: "Wa9t El Khedma",
     weekdays: "Ethnin - Sebt",
-    sunday: "El Had",
-    closed: "Ma3lou9",
+    sunday: "El Ahad",
+    closed: "Ma8lou9",
     logout: "Khrouj",
   },
 } as const satisfies Record<Lang, unknown>;
@@ -134,7 +134,7 @@ const initialServices: Service[] = [
 export default function TableauDeBordBarberMobilePage() {
   const [view, setView] = useState<ViewId>("dashboard");
   const [services, setServices] = useState<Service[]>(initialServices);
-  const [lang, setLang] = useState<Lang>("fr");
+  const [lang, setLang] = useState<Lang>("tn");
   const t = dashboardContent[lang];
 
   return (
