@@ -12,7 +12,6 @@ import {
   Scissors,
   Share2,
   Smile,
-  SquarePen,
   Trash2,
   User,
 } from "lucide-react";
@@ -23,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { dashboard as dashboardContent, useLang } from "@/lib/tounsi";
 import { AddServiceDialog } from "./_components/add-service-dialog";
+import { EditProfileDialog } from "./_components/edit-profile-dialog";
 import { EditServiceDialog } from "./_components/edit-service-dialog";
 
 const BARBER_AVATAR =
@@ -72,11 +72,24 @@ const initialServices: Service[] = [
   { name: "Teinture Barbe", duration: "45 min", price: "40 DT", icon: Eraser },
 ];
 
+type Profile = {
+  name: string;
+  bio: string;
+  weekdaysHours: string;
+  sundayHours: string;
+};
+
 export default function TableauDeBordBarberMobilePage() {
   const [view, setView] = useState<ViewId>("dashboard");
   const [services, setServices] = useState<Service[]>(initialServices);
   const { lang, toggleLang } = useLang();
   const t = dashboardContent[lang];
+  const [profile, setProfile] = useState<Profile>({
+    name: "Khalil B.",
+    bio: t.bio,
+    weekdaysHours: "09:00 - 19:00",
+    sundayHours: t.closed,
+  });
 
   return (
     <div className="bg-background text-on-background min-h-screen overflow-x-hidden">
@@ -350,7 +363,7 @@ export default function TableauDeBordBarberMobilePage() {
                 </Avatar>
                 <div className="text-center">
                   <h2 className="font-headline-lg text-headline-lg">
-                    Khalil B.
+                    {profile.name}
                   </h2>
                   <p className="text-primary font-label-md tracking-widest uppercase">
                     {t.masterBarber}
@@ -359,7 +372,7 @@ export default function TableauDeBordBarberMobilePage() {
               </div>
               <div className="space-y-stack-md relative z-10">
                 <p className="text-on-surface-variant font-body-md px-4 text-center">
-                  {t.bio}
+                  {profile.bio}
                 </p>
                 <div className="gap-gutter mt-stack-lg flex justify-center">
                   <Button
@@ -378,14 +391,11 @@ export default function TableauDeBordBarberMobilePage() {
                   >
                     <Share2 className="size-5" />
                   </Button>
-                  <Button
-                    aria-label={t.editProfileAria}
-                    variant="secondary"
-                    size="icon"
-                    className="bg-surface-variant text-primary size-11 rounded-full"
-                  >
-                    <SquarePen className="size-5" />
-                  </Button>
+                  <EditProfileDialog
+                    lang={lang}
+                    profile={profile}
+                    onSave={setProfile}
+                  />
                 </div>
               </div>
             </Card>
@@ -400,11 +410,13 @@ export default function TableauDeBordBarberMobilePage() {
                   <span className="text-on-surface-variant">
                     {t.weekdays}
                   </span>
-                  <span className="font-bold">09:00 - 19:00</span>
+                  <span className="font-bold">{profile.weekdaysHours}</span>
                 </div>
                 <div className="text-body-md flex justify-between">
                   <span className="text-on-surface-variant">{t.sunday}</span>
-                  <span className="text-destructive">{t.closed}</span>
+                  <span className="text-destructive">
+                    {profile.sundayHours}
+                  </span>
                 </div>
               </div>
             </Card>

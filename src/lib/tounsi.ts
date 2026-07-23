@@ -181,6 +181,29 @@ export const addServiceDialog = {
   },
 } as const satisfies Record<Lang, unknown>;
 
+export const editProfileDialog = {
+  fr: {
+    editAria: "Modifier le profil",
+    title: "Modifier le profil",
+    name: "Nom",
+    bio: "Description",
+    weekdays: "Lundi - Samedi",
+    sunday: "Dimanche",
+    cancel: "Annuler",
+    save: "Enregistrer",
+  },
+  tn: {
+    editAria: "Badel Profil",
+    title: "Badel Profil",
+    name: "Esm",
+    bio: "Description",
+    weekdays: "Ethnin - Sebt",
+    sunday: "El Ahad",
+    cancel: "Batel",
+    save: "7afedh",
+  },
+} as const satisfies Record<Lang, unknown>;
+
 export const editServiceDialog = {
   fr: {
     editAria: "Modifier",
