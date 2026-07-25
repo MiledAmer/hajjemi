@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bell,
@@ -109,23 +109,42 @@ export function DashboardClient({
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
 
+  const [optimisticAppointments, applyStatus] = useOptimistic(
+    appointments,
+    (state, { id, status }: { id: string; status: Appointment["status"] }) =>
+      state.map((a) => (a.id === id ? { ...a, status } : a)),
+  );
+  const [optimisticProfile, applyProfilePatch] = useOptimistic(
+    profile,
+    (state, patch: Partial<Pick<BarberProfile, "businessName" | "bio">>) => ({
+      ...state,
+      ...patch,
+    }),
+  );
+
   const mondayRow = availability.find((a) => a.dayOfWeek === "MONDAY");
   const sundayRow = availability.find((a) => a.dayOfWeek === "SUNDAY");
-  const weekdaysHours = mondayRow
-    ? `${formatMinutes(mondayRow.startMinute)} - ${formatMinutes(mondayRow.endMinute)}`
-    : "09:00 - 19:00";
-  const sundayHours = sundayRow
-    ? `${formatMinutes(sundayRow.startMinute)} - ${formatMinutes(sundayRow.endMinute)}`
-    : t.closed;
+  const [optimisticHours, applyHoursPatch] = useOptimistic(
+    {
+      weekdaysHours: mondayRow
+        ? `${formatMinutes(mondayRow.startMinute)} - ${formatMinutes(mondayRow.endMinute)}`
+        : "09:00 - 19:00",
+      sundayHours: sundayRow
+        ? `${formatMinutes(sundayRow.startMinute)} - ${formatMinutes(sundayRow.endMinute)}`
+        : t.closed,
+    },
+    (state, patch: { weekdaysHours: string; sundayHours: string }) => patch,
+  );
 
   const todayCount = useMemo(() => {
     const today = new Date();
-    return appointments.filter((a) => isSameDay(new Date(a.startAt), today))
-      .length;
-  }, [appointments]);
+    return optimisticAppointments.filter((a) =>
+      isSameDay(new Date(a.startAt), today),
+    ).length;
+  }, [optimisticAppointments]);
   const upcomingAppointments = useMemo(() => {
     const now = new Date();
-    return appointments
+    return optimisticAppointments
       .filter(
         (a) =>
           new Date(a.startAt) >= now &&
@@ -133,38 +152,46 @@ export function DashboardClient({
           a.status !== "NO_SHOW",
       )
       .slice(0, 3);
-  }, [appointments]);
+  }, [optimisticAppointments]);
 
   function setStatus(id: string, status: "CONFIRMED" | "CANCELLED") {
     setPendingId(id);
     startTransition(async () => {
+      applyStatus({ id, status });
       await updateAppointment(id, { status });
       router.refresh();
       setPendingId(null);
     });
   }
 
-  async function saveProfile(updated: {
+  function saveProfile(updated: {
     name: string;
     bio: string;
     weekdaysHours: string;
     sundayHours: string;
   }) {
-    await updateBarberProfile(profile.id, {
-      businessName: updated.name,
-      bio: updated.bio,
-    });
-    // ponytail: a "Fermé"/free-text Sunday value is treated as closed rather
-    // than validated — only an exact "HH:MM - HH:MM" range is persisted.
-    if (WEEKDAYS_RANGE_RE.test(updated.weekdaysHours)) {
-      await setWeeklyHours(profile.id, {
-        weekdaysRange: updated.weekdaysHours,
-        sundayRange: WEEKDAYS_RANGE_RE.test(updated.sundayHours)
-          ? updated.sundayHours
-          : null,
+    startTransition(async () => {
+      applyProfilePatch({ businessName: updated.name, bio: updated.bio });
+      applyHoursPatch({
+        weekdaysHours: updated.weekdaysHours,
+        sundayHours: updated.sundayHours,
       });
-    }
-    router.refresh();
+      await updateBarberProfile(profile.id, {
+        businessName: updated.name,
+        bio: updated.bio,
+      });
+      // ponytail: a "Fermé"/free-text Sunday value is treated as closed
+      // rather than validated — only an exact "HH:MM - HH:MM" range persists.
+      if (WEEKDAYS_RANGE_RE.test(updated.weekdaysHours)) {
+        await setWeeklyHours(profile.id, {
+          weekdaysRange: updated.weekdaysHours,
+          sundayRange: WEEKDAYS_RANGE_RE.test(updated.sundayHours)
+            ? updated.sundayHours
+            : null,
+        });
+      }
+      router.refresh();
+    });
   }
 
   return (
@@ -178,10 +205,10 @@ export function DashboardClient({
                 alt="Portrait du barbier"
                 src={profile.avatarUrl ?? BARBER_AVATAR}
               />
-              <AvatarFallback>{profile.businessName[0]}</AvatarFallback>
+              <AvatarFallback>{optimisticProfile.businessName[0]}</AvatarFallback>
             </Avatar>
             <span className="font-headline-md text-headline-md text-primary font-bold">
-              {profile.businessName}
+              {optimisticProfile.businessName}
             </span>
           </div>
           <nav className="gap-stack-lg hidden items-center md:flex">
@@ -286,7 +313,7 @@ export function DashboardClient({
               {t.bookingsTitle}
             </h1>
             <div className="gap-stack-lg space-y-stack-lg md:grid md:grid-cols-2 md:space-y-0 lg:grid-cols-3">
-              {appointments.map((booking) => (
+              {optimisticAppointments.map((booking) => (
                 <Card
                   key={booking.id}
                   className={
@@ -446,11 +473,11 @@ export function DashboardClient({
                     alt={`Portrait de ${profile.user.name}`}
                     src={profile.avatarUrl ?? BARBER_PROFILE_PORTRAIT}
                   />
-                  <AvatarFallback>{profile.businessName[0]}</AvatarFallback>
+                  <AvatarFallback>{optimisticProfile.businessName[0]}</AvatarFallback>
                 </Avatar>
                 <div className="text-center">
                   <h2 className="font-headline-lg text-headline-lg">
-                    {profile.businessName}
+                    {optimisticProfile.businessName}
                   </h2>
                   <p className="text-primary font-label-md tracking-widest uppercase">
                     {t.masterBarber}
@@ -459,7 +486,7 @@ export function DashboardClient({
               </div>
               <div className="space-y-stack-md relative z-10">
                 <p className="text-on-surface-variant font-body-md px-4 text-center">
-                  {profile.bio ?? t.bio}
+                  {optimisticProfile.bio ?? t.bio}
                 </p>
                 <div className="gap-gutter mt-stack-lg flex justify-center">
                   <Button
@@ -481,10 +508,10 @@ export function DashboardClient({
                   <EditProfileDialog
                     lang={lang}
                     profile={{
-                      name: profile.businessName,
-                      bio: profile.bio ?? t.bio,
-                      weekdaysHours,
-                      sundayHours,
+                      name: optimisticProfile.businessName,
+                      bio: optimisticProfile.bio ?? t.bio,
+                      weekdaysHours: optimisticHours.weekdaysHours,
+                      sundayHours: optimisticHours.sundayHours,
                     }}
                     onSave={saveProfile}
                   />
@@ -502,11 +529,15 @@ export function DashboardClient({
                   <span className="text-on-surface-variant">
                     {t.weekdays}
                   </span>
-                  <span className="font-bold">{weekdaysHours}</span>
+                  <span className="font-bold">
+                    {optimisticHours.weekdaysHours}
+                  </span>
                 </div>
                 <div className="text-body-md flex justify-between">
                   <span className="text-on-surface-variant">{t.sunday}</span>
-                  <span className="text-destructive">{sundayHours}</span>
+                  <span className="text-destructive">
+                    {optimisticHours.sundayHours}
+                  </span>
                 </div>
               </div>
             </Card>
