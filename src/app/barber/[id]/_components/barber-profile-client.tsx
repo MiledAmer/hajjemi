@@ -2,14 +2,17 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { ArrowLeft, ArrowRight, Check, Clock, MapPin, Plus } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { CURRENT_CLIENT_USER_ID } from "@/lib/current-client";
 import { GOVERNORATE_LABELS } from "@/lib/governorate";
+import { createAppointment } from "@/server/appointments";
 import type {
   BarberAvailability,
   BarberProfile,
@@ -24,12 +27,12 @@ const navLinks = [
 
 // ponytail: no Service model in the schema yet — the bookable service list
 // stays client-only mock data until Catalog is modeled and gets its own CRUD.
+// Price/duration are parsed below to build the real Appointment though.
 type Service = {
   name: string;
   description: string;
   duration: string;
   price: string;
-  selected?: boolean;
 };
 
 const services: Service[] = [
@@ -46,7 +49,6 @@ const services: Service[] = [
       "Coupe aux ciseaux ou tondeuse, finition parfaite, coiffage avec produit premium.",
     duration: "30 min",
     price: "15 DT",
-    selected: true,
   },
   {
     name: "Taille de Barbe Classique",
@@ -65,6 +67,25 @@ const services: Service[] = [
 ];
 
 const serviceCategories = ["Populaire", "Coupes", "Barbe", "Soins"];
+
+function parsePriceMillimes(price: string) {
+  return Math.round(parseFloat(price) * 1000);
+}
+
+function parseDurationMinutes(duration: string) {
+  return parseInt(duration, 10);
+}
+
+function formatMillimes(millimes: number) {
+  return `${(millimes / 1000).toFixed(3)} DT`;
+}
+
+function nowForInput() {
+  const d = new Date(Date.now() + 60 * 60 * 1000);
+  d.setMinutes(0, 0, 0);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 const DAY_INDEX = [
   "SUNDAY",
@@ -88,13 +109,21 @@ function isOpenNow(rows: BarberAvailability[]) {
   );
 }
 
-function ServiceItem({ service }: { service: Service }) {
+function ServiceItem({
+  service,
+  selected,
+  onToggle,
+}: {
+  service: Service;
+  selected: boolean;
+  onToggle: () => void;
+}) {
   return (
     <Card className="group border-surface-variant p-stack-md hover:bg-surface-container-high relative flex-row items-center justify-between gap-0 rounded-xl border bg-[#1C1C1E] transition-colors">
-      {service.selected && (
+      {selected && (
         <div className="bg-primary absolute top-0 bottom-0 left-0 w-1" />
       )}
-      <div className={`flex-1 pr-4 ${service.selected ? "pl-2" : ""}`}>
+      <div className={`flex-1 pr-4 ${selected ? "pl-2" : ""}`}>
         <h3 className="font-headline-md text-on-surface mb-1 text-[18px]">
           {service.name}
         </h3>
@@ -112,10 +141,11 @@ function ServiceItem({ service }: { service: Service }) {
         <span className="font-headline-md text-primary text-[20px]">
           {service.price}
         </span>
-        {service.selected ? (
+        {selected ? (
           <Button
             aria-label="Retirer service"
             size="icon"
+            onClick={onToggle}
             className="bg-primary text-background size-8 rounded-full"
           >
             <Check className="size-4" />
@@ -125,6 +155,7 @@ function ServiceItem({ service }: { service: Service }) {
             aria-label="Ajouter service"
             variant="secondary"
             size="icon"
+            onClick={onToggle}
             className="bg-surface-variant text-on-surface group-hover:bg-primary group-hover:text-background size-8 rounded-full"
           >
             <Plus className="size-4" />
@@ -143,9 +174,57 @@ export function BarberProfileClient({
   availability: BarberAvailability[];
 }) {
   const router = useRouter();
-  const [selected] = useState(services);
   const open = isOpenNow(availability);
   const heroImage = profile.coverImageUrl ?? profile.avatarUrl;
+
+  const [selectedNames, setSelectedNames] = useState<Set<string>>(
+    () => new Set([services[1]!.name]),
+  );
+  const [startAtInput, setStartAtInput] = useState(nowForInput);
+  const [isPending, startTransition] = useTransition();
+  const [bookingResult, setBookingResult] = useState<
+    { status: "success"; startAt: string } | { status: "error" } | null
+  >(null);
+
+  const selectedServices = services.filter((s) => selectedNames.has(s.name));
+  const totalPriceMillimes = selectedServices.reduce(
+    (sum, s) => sum + parsePriceMillimes(s.price),
+    0,
+  );
+  const totalDurationMinutes = selectedServices.reduce(
+    (sum, s) => sum + parseDurationMinutes(s.duration),
+    0,
+  );
+
+  function toggleService(name: string) {
+    setSelectedNames((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  }
+
+  function bookAppointment() {
+    if (selectedServices.length === 0 || !startAtInput) return;
+    const startAt = new Date(startAtInput);
+    const endAt = new Date(startAt.getTime() + totalDurationMinutes * 60_000);
+    startTransition(async () => {
+      try {
+        await createAppointment({
+          clientId: CURRENT_CLIENT_USER_ID,
+          barberId: profile.id,
+          startAt,
+          endAt,
+          totalPriceMillimes,
+          status: "PENDING",
+        });
+        setBookingResult({ status: "success", startAt: startAtInput });
+      } catch {
+        setBookingResult({ status: "error" });
+      }
+    });
+  }
 
   return (
     <div className="bg-background text-on-background flex min-h-screen flex-col pb-24 antialiased md:pb-0">
@@ -332,9 +411,43 @@ export function BarberProfileClient({
           {/* Service List */}
           <div className="gap-stack-sm flex flex-col">
             {services.map((service) => (
-              <ServiceItem key={service.name} service={service} />
+              <ServiceItem
+                key={service.name}
+                service={service}
+                selected={selectedNames.has(service.name)}
+                onToggle={() => toggleService(service.name)}
+              />
             ))}
           </div>
+
+          <div className="mt-stack-lg flex flex-col gap-2">
+            <label
+              htmlFor="appointment-start"
+              className="font-label-md text-label-md text-on-surface-variant"
+            >
+              Date et heure du rendez-vous
+            </label>
+            <Input
+              id="appointment-start"
+              type="datetime-local"
+              value={startAtInput}
+              min={nowForInput()}
+              onChange={(event) => setStartAtInput(event.target.value)}
+            />
+          </div>
+
+          {bookingResult?.status === "success" && (
+            <p className="text-primary font-body-md mt-stack-md">
+              Rendez-vous demandé pour le{" "}
+              {new Date(bookingResult.startAt).toLocaleString("fr-FR")}. En
+              attente de confirmation du barbier.
+            </p>
+          )}
+          {bookingResult?.status === "error" && (
+            <p className="text-destructive font-body-md mt-stack-md">
+              Échec de la réservation. Réessayez.
+            </p>
+          )}
 
           {/* Spacer for mobile FAB */}
           <div className="h-24 md:hidden" />
@@ -345,14 +458,20 @@ export function BarberProfileClient({
       <div className="glass-panel pb-safe px-container-margin py-stack-md fixed bottom-0 left-0 z-40 w-full shadow-[0_-8px_16px_rgba(0,0,0,0.4)] md:hidden">
         <div className="mb-2 flex items-center justify-between">
           <span className="font-label-md text-label-md text-on-surface-variant">
-            {selected.filter((s) => s.selected).length} service sélectionné
+            {selectedServices.length} service
+            {selectedServices.length > 1 ? "s" : ""} sélectionné
+            {selectedServices.length > 1 ? "s" : ""}
           </span>
           <span className="font-headline-md text-primary text-[20px]">
-            {selected.find((s) => s.selected)?.price ?? "0 DT"}
+            {formatMillimes(totalPriceMillimes)}
           </span>
         </div>
-        <Button className="shadow-ambient bg-primary font-headline-md text-background h-auto w-full gap-2 rounded-lg py-3 text-[18px]">
-          Réserver maintenant
+        <Button
+          disabled={selectedServices.length === 0 || isPending}
+          onClick={bookAppointment}
+          className="shadow-ambient bg-primary font-headline-md text-background h-auto w-full gap-2 rounded-lg py-3 text-[18px]"
+        >
+          {isPending ? "Réservation..." : "Réserver maintenant"}
           <ArrowRight className="size-5" />
         </Button>
       </div>
@@ -363,31 +482,30 @@ export function BarberProfileClient({
           <h3 className="font-headline-md border-surface-variant text-on-surface mb-2 border-b pb-2 text-[18px]">
             Votre Réservation
           </h3>
-          {selected
-            .filter((s) => s.selected)
-            .map((s) => (
-              <div
-                key={s.name}
-                className="mb-1 flex items-center justify-between"
-              >
-                <span className="font-body-md text-label-sm text-on-surface-variant">
-                  {s.name}
-                </span>
-                <span className="font-label-sm text-label-sm text-on-surface">
-                  {s.price}
-                </span>
-              </div>
-            ))}
+          {selectedServices.map((s) => (
+            <div key={s.name} className="mb-1 flex items-center justify-between">
+              <span className="font-body-md text-label-sm text-on-surface-variant">
+                {s.name}
+              </span>
+              <span className="font-label-sm text-label-sm text-on-surface">
+                {s.price}
+              </span>
+            </div>
+          ))}
           <div className="border-surface-variant mt-3 flex items-center justify-between border-t pt-2">
             <span className="font-headline-md text-on-surface text-[16px]">
               Total
             </span>
             <span className="font-headline-md text-primary text-[20px]">
-              {selected.find((s) => s.selected)?.price ?? "0 DT"}
+              {formatMillimes(totalPriceMillimes)}
             </span>
           </div>
-          <Button className="font-label-md text-label-md bg-primary text-background mt-4 h-auto w-full rounded-lg py-3 shadow-sm hover:opacity-90">
-            Réserver maintenant
+          <Button
+            disabled={selectedServices.length === 0 || isPending}
+            onClick={bookAppointment}
+            className="font-label-md text-label-md bg-primary text-background mt-4 h-auto w-full rounded-lg py-3 shadow-sm hover:opacity-90"
+          >
+            {isPending ? "Réservation..." : "Réserver maintenant"}
           </Button>
         </Card>
       </div>

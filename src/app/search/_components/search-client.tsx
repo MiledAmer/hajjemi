@@ -187,7 +187,7 @@ export function SearchClient({
                     : "font-label-md text-label-md border-outline-variant bg-surface-container-high text-on-surface-variant hover:bg-surface-variant h-auto rounded-full px-4 py-2 whitespace-nowrap"
                 }
               >
-                <MapPin className="size-[18px]" />
+                <MapPin className="size-4.5" />
                 {GOVERNORATE_LABELS[gov]}
               </Button>
             ))}

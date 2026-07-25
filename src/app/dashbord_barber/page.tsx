@@ -5,6 +5,10 @@ import { getBarberProfile } from "@/server/barber-profiles";
 import { CURRENT_BARBER_PROFILE_ID } from "@/lib/current-barber";
 import { DashboardClient } from "./_components/dashboard-client";
 
+// Always live data — accept/decline and profile edits must never serve a
+// build-time snapshot (this page has no dynamic API to auto-opt out with).
+export const dynamic = "force-dynamic";
+
 export default async function DashboardBarberPage() {
   const [profile, appointments, availability] = await Promise.all([
     getBarberProfile(CURRENT_BARBER_PROFILE_ID),
