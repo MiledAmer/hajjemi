@@ -23,9 +23,11 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { dashboard as dashboardContent, useLang } from "@/lib/tounsi";
 import { updateAppointment } from "@/server/appointments";
+import { setWeeklyHours } from "@/server/barber-availability";
 import { updateBarberProfile } from "@/server/barber-profiles";
 import type {
   Appointment,
+  BarberAvailability,
   BarberProfile,
   User as DbUser,
 } from "../../../../generated/prisma";
@@ -80,12 +82,24 @@ function isSameDay(a: Date, b: Date) {
   );
 }
 
+function formatMinutes(minutes: number) {
+  const h = Math.floor(minutes / 60)
+    .toString()
+    .padStart(2, "0");
+  const m = (minutes % 60).toString().padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+const WEEKDAYS_RANGE_RE = /^\d{2}:\d{2} - \d{2}:\d{2}$/;
+
 export function DashboardClient({
   profile,
   appointments,
+  availability,
 }: {
   profile: BarberProfile & { user: DbUser };
   appointments: AppointmentWithClient[];
+  availability: BarberAvailability[];
 }) {
   const router = useRouter();
   const [view, setView] = useState<ViewId>("dashboard");
@@ -94,6 +108,15 @@ export function DashboardClient({
   const t = dashboardContent[lang];
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
+
+  const mondayRow = availability.find((a) => a.dayOfWeek === "MONDAY");
+  const sundayRow = availability.find((a) => a.dayOfWeek === "SUNDAY");
+  const weekdaysHours = mondayRow
+    ? `${formatMinutes(mondayRow.startMinute)} - ${formatMinutes(mondayRow.endMinute)}`
+    : "09:00 - 19:00";
+  const sundayHours = sundayRow
+    ? `${formatMinutes(sundayRow.startMinute)} - ${formatMinutes(sundayRow.endMinute)}`
+    : t.closed;
 
   const todayCount = useMemo(() => {
     const today = new Date();
@@ -127,12 +150,20 @@ export function DashboardClient({
     weekdaysHours: string;
     sundayHours: string;
   }) {
-    // ponytail: weekdaysHours/sundayHours are free text here, not backed by
-    // BarberAvailability (day/minute rows) yet — only businessName/bio persist.
     await updateBarberProfile(profile.id, {
       businessName: updated.name,
       bio: updated.bio,
     });
+    // ponytail: a "Fermé"/free-text Sunday value is treated as closed rather
+    // than validated — only an exact "HH:MM - HH:MM" range is persisted.
+    if (WEEKDAYS_RANGE_RE.test(updated.weekdaysHours)) {
+      await setWeeklyHours(profile.id, {
+        weekdaysRange: updated.weekdaysHours,
+        sundayRange: WEEKDAYS_RANGE_RE.test(updated.sundayHours)
+          ? updated.sundayHours
+          : null,
+      });
+    }
     router.refresh();
   }
 
@@ -452,8 +483,8 @@ export function DashboardClient({
                     profile={{
                       name: profile.businessName,
                       bio: profile.bio ?? t.bio,
-                      weekdaysHours: "09:00 - 19:00",
-                      sundayHours: t.closed,
+                      weekdaysHours,
+                      sundayHours,
                     }}
                     onSave={saveProfile}
                   />
@@ -471,11 +502,11 @@ export function DashboardClient({
                   <span className="text-on-surface-variant">
                     {t.weekdays}
                   </span>
-                  <span className="font-bold">09:00 - 19:00</span>
+                  <span className="font-bold">{weekdaysHours}</span>
                 </div>
                 <div className="text-body-md flex justify-between">
                   <span className="text-on-surface-variant">{t.sunday}</span>
-                  <span className="text-destructive">{t.closed}</span>
+                  <span className="text-destructive">{sundayHours}</span>
                 </div>
               </div>
             </Card>
