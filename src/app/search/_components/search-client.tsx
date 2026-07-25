@@ -7,24 +7,16 @@ import {
   Calendar,
   Home,
   MapPin,
-  Menu,
   Navigation,
   Search,
   Store,
   User,
-  X,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import { GOVERNORATE_LABELS } from "@/lib/governorate";
 import type {
   BarberProfile,
@@ -106,7 +98,6 @@ export function SearchClient({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [queryInput, setQueryInput] = useState(q);
 
   function pushParams(next: { q?: string; gov?: string }) {
@@ -137,15 +128,6 @@ export function SearchClient({
       {/* TopAppBar */}
       <header className="bg-surface sticky top-0 z-40 w-full shadow-sm">
         <div className="px-container-margin mx-auto flex h-16 w-full max-w-7xl items-center justify-between">
-          <Button
-            aria-label="Menu"
-            variant="ghost"
-            size="icon"
-            className="text-primary rounded-full md:hidden"
-            onClick={() => setIsDrawerOpen(true)}
-          >
-            <Menu className="size-5" />
-          </Button>
           <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold tracking-tighter md:hidden">
             HAJJEM
           </h1>
@@ -175,49 +157,6 @@ export function SearchClient({
           </Avatar>
         </div>
       </header>
-
-      {/* Mobile Navigation Drawer */}
-      <Sheet open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
-        <SheetContent
-          side="left"
-          showCloseButton={false}
-          className="bg-surface-container-low border-none p-gutter"
-        >
-          <SheetHeader className="mt-4 mb-4 flex-row items-center justify-between p-0">
-            <SheetTitle className="font-headline-lg text-headline-lg text-primary font-bold tracking-tighter">
-              HAJJEM
-            </SheetTitle>
-            <Button
-              aria-label="Fermer"
-              variant="ghost"
-              size="icon"
-              className="text-on-surface-variant rounded-full"
-              onClick={() => setIsDrawerOpen(false)}
-            >
-              <X className="size-5" />
-            </Button>
-          </SheetHeader>
-          <div className="flex grow flex-col gap-2">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setIsDrawerOpen(false)}
-                className={
-                  link.href === "/search"
-                    ? "bg-secondary-container text-on-secondary-container flex items-center gap-4 rounded-lg px-4 py-3 font-bold transition-opacity active:opacity-80"
-                    : "text-on-surface-variant hover:bg-surface-container-highest flex items-center gap-4 rounded-lg px-4 py-3 transition-colors active:opacity-80"
-                }
-              >
-                <link.icon className="size-5" />
-                <span className="font-body-md text-body-md">
-                  {link.label}
-                </span>
-              </Link>
-            ))}
-          </div>
-        </SheetContent>
-      </Sheet>
 
       <main className="gap-stack-lg px-container-margin pt-stack-md flex flex-col">
         {/* Search Bar */}
