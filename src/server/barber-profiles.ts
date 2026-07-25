@@ -27,7 +27,7 @@ export async function createBarberProfile(
 }
 
 export async function getBarberProfile(id: string) {
-  return db.barberProfile.findUnique({ where: { id } });
+  return db.barberProfile.findUnique({ where: { id }, include: { user: true } });
 }
 
 export async function getBarberProfileByUserId(userId: string) {

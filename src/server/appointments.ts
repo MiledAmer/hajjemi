@@ -39,6 +39,7 @@ export async function getAppointment(id: string) {
 export async function listAppointmentsByBarber(barberId: string) {
   return db.appointment.findMany({
     where: { barberId },
+    include: { client: true },
     orderBy: { startAt: "asc" },
   });
 }
