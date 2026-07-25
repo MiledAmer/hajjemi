@@ -122,7 +122,6 @@ exports.Prisma.TransactionIsolationLevel = makeStrictEnum({
 
 exports.Prisma.UserScalarFieldEnum = {
   id: 'id',
-  email: 'email',
   phone: 'phone',
   passwordHash: 'passwordHash',
   name: 'name',
@@ -141,21 +140,7 @@ exports.Prisma.BarberProfileScalarFieldEnum = {
   address: 'address',
   avatarUrl: 'avatarUrl',
   coverImageUrl: 'coverImageUrl',
-  avgRating: 'avgRating',
-  reviewCount: 'reviewCount',
   planType: 'planType',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
-};
-
-exports.Prisma.ServiceScalarFieldEnum = {
-  id: 'id',
-  barberId: 'barberId',
-  name: 'name',
-  description: 'description',
-  durationMinutes: 'durationMinutes',
-  priceMillimes: 'priceMillimes',
-  categories: 'categories',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -178,25 +163,6 @@ exports.Prisma.AppointmentScalarFieldEnum = {
   totalPriceMillimes: 'totalPriceMillimes',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
-};
-
-exports.Prisma.AppointmentServiceScalarFieldEnum = {
-  id: 'id',
-  appointmentId: 'appointmentId',
-  serviceId: 'serviceId',
-  nameSnapshot: 'nameSnapshot',
-  priceMillimesSnapshot: 'priceMillimesSnapshot',
-  durationMinutesSnapshot: 'durationMinutesSnapshot'
-};
-
-exports.Prisma.ReviewScalarFieldEnum = {
-  id: 'id',
-  appointmentId: 'appointmentId',
-  authorId: 'authorId',
-  barberId: 'barberId',
-  rating: 'rating',
-  comment: 'comment',
-  createdAt: 'createdAt'
 };
 
 exports.Prisma.SubscriptionScalarFieldEnum = {
@@ -260,14 +226,6 @@ exports.PlanType = exports.$Enums.PlanType = {
   PRO: 'PRO'
 };
 
-exports.ServiceCategory = exports.$Enums.ServiceCategory = {
-  POPULAR: 'POPULAR',
-  HAIRCUT: 'HAIRCUT',
-  BEARD: 'BEARD',
-  CARE: 'CARE',
-  COLORING: 'COLORING'
-};
-
 exports.DayOfWeek = exports.$Enums.DayOfWeek = {
   MONDAY: 'MONDAY',
   TUESDAY: 'TUESDAY',
@@ -296,11 +254,8 @@ exports.SubscriptionStatus = exports.$Enums.SubscriptionStatus = {
 exports.Prisma.ModelName = {
   User: 'User',
   BarberProfile: 'BarberProfile',
-  Service: 'Service',
   BarberAvailability: 'BarberAvailability',
   Appointment: 'Appointment',
-  AppointmentService: 'AppointmentService',
-  Review: 'Review',
   Subscription: 'Subscription'
 };
 
