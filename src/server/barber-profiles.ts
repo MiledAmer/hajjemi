@@ -38,6 +38,28 @@ export async function listBarberProfiles() {
   return db.barberProfile.findMany({ orderBy: { createdAt: "desc" } });
 }
 
+export async function searchBarberProfiles(input: {
+  query?: string;
+  governorate?: Governorate;
+}) {
+  const query = input.query?.trim();
+  return db.barberProfile.findMany({
+    where: {
+      governorate: input.governorate,
+      ...(query
+        ? {
+            OR: [
+              { businessName: { contains: query, mode: "insensitive" } },
+              { address: { contains: query, mode: "insensitive" } },
+            ],
+          }
+        : {}),
+    },
+    include: { user: true },
+    orderBy: { createdAt: "desc" },
+  });
+}
+
 export async function updateBarberProfile(
   id: string,
   input: z.infer<typeof updateBarberProfileSchema>,

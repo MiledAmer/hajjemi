@@ -1,0 +1,28 @@
+import type { Governorate } from "../../generated/prisma";
+
+export const GOVERNORATE_LABELS: Record<Governorate, string> = {
+  TUNIS: "Tunis",
+  ARIANA: "Ariana",
+  BEN_AROUS: "Ben Arous",
+  MANOUBA: "Manouba",
+  NABEUL: "Nabeul",
+  ZAGHOUAN: "Zaghouan",
+  BIZERTE: "Bizerte",
+  BEJA: "Béja",
+  JENDOUBA: "Jendouba",
+  KEF: "Le Kef",
+  SILIANA: "Siliana",
+  SOUSSE: "Sousse",
+  MONASTIR: "Monastir",
+  MAHDIA: "Mahdia",
+  SFAX: "Sfax",
+  KAIROUAN: "Kairouan",
+  KASSERINE: "Kasserine",
+  SIDI_BOUZID: "Sidi Bouzid",
+  GABES: "Gabès",
+  MEDENINE: "Médenine",
+  TATAOUINE: "Tataouine",
+  GAFSA: "Gafsa",
+  TOZEUR: "Tozeur",
+  KEBILI: "Kébili",
+};

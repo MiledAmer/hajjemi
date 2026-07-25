@@ -2,20 +2,19 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  ArrowLeft,
-  ArrowRight,
-  Check,
-  Clock,
-  MapPin,
-  Plus,
-  Star,
-} from "lucide-react";
+import { useState } from "react";
+import { ArrowLeft, ArrowRight, Check, Clock, MapPin, Plus } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { GOVERNORATE_LABELS } from "@/lib/governorate";
+import type {
+  BarberAvailability,
+  BarberProfile,
+  User as DbUser,
+} from "../../../../../generated/prisma";
 
 const navLinks = [
   { label: "Accueil", href: "/" },
@@ -23,6 +22,8 @@ const navLinks = [
   { label: "Espace Barber", href: "/plans" },
 ];
 
+// ponytail: no Service model in the schema yet — the bookable service list
+// stays client-only mock data until Catalog is modeled and gets its own CRUD.
 type Service = {
   name: string;
   description: string;
@@ -64,6 +65,28 @@ const services: Service[] = [
 ];
 
 const serviceCategories = ["Populaire", "Coupes", "Barbe", "Soins"];
+
+const DAY_INDEX = [
+  "SUNDAY",
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+] as const;
+
+function isOpenNow(rows: BarberAvailability[]) {
+  const now = new Date();
+  const today = DAY_INDEX[now.getDay()];
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  return rows.some(
+    (r) =>
+      r.dayOfWeek === today &&
+      minutes >= r.startMinute &&
+      minutes < r.endMinute,
+  );
+}
 
 function ServiceItem({ service }: { service: Service }) {
   return (
@@ -112,8 +135,17 @@ function ServiceItem({ service }: { service: Service }) {
   );
 }
 
-export default function ProfilBarberPage() {
+export function BarberProfileClient({
+  profile,
+  availability,
+}: {
+  profile: BarberProfile & { user: DbUser };
+  availability: BarberAvailability[];
+}) {
   const router = useRouter();
+  const [selected] = useState(services);
+  const open = isOpenNow(availability);
+  const heroImage = profile.coverImageUrl ?? profile.avatarUrl;
 
   return (
     <div className="bg-background text-on-background flex min-h-screen flex-col pb-24 antialiased md:pb-0">
@@ -146,10 +178,10 @@ export default function ProfilBarberPage() {
         </div>
         <Avatar className="bg-surface-container-high focus-visible:ring-primary size-10 focus-visible:ring-2">
           <AvatarImage
-            alt="Portrait d'Ahmed, barbier, coupe fondu nette et barbe soignée."
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBvZAHjelVw0NlTkX0cvlHwDy3cyY-vKWW1QS_JP5tTMOLNLvzcgpieDgitP8iB9Mc3NNsexf_PtNYw9QOuNxv4g7-SbDr0AH3Ur_P0OdAqccmorYq3CZyDFrcGozOoKKNiWbD5eyUlerThHkKoEItiJDaScSlLvXPQguTk-BG94b_wHkN8YubJ7e5If4jkf2wnqywLNVJRtjNuDSshngEv9vfzKXdOG3sHMRY9g2eW2UKWf9M2rbSK8Sv_E-vDnpM_gjjoXrsms-HO"
+            alt={`Portrait de ${profile.user.name}`}
+            src={profile.avatarUrl ?? undefined}
           />
-          <AvatarFallback>A</AvatarFallback>
+          <AvatarFallback>{profile.user.name[0]}</AvatarFallback>
         </Avatar>
       </header>
 
@@ -172,21 +204,29 @@ export default function ProfilBarberPage() {
 
           {/* Hero Image */}
           <div className="shadow-ambient relative h-72 w-full overflow-hidden md:h-96 md:rounded-xl">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              alt="Ahmed, barbier, en plein travail de précision sur un dégradé, salon premium et sombre."
-              className="absolute inset-0 h-full w-full object-cover"
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8RnBDDOInkPBTpKHz20kPiDPiWAhtUZl1OfkKpupS9dQJ4OFvP6VbnoVMSCgQjdE8pDDFTi2i13A_2p8Ra3yX9ypb1v4ou5hxXE-KVlfahvJt1Kjs1VD61zwh986SCHrwx_zwwXGI_OphXP9IprhC1Pgxj7TTx0dDuTtE-AAVG5Atyurq91bmH-vrBcPAzqakLScgbmZ55IFjxZQgrkEql8OgEAWd090nyY3bFZ5pi14QxjAhqa_5m-Id06cVdgh2dy-oT6L3nydA"
-            />
+            {heroImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                alt={profile.businessName}
+                className="absolute inset-0 h-full w-full object-cover"
+                src={heroImage}
+              />
+            ) : (
+              <div className="bg-surface-container-low absolute inset-0 flex items-center justify-center">
+                <span className="font-headline-lg text-primary text-4xl">
+                  {profile.businessName[0]}
+                </span>
+              </div>
+            )}
             {/* Gradient Overlay for Text Readability on Mobile */}
             <div className="from-background via-background/40 absolute inset-0 bg-linear-to-t to-transparent md:hidden" />
             {/* Barber Name & Specialty Overlay (Mobile Only) */}
             <div className="p-container-margin absolute bottom-0 left-0 w-full md:hidden">
               <h1 className="font-headline-lg-mobile text-headline-lg-mobile mb-stack-sm text-on-surface drop-shadow-md">
-                Ahmed
+                {profile.businessName}
               </h1>
               <p className="font-body-md text-body-md text-primary drop-shadow-md">
-                Expert Dégradé &amp; Barbe
+                {profile.user.name}
               </p>
             </div>
           </div>
@@ -194,20 +234,22 @@ export default function ProfilBarberPage() {
           {/* Barber Info (Desktop Only - Extracted from Image) */}
           <div className="mt-stack-md px-container-margin hidden md:block md:px-0">
             <h1 className="font-headline-lg text-headline-lg mb-stack-sm text-on-surface">
-              Ahmed
+              {profile.businessName}
             </h1>
             <p className="font-body-md text-body-md mb-stack-lg text-primary">
-              Expert Dégradé &amp; Barbe
+              {profile.user.name}
             </p>
-            {/* Rating & Location Badges */}
+            {/* Location & Open Status Badges */}
             <div className="mb-stack-lg gap-stack-md flex">
               <Badge
                 variant="outline"
                 className="border-surface-variant bg-surface-container gap-2 rounded-full px-3 py-1"
               >
-                <Star className="text-primary size-4 fill-current" />
+                <Clock
+                  className={`size-4 ${open ? "text-primary" : "text-destructive"}`}
+                />
                 <span className="font-label-sm text-label-sm text-on-surface">
-                  4.9 (128 avis)
+                  {open ? "Ouvert" : "Fermé"}
                 </span>
               </Badge>
               <Badge
@@ -216,50 +258,49 @@ export default function ProfilBarberPage() {
               >
                 <MapPin className="text-on-surface-variant size-4" />
                 <span className="font-label-sm text-label-sm text-on-surface-variant">
-                  Tunis, Centre Ville
+                  {profile.address
+                    ? `${profile.address}, ${GOVERNORATE_LABELS[profile.governorate]}`
+                    : GOVERNORATE_LABELS[profile.governorate]}
                 </span>
               </Badge>
             </div>
             {/* About Barber */}
-            <p className="font-body-md text-body-md mb-stack-lg text-on-surface-variant leading-relaxed">
-              Spécialiste de la coiffure masculine moderne avec plus de 5 ans
-              d&apos;expérience. Reconnu pour sa précision méticuleuse dans les
-              dégradés à blanc et le traçage de barbe.
-            </p>
+            {profile.bio && (
+              <p className="font-body-md text-body-md mb-stack-lg text-on-surface-variant leading-relaxed">
+                {profile.bio}
+              </p>
+            )}
           </div>
 
           {/* Mobile Only Info block below image */}
           <div className="fade-in-up px-container-margin pt-stack-md md:hidden">
-            {/* Rating & Location Badges */}
             <div className="mb-stack-md gap-stack-sm flex flex-wrap">
-              <Badge
-                variant="outline"
-                className="border-surface-variant bg-surface-container gap-1 rounded-full px-3 py-1"
-              >
-                <Star className="text-primary size-3.5 fill-current" />
-                <span className="font-label-sm text-label-sm text-on-surface">
-                  4.9 (128)
-                </span>
-              </Badge>
               <Badge
                 variant="outline"
                 className="border-surface-variant bg-surface-container gap-1 rounded-full px-3 py-1"
               >
                 <MapPin className="text-on-surface-variant size-3.5" />
                 <span className="font-label-sm text-label-sm text-on-surface-variant">
-                  Tunis
+                  {GOVERNORATE_LABELS[profile.governorate]}
                 </span>
               </Badge>
               <Badge
                 variant="outline"
                 className="border-surface-variant bg-surface-container gap-1 rounded-full px-3 py-1"
               >
-                <Clock className="text-on-surface-variant size-3.5" />
+                <Clock
+                  className={`size-3.5 ${open ? "text-primary" : "text-destructive"}`}
+                />
                 <span className="font-label-sm text-label-sm text-on-surface-variant">
-                  Ouv.
+                  {open ? "Ouv." : "Fermé"}
                 </span>
               </Badge>
             </div>
+            {profile.bio && (
+              <p className="font-body-md text-body-md text-on-surface-variant mb-stack-md leading-relaxed">
+                {profile.bio}
+              </p>
+            )}
           </div>
         </section>
 
@@ -269,12 +310,6 @@ export default function ProfilBarberPage() {
             <h2 className="font-headline-md text-headline-md text-on-surface">
               Services
             </h2>
-            <Button
-              variant="ghost"
-              className="font-label-md text-label-md text-primary h-auto p-0 hover:underline"
-            >
-              Voir tout
-            </Button>
           </div>
 
           {/* Service Categories (Chips) */}
@@ -310,10 +345,10 @@ export default function ProfilBarberPage() {
       <div className="glass-panel pb-safe px-container-margin py-stack-md fixed bottom-0 left-0 z-40 w-full shadow-[0_-8px_16px_rgba(0,0,0,0.4)] md:hidden">
         <div className="mb-2 flex items-center justify-between">
           <span className="font-label-md text-label-md text-on-surface-variant">
-            1 service sélectionné
+            {selected.filter((s) => s.selected).length} service sélectionné
           </span>
           <span className="font-headline-md text-primary text-[20px]">
-            15 DT
+            {selected.find((s) => s.selected)?.price ?? "0 DT"}
           </span>
         </div>
         <Button className="shadow-ambient bg-primary font-headline-md text-background h-auto w-full gap-2 rounded-lg py-3 text-[18px]">
@@ -328,20 +363,27 @@ export default function ProfilBarberPage() {
           <h3 className="font-headline-md border-surface-variant text-on-surface mb-2 border-b pb-2 text-[18px]">
             Votre Réservation
           </h3>
-          <div className="mb-1 flex items-center justify-between">
-            <span className="font-body-md text-label-sm text-on-surface-variant">
-              Dégradé Américain
-            </span>
-            <span className="font-label-sm text-label-sm text-on-surface">
-              15 DT
-            </span>
-          </div>
+          {selected
+            .filter((s) => s.selected)
+            .map((s) => (
+              <div
+                key={s.name}
+                className="mb-1 flex items-center justify-between"
+              >
+                <span className="font-body-md text-label-sm text-on-surface-variant">
+                  {s.name}
+                </span>
+                <span className="font-label-sm text-label-sm text-on-surface">
+                  {s.price}
+                </span>
+              </div>
+            ))}
           <div className="border-surface-variant mt-3 flex items-center justify-between border-t pt-2">
             <span className="font-headline-md text-on-surface text-[16px]">
               Total
             </span>
             <span className="font-headline-md text-primary text-[20px]">
-              15 DT
+              {selected.find((s) => s.selected)?.price ?? "0 DT"}
             </span>
           </div>
           <Button className="font-label-md text-label-md bg-primary text-background mt-4 h-auto w-full rounded-lg py-3 shadow-sm hover:opacity-90">
