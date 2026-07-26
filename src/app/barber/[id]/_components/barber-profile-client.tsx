@@ -445,6 +445,15 @@ export function BarberProfileClient({
             </Button>
           </div>
 
+          {/* Mobile Language Switch Overlay */}
+          <button
+            type="button"
+            onClick={toggleLang}
+            className="glass-panel font-label-sm text-label-sm text-on-surface absolute top-4 right-4 z-10 rounded-full px-3 py-2 md:hidden"
+          >
+            {t.switchTo}
+          </button>
+
           {/* Hero Image */}
           <div className="shadow-ambient relative h-72 w-full overflow-hidden md:h-96 md:rounded-xl">
             {heroImage ? (

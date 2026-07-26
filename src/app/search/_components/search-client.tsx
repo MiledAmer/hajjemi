@@ -155,6 +155,8 @@ export function SearchClient({
                 {link.label}
               </Link>
             ))}
+          </div>
+          <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={toggleLang}
@@ -162,14 +164,14 @@ export function SearchClient({
             >
               {t.switchTo}
             </button>
+            <Avatar className="border-outline-variant bg-surface-container-high size-10 shrink-0 cursor-pointer border transition-opacity hover:opacity-80">
+              <AvatarImage
+                alt={t.avatarAlt}
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnsSXzu2i44E7vz6WoQBEjfmBXUf6HtCnlYAt1oW6buiuRYStu_8PluM1ytGZwzCQ6_5YKe4l2jXPfWgjdPOyPP5HJWGlv4jU7rVW82-0XZWpZ-hdJO9ewrUuwH4smLu0zHCmrPrY30zZQdXnraEkGOyIAoIkIRJSXFLnrDLOyYe8gvXejYLab6GdVL6AOgYc1p9wUYpe6Uljo-tFThiC8JCsooIxDBRSlFQVtmnKP8-B1r9sfzIEv3a6vXtnln5YszcPWSm3v98F_"
+              />
+              <AvatarFallback>U</AvatarFallback>
+            </Avatar>
           </div>
-          <Avatar className="border-outline-variant bg-surface-container-high size-10 shrink-0 cursor-pointer border transition-opacity hover:opacity-80">
-            <AvatarImage
-              alt={t.avatarAlt}
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnsSXzu2i44E7vz6WoQBEjfmBXUf6HtCnlYAt1oW6buiuRYStu_8PluM1ytGZwzCQ6_5YKe4l2jXPfWgjdPOyPP5HJWGlv4jU7rVW82-0XZWpZ-hdJO9ewrUuwH4smLu0zHCmrPrY30zZQdXnraEkGOyIAoIkIRJSXFLnrDLOyYe8gvXejYLab6GdVL6AOgYc1p9wUYpe6Uljo-tFThiC8JCsooIxDBRSlFQVtmnKP8-B1r9sfzIEv3a6vXtnln5YszcPWSm3v98F_"
-            />
-            <AvatarFallback>U</AvatarFallback>
-          </Avatar>
         </div>
       </header>
 
