@@ -27,13 +27,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { CURRENT_CLIENT_USER_ID } from "@/lib/current-client";
 import { GOVERNORATE_LABELS } from "@/lib/governorate";
 import { barberProfile as content, useLang } from "@/lib/tounsi";
 import { cn } from "@/lib/utils";
 import { createAppointment } from "@/server/appointments";
 import type {
+  Appointment,
   BarberAvailability,
   BarberProfile,
   User as DbUser,
@@ -132,6 +132,58 @@ function isSameDay(a: Date, b: Date) {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate()
   );
+}
+
+const SLOT_STEP_MINUTES = 30;
+
+function formatSlotTime(minutes: number) {
+  const h = Math.floor(minutes / 60)
+    .toString()
+    .padStart(2, "0");
+  const m = (minutes % 60).toString().padStart(2, "0");
+  return `${h}:${m}`;
+}
+
+/// Available hour slots for a given day: the barber's opening ranges for
+/// that weekday, minus anything already booked (active appointments) and
+/// minus slots that have already passed if the day is today.
+function getAvailableSlots(
+  availability: BarberAvailability[],
+  appointments: Pick<Appointment, "startAt" | "endAt" | "status">[],
+  date: Date,
+  durationMinutes: number,
+) {
+  const day = DAY_INDEX[date.getDay()];
+  const dayRanges = availability.filter((r) => r.dayOfWeek === day);
+  const duration = Math.max(durationMinutes, SLOT_STEP_MINUTES);
+  const now = Date.now();
+  const busy = appointments.filter(
+    (a) =>
+      a.status !== "CANCELLED" &&
+      a.status !== "NO_SHOW" &&
+      isSameDay(new Date(a.startAt), date),
+  );
+
+  const slots: number[] = [];
+  for (const range of dayRanges) {
+    for (
+      let start = range.startMinute;
+      start + duration <= range.endMinute;
+      start += SLOT_STEP_MINUTES
+    ) {
+      const slotStart = new Date(date);
+      slotStart.setHours(Math.floor(start / 60), start % 60, 0, 0);
+      if (slotStart.getTime() < now) continue;
+      const slotEndMs = slotStart.getTime() + duration * 60_000;
+      const overlaps = busy.some((a) => {
+        const busyStart = new Date(a.startAt).getTime();
+        const busyEnd = new Date(a.endAt).getTime();
+        return slotStart.getTime() < busyEnd && slotEndMs > busyStart;
+      });
+      if (!overlaps) slots.push(start);
+    }
+  }
+  return slots;
 }
 
 function withDate(iso: string, date: Date) {
@@ -307,9 +359,11 @@ function ServiceItem({
 export function BarberProfileClient({
   profile,
   availability,
+  appointments,
 }: {
   profile: BarberProfile & { user: DbUser };
   availability: BarberAvailability[];
+  appointments: Appointment[];
 }) {
   const router = useRouter();
   const { lang, toggleLang } = useLang();
@@ -344,6 +398,18 @@ export function BarberProfileClient({
   );
   const selectedDayOff =
     !!startAtInput && isDayOff(availability, new Date(startAtInput));
+  const daySlots = startAtInput
+    ? getAvailableSlots(
+        availability,
+        appointments,
+        new Date(startAtInput),
+        totalDurationMinutes,
+      )
+    : [];
+  const selectedMinutes = (() => {
+    const [h, m] = startAtInput.slice(11, 16).split(":").map(Number);
+    return (h ?? 0) * 60 + (m ?? 0);
+  })();
 
   function toggleService(name: string) {
     setSelectedNames((prev) => {
@@ -355,14 +421,24 @@ export function BarberProfileClient({
   }
 
   function requestBooking() {
-    if (selectedServices.length === 0 || !startAtInput || selectedDayOff)
+    if (
+      selectedServices.length === 0 ||
+      !startAtInput ||
+      selectedDayOff ||
+      !daySlots.includes(selectedMinutes)
+    )
       return;
     setConfirmOpen(true);
   }
 
   function bookAppointment() {
     setConfirmOpen(false);
-    if (selectedServices.length === 0 || !startAtInput || selectedDayOff)
+    if (
+      selectedServices.length === 0 ||
+      !startAtInput ||
+      selectedDayOff ||
+      !daySlots.includes(selectedMinutes)
+    )
       return;
     const startAt = new Date(startAtInput);
     const endAt = new Date(startAt.getTime() + totalDurationMinutes * 60_000);
@@ -636,20 +712,38 @@ export function BarberProfileClient({
                 nextMonthAria={t.nextMonthAria}
               />
               <div className="mt-stack-md flex flex-col gap-2">
-                <label
-                  htmlFor="appointment-time"
-                  className="font-label-md text-label-md text-on-surface-variant"
-                >
+                <span className="font-label-md text-label-md text-on-surface-variant">
                   {t.timeLabel}
-                </label>
-                <Input
-                  id="appointment-time"
-                  type="time"
-                  value={startAtInput.slice(11, 16)}
-                  onChange={(event) =>
-                    setStartAtInput(withTime(startAtInput, event.target.value))
-                  }
-                />
+                </span>
+                {daySlots.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-2">
+                    {daySlots.map((minutes) => (
+                      <button
+                        key={minutes}
+                        type="button"
+                        onClick={() =>
+                          setStartAtInput(
+                            withTime(startAtInput, formatSlotTime(minutes)),
+                          )
+                        }
+                        className={cn(
+                          "font-label-sm text-label-sm rounded-md border px-2 py-2 transition-colors",
+                          minutes === selectedMinutes
+                            ? "bg-primary text-background border-primary"
+                            : "border-surface-variant text-on-surface hover:bg-surface-variant",
+                        )}
+                      >
+                        {formatSlotTime(minutes)}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  !selectedDayOff && (
+                    <p className="text-destructive font-body-md">
+                      {t.noSlots}
+                    </p>
+                  )
+                )}
               </div>
               {selectedDayOff && (
                 <p className="text-destructive font-body-md">
@@ -687,7 +781,12 @@ export function BarberProfileClient({
           </span>
         </div>
         <Button
-          disabled={selectedServices.length === 0 || isPending || selectedDayOff}
+          disabled={
+            selectedServices.length === 0 ||
+            isPending ||
+            selectedDayOff ||
+            !daySlots.includes(selectedMinutes)
+          }
           onClick={requestBooking}
           className="shadow-ambient bg-primary font-headline-md text-background h-auto w-full gap-2 rounded-lg py-3 text-[18px]"
         >
@@ -721,7 +820,12 @@ export function BarberProfileClient({
             </span>
           </div>
           <Button
-            disabled={selectedServices.length === 0 || isPending}
+            disabled={
+              selectedServices.length === 0 ||
+              isPending ||
+              selectedDayOff ||
+              !daySlots.includes(selectedMinutes)
+            }
             onClick={requestBooking}
             className="font-label-md text-label-md bg-primary text-background mt-4 h-auto w-full rounded-lg py-3 shadow-sm hover:opacity-90"
           >
