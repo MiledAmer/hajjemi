@@ -9,6 +9,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { CURRENT_CLIENT_USER_ID } from "@/lib/current-client";
 import { GOVERNORATE_LABELS } from "@/lib/governorate";
@@ -181,6 +189,7 @@ export function BarberProfileClient({
     () => new Set([services[1]!.name]),
   );
   const [startAtInput, setStartAtInput] = useState(nowForInput);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [bookingResult, setBookingResult] = useState<
     { status: "success"; startAt: string } | { status: "error" } | null
@@ -205,8 +214,13 @@ export function BarberProfileClient({
     });
   }
 
-  function bookAppointment() {
+  function requestBooking() {
     if (selectedServices.length === 0 || !startAtInput) return;
+    setConfirmOpen(true);
+  }
+
+  function bookAppointment() {
+    setConfirmOpen(false);
     const startAt = new Date(startAtInput);
     const endAt = new Date(startAt.getTime() + totalDurationMinutes * 60_000);
     startTransition(async () => {
@@ -227,7 +241,7 @@ export function BarberProfileClient({
   }
 
   return (
-    <div className="bg-background text-on-background flex min-h-screen flex-col pb-24 antialiased md:pb-0">
+    <div className="bg-background text-on-background flex min-h-screen flex-col antialiased">
       {/* Top Navigation (Web View - Hidden on Mobile to prioritize Hero) */}
       <header className="bg-surface px-container-margin sticky top-0 z-50 mx-auto hidden h-16 w-full max-w-7xl items-center justify-between shadow-sm md:flex">
         <div className="flex items-center gap-4">
@@ -384,7 +398,7 @@ export function BarberProfileClient({
         </section>
 
         {/* Services Section (Right Column on Desktop) */}
-        <section className="fade-in-up mt-stack-lg px-container-margin pb-32 delay-100 md:col-span-7 md:mt-0 md:px-0 md:pb-0">
+        <section className="fade-in-up mt-stack-lg px-container-margin pb-28 delay-100 md:col-span-7 md:mt-0 md:px-0 md:pb-0">
           <div className="mb-stack-md flex items-center justify-between">
             <h2 className="font-headline-md text-headline-md text-on-surface">
               Services
@@ -436,21 +450,12 @@ export function BarberProfileClient({
             />
           </div>
 
-          {bookingResult?.status === "success" && (
-            <p className="text-primary font-body-md mt-stack-md">
-              Rendez-vous demandé pour le{" "}
-              {new Date(bookingResult.startAt).toLocaleString("fr-FR")}. En
-              attente de confirmation du barbier.
-            </p>
-          )}
           {bookingResult?.status === "error" && (
             <p className="text-destructive font-body-md mt-stack-md">
               Échec de la réservation. Réessayez.
             </p>
           )}
 
-          {/* Spacer for mobile FAB */}
-          <div className="h-24 md:hidden" />
         </section>
       </main>
 
@@ -468,7 +473,7 @@ export function BarberProfileClient({
         </div>
         <Button
           disabled={selectedServices.length === 0 || isPending}
-          onClick={bookAppointment}
+          onClick={requestBooking}
           className="shadow-ambient bg-primary font-headline-md text-background h-auto w-full gap-2 rounded-lg py-3 text-[18px]"
         >
           {isPending ? "Réservation..." : "Réserver maintenant"}
@@ -502,13 +507,94 @@ export function BarberProfileClient({
           </div>
           <Button
             disabled={selectedServices.length === 0 || isPending}
-            onClick={bookAppointment}
+            onClick={requestBooking}
             className="font-label-md text-label-md bg-primary text-background mt-4 h-auto w-full rounded-lg py-3 shadow-sm hover:opacity-90"
           >
             {isPending ? "Réservation..." : "Réserver maintenant"}
           </Button>
         </Card>
       </div>
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirmer la réservation</DialogTitle>
+            <DialogDescription>
+              Vérifiez les détails avant d&apos;envoyer la demande au
+              barbier.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="gap-stack-sm flex flex-col">
+            {selectedServices.map((s) => (
+              <div key={s.name} className="flex items-center justify-between">
+                <span className="font-body-md text-label-sm text-on-surface-variant">
+                  {s.name}
+                </span>
+                <span className="font-label-sm text-label-sm text-on-surface">
+                  {s.price}
+                </span>
+              </div>
+            ))}
+            <div className="border-surface-variant mt-2 flex items-center justify-between border-t pt-2">
+              <span className="font-body-md text-label-sm text-on-surface-variant">
+                Date et heure
+              </span>
+              <span className="font-label-sm text-label-sm text-on-surface">
+                {startAtInput
+                  ? new Date(startAtInput).toLocaleString("fr-FR")
+                  : ""}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="font-body-md text-label-sm text-on-surface-variant">
+                Total
+              </span>
+              <span className="font-headline-md text-primary text-[18px]">
+                {formatMillimes(totalPriceMillimes)}
+              </span>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmOpen(false)}
+              disabled={isPending}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={bookAppointment}
+              disabled={isPending}
+              className="bg-primary text-background"
+            >
+              {isPending ? "Réservation..." : "Confirmer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={bookingResult?.status === "success"}
+        onOpenChange={(o) => !o && setBookingResult(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Demande envoyée au barbier</DialogTitle>
+            <DialogDescription>
+              {bookingResult?.status === "success" &&
+                `Rendez-vous demandé pour le ${new Date(bookingResult.startAt).toLocaleString("fr-FR")}. En attente de confirmation du barbier.`}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              onClick={() => setBookingResult(null)}
+              className="bg-primary text-background"
+            >
+              OK
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
