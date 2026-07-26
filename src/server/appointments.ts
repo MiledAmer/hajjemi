@@ -10,7 +10,9 @@ const createAppointmentSchema = z
     barberId: z.string().min(1),
     startAt: z.coerce.date(),
     endAt: z.coerce.date(),
-    totalPriceMillimes: z.number().int().positive(),
+    // ponytail: no Service catalog yet, so the client can't price the
+    // visit up front — barber sets/confirms the price out of band.
+    totalPriceMillimes: z.number().int().nonnegative().default(0),
     status: z.nativeEnum(AppointmentStatus).default(AppointmentStatus.PENDING),
   })
   .refine((data) => data.endAt > data.startAt, {

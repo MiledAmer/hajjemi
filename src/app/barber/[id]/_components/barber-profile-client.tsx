@@ -7,12 +7,10 @@ import {
   ArrowLeft,
   ArrowRight,
   Calendar as CalendarIcon,
-  Check,
   ChevronLeft,
   ChevronRight,
   Clock,
   MapPin,
-  Plus,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -39,58 +37,10 @@ import type {
   User as DbUser,
 } from "../../../../../generated/prisma";
 
-// ponytail: no Service model in the schema yet — the bookable service list
-// stays client-only mock data until Catalog is modeled and gets its own CRUD.
-// Price/duration are parsed below to build the real Appointment though.
-type Service = {
-  name: string;
-  description: string;
-  duration: string;
-  price: string;
-};
-
-const services: Service[] = [
-  {
-    name: "Coupe + Barbe (VIP)",
-    description:
-      "Dégradé à blanc, taille de barbe avec serviette chaude, contours au rasoir, soin visage.",
-    duration: "45 min",
-    price: "30 DT",
-  },
-  {
-    name: "Dégradé Américain",
-    description:
-      "Coupe aux ciseaux ou tondeuse, finition parfaite, coiffage avec produit premium.",
-    duration: "30 min",
-    price: "15 DT",
-  },
-  {
-    name: "Taille de Barbe Classique",
-    description:
-      "Taille à la tondeuse, contours propres, application d'huile nourrissante.",
-    duration: "15 min",
-    price: "10 DT",
-  },
-  {
-    name: "Coloration / Mèches",
-    description:
-      "Coloration complète ou mèches personnalisées. Produit professionnel respectueux du cuir chevelu.",
-    duration: "60 min",
-    price: "45 DT",
-  },
-];
-
-function parsePriceMillimes(price: string) {
-  return Math.round(parseFloat(price) * 1000);
-}
-
-function parseDurationMinutes(duration: string) {
-  return parseInt(duration, 10);
-}
-
-function formatMillimes(millimes: number) {
-  return `${(millimes / 1000).toFixed(3)} DT`;
-}
+// ponytail: no Service catalog in the schema yet, so a booking is just a
+// day/hour with a fixed placeholder duration — price is set by the barber
+// out of band once the appointment is confirmed.
+const APPOINTMENT_DURATION_MINUTES = 30;
 
 function nowForInput() {
   const d = new Date(Date.now() + 60 * 60 * 1000);
@@ -243,67 +193,6 @@ function DatePicker({
   );
 }
 
-function ServiceItem({
-  service,
-  selected,
-  onToggle,
-  removeAria,
-  addAria,
-}: {
-  service: Service;
-  selected: boolean;
-  onToggle: () => void;
-  removeAria: string;
-  addAria: string;
-}) {
-  return (
-    <Card className="group border-surface-variant p-stack-md hover:bg-surface-container-high relative flex-row items-center justify-between gap-0 rounded-xl border bg-[#1C1C1E] transition-colors">
-      {selected && (
-        <div className="bg-primary absolute top-0 bottom-0 left-0 w-1" />
-      )}
-      <div className={`flex-1 pr-4 ${selected ? "pl-2" : ""}`}>
-        <h3 className="font-headline-md text-on-surface mb-1 text-[18px]">
-          {service.name}
-        </h3>
-        <p className="font-body-md text-label-sm text-on-surface-variant line-clamp-2">
-          {service.description}
-        </p>
-        <div className="mt-2 flex items-center gap-2">
-          <Clock className="text-primary size-3.5" />
-          <span className="font-label-sm text-label-sm text-on-surface-variant">
-            {service.duration}
-          </span>
-        </div>
-      </div>
-      <div className="flex shrink-0 flex-col items-end gap-2">
-        <span className="font-headline-md text-primary text-[20px]">
-          {service.price}
-        </span>
-        {selected ? (
-          <Button
-            aria-label={removeAria}
-            size="icon"
-            onClick={onToggle}
-            className="bg-primary text-background size-8 rounded-full"
-          >
-            <Check className="size-4" />
-          </Button>
-        ) : (
-          <Button
-            aria-label={addAria}
-            variant="secondary"
-            size="icon"
-            onClick={onToggle}
-            className="bg-surface-variant text-on-surface group-hover:bg-primary group-hover:text-background size-8 rounded-full"
-          >
-            <Plus className="size-4" />
-          </Button>
-        )}
-      </div>
-    </Card>
-  );
-}
-
 export function BarberProfileClient({
   profile,
   availability,
@@ -322,9 +211,6 @@ export function BarberProfileClient({
   const open = isOpenNow(availability);
   const heroImage = profile.coverImageUrl ?? profile.avatarUrl;
 
-  const [selectedNames, setSelectedNames] = useState<Set<string>>(
-    () => new Set([services[1]!.name]),
-  );
   const [startAtInput, setStartAtInput] = useState(nowForInput);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -333,39 +219,21 @@ export function BarberProfileClient({
     { status: "success"; startAt: string } | { status: "error" } | null
   >(null);
 
-  const selectedServices = services.filter((s) => selectedNames.has(s.name));
-  const totalPriceMillimes = selectedServices.reduce(
-    (sum, s) => sum + parsePriceMillimes(s.price),
-    0,
-  );
-  const totalDurationMinutes = selectedServices.reduce(
-    (sum, s) => sum + parseDurationMinutes(s.duration),
-    0,
-  );
   const selectedDayOff =
     !!startAtInput && isDayOff(availability, new Date(startAtInput));
 
-  function toggleService(name: string) {
-    setSelectedNames((prev) => {
-      const next = new Set(prev);
-      if (next.has(name)) next.delete(name);
-      else next.add(name);
-      return next;
-    });
-  }
-
   function requestBooking() {
-    if (selectedServices.length === 0 || !startAtInput || selectedDayOff)
-      return;
+    if (!startAtInput || selectedDayOff) return;
     setConfirmOpen(true);
   }
 
   function bookAppointment() {
     setConfirmOpen(false);
-    if (selectedServices.length === 0 || !startAtInput || selectedDayOff)
-      return;
+    if (!startAtInput || selectedDayOff) return;
     const startAt = new Date(startAtInput);
-    const endAt = new Date(startAt.getTime() + totalDurationMinutes * 60_000);
+    const endAt = new Date(
+      startAt.getTime() + APPOINTMENT_DURATION_MINUTES * 60_000,
+    );
     startTransition(async () => {
       try {
         await createAppointment({
@@ -373,7 +241,7 @@ export function BarberProfileClient({
           barberId: profile.id,
           startAt,
           endAt,
-          totalPriceMillimes,
+          totalPriceMillimes: 0,
           status: "PENDING",
         });
         setBookingResult({ status: "success", startAt: startAtInput });
@@ -556,46 +424,9 @@ export function BarberProfileClient({
           </div>
         </section>
 
-        {/* Services Section (Right Column on Desktop) */}
+        {/* Booking Section (Right Column on Desktop) */}
         <section className="fade-in-up mt-stack-lg px-container-margin pb-28 delay-100 md:col-span-7 md:mt-0 md:px-0 md:pb-0">
-          <div className="mb-stack-md flex items-center justify-between">
-            <h2 className="font-headline-md text-headline-md text-on-surface">
-              {t.servicesTitle}
-            </h2>
-          </div>
-
-          {/* Service Categories (Chips) */}
-          <div className="hide-scrollbar mb-stack-md gap-stack-sm pb-stack-sm flex overflow-x-auto">
-            {t.categories.map((category, index) => (
-              <Button
-                key={category}
-                variant={index === 0 ? "default" : "outline"}
-                className={
-                  index === 0
-                    ? "font-label-md text-label-md bg-primary-container text-on-primary-container h-auto rounded-full px-4 py-2 whitespace-nowrap"
-                    : "font-label-md text-label-md border-surface-variant bg-surface-container text-on-surface-variant hover:bg-surface-variant h-auto rounded-full px-4 py-2 whitespace-nowrap"
-                }
-              >
-                {category}
-              </Button>
-            ))}
-          </div>
-
-          {/* Service List */}
-          <div className="gap-stack-sm flex flex-col">
-            {services.map((service) => (
-              <ServiceItem
-                key={service.name}
-                service={service}
-                selected={selectedNames.has(service.name)}
-                onToggle={() => toggleService(service.name)}
-                removeAria={t.removeServiceAria}
-                addAria={t.addServiceAria}
-              />
-            ))}
-          </div>
-
-          <div className="mt-stack-lg flex flex-col gap-2">
+          <div className="flex flex-col gap-2">
             <span className="font-label-md text-label-md text-on-surface-variant">
               {t.dateTimeLabel}
             </span>
@@ -678,16 +509,8 @@ export function BarberProfileClient({
 
       {/* Floating Action Button Area (Mobile Book Now) */}
       <div className="glass-panel pb-safe px-container-margin py-stack-md fixed bottom-0 left-0 z-40 w-full shadow-[0_-8px_16px_rgba(0,0,0,0.4)] md:hidden">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="font-label-md text-label-md text-on-surface-variant">
-            {t.servicesSelected(selectedServices.length)}
-          </span>
-          <span className="font-headline-md text-primary text-[20px]">
-            {formatMillimes(totalPriceMillimes)}
-          </span>
-        </div>
         <Button
-          disabled={selectedServices.length === 0 || isPending || selectedDayOff}
+          disabled={isPending || selectedDayOff}
           onClick={requestBooking}
           className="shadow-ambient bg-primary font-headline-md text-background h-auto w-full gap-2 rounded-lg py-3 text-[18px]"
         >
@@ -699,31 +522,10 @@ export function BarberProfileClient({
       {/* Desktop Floating Action Area (Hidden on mobile) */}
       <div className="fixed right-8 bottom-8 z-50 hidden md:block">
         <Card className="fade-in-up shadow-ambient border-surface-variant bg-surface-container-high w-80 gap-0 rounded-xl border p-4 delay-200">
-          <h3 className="font-headline-md border-surface-variant text-on-surface mb-2 border-b pb-2 text-[18px]">
-            {t.yourBooking}
-          </h3>
-          {selectedServices.map((s) => (
-            <div key={s.name} className="mb-1 flex items-center justify-between">
-              <span className="font-body-md text-label-sm text-on-surface-variant">
-                {s.name}
-              </span>
-              <span className="font-label-sm text-label-sm text-on-surface">
-                {s.price}
-              </span>
-            </div>
-          ))}
-          <div className="border-surface-variant mt-3 flex items-center justify-between border-t pt-2">
-            <span className="font-headline-md text-on-surface text-[16px]">
-              {t.total}
-            </span>
-            <span className="font-headline-md text-primary text-[20px]">
-              {formatMillimes(totalPriceMillimes)}
-            </span>
-          </div>
           <Button
-            disabled={selectedServices.length === 0 || isPending}
+            disabled={isPending || selectedDayOff}
             onClick={requestBooking}
-            className="font-label-md text-label-md bg-primary text-background mt-4 h-auto w-full rounded-lg py-3 shadow-sm hover:opacity-90"
+            className="font-label-md text-label-md bg-primary text-background h-auto w-full rounded-lg py-3 shadow-sm hover:opacity-90"
           >
             {isPending ? t.bookingInProgress : t.bookNow}
           </Button>
@@ -737,17 +539,7 @@ export function BarberProfileClient({
             <DialogDescription>{t.confirmDescription}</DialogDescription>
           </DialogHeader>
           <div className="gap-stack-sm flex flex-col">
-            {selectedServices.map((s) => (
-              <div key={s.name} className="flex items-center justify-between">
-                <span className="font-body-md text-label-sm text-on-surface-variant">
-                  {s.name}
-                </span>
-                <span className="font-label-sm text-label-sm text-on-surface">
-                  {s.price}
-                </span>
-              </div>
-            ))}
-            <div className="border-surface-variant mt-2 flex items-center justify-between border-t pt-2">
+            <div className="flex items-center justify-between">
               <span className="font-body-md text-label-sm text-on-surface-variant">
                 {t.confirmDateTime}
               </span>
@@ -755,14 +547,6 @@ export function BarberProfileClient({
                 {startAtInput
                   ? new Date(startAtInput).toLocaleString("fr-FR")
                   : ""}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="font-body-md text-label-sm text-on-surface-variant">
-                {t.total}
-              </span>
-              <span className="font-headline-md text-primary text-[18px]">
-                {formatMillimes(totalPriceMillimes)}
               </span>
             </div>
           </div>
