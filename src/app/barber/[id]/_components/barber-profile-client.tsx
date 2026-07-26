@@ -3,7 +3,17 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { ArrowLeft, ArrowRight, Check, Clock, MapPin, Plus } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Calendar as CalendarIcon,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Clock,
+  MapPin,
+  Plus,
+} from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -20,6 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { CURRENT_CLIENT_USER_ID } from "@/lib/current-client";
 import { GOVERNORATE_LABELS } from "@/lib/governorate";
+import { cn } from "@/lib/utils";
 import { createAppointment } from "@/server/appointments";
 import type {
   BarberAvailability,
@@ -122,6 +133,119 @@ function isDayOff(rows: BarberAvailability[], date: Date) {
   return !rows.some((r) => r.dayOfWeek === day);
 }
 
+function isSameDay(a: Date, b: Date) {
+  return (
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+  );
+}
+
+function withDate(iso: string, date: Date) {
+  const time = iso.slice(11, 16) || "09:00";
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${time}`;
+}
+
+function withTime(iso: string, time: string) {
+  return `${iso.slice(0, 10)}T${time}`;
+}
+
+const WEEKDAY_LABELS = ["D", "L", "M", "M", "J", "V", "S"];
+
+function DatePicker({
+  availability,
+  selected,
+  onSelect,
+}: {
+  availability: BarberAvailability[];
+  selected: Date;
+  onSelect: (date: Date) => void;
+}) {
+  const [month, setMonth] = useState(
+    () => new Date(selected.getFullYear(), selected.getMonth(), 1),
+  );
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const firstWeekday = month.getDay();
+  const daysInMonth = new Date(
+    month.getFullYear(),
+    month.getMonth() + 1,
+    0,
+  ).getDate();
+  const cells = Array.from(
+    { length: daysInMonth },
+    (_, i) => new Date(month.getFullYear(), month.getMonth(), i + 1),
+  );
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center justify-between">
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Mois précédent"
+          onClick={() =>
+            setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))
+          }
+        >
+          <ChevronLeft className="size-4" />
+        </Button>
+        <span className="font-label-md text-label-md text-on-surface capitalize">
+          {month.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}
+        </span>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Mois suivant"
+          onClick={() =>
+            setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))
+          }
+        >
+          <ChevronRight className="size-4" />
+        </Button>
+      </div>
+      <div className="text-on-surface-variant grid grid-cols-7 gap-1 text-center text-xs">
+        {WEEKDAY_LABELS.map((d, i) => (
+          <span key={i}>{d}</span>
+        ))}
+      </div>
+      <div className="mt-1 grid grid-cols-7 gap-1">
+        {Array.from({ length: firstWeekday }).map((_, i) => (
+          <span key={`pad-${i}`} />
+        ))}
+        {cells.map((date) => {
+          const closed = isDayOff(availability, date);
+          const past = date < today;
+          const isSelected = isSameDay(date, selected);
+          return (
+            <button
+              key={date.toISOString()}
+              type="button"
+              disabled={past}
+              onClick={() => onSelect(date)}
+              className={cn(
+                "h-9 rounded-md text-sm transition-colors",
+                past && "text-on-surface-variant/40 cursor-not-allowed",
+                !past && closed && !isSelected && "text-destructive",
+                !past &&
+                  !closed &&
+                  !isSelected &&
+                  "text-on-surface hover:bg-surface-variant",
+                isSelected && "bg-primary text-background",
+              )}
+            >
+              {date.getDate()}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 function ServiceItem({
   service,
   selected,
@@ -194,6 +318,7 @@ export function BarberProfileClient({
     () => new Set([services[1]!.name]),
   );
   const [startAtInput, setStartAtInput] = useState(nowForInput);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [bookingResult, setBookingResult] = useState<
@@ -229,6 +354,8 @@ export function BarberProfileClient({
 
   function bookAppointment() {
     setConfirmOpen(false);
+    if (selectedServices.length === 0 || !startAtInput || selectedDayOff)
+      return;
     const startAt = new Date(startAtInput);
     const endAt = new Date(startAt.getTime() + totalDurationMinutes * 60_000);
     startTransition(async () => {
@@ -443,30 +570,74 @@ export function BarberProfileClient({
           </div>
 
           <div className="mt-stack-lg flex flex-col gap-2">
-            <label
-              htmlFor="appointment-start"
-              className="font-label-md text-label-md text-on-surface-variant"
-            >
+            <span className="font-label-md text-label-md text-on-surface-variant">
               Date et heure du rendez-vous
-            </label>
-            <Input
-              id="appointment-start"
-              type="datetime-local"
-              value={startAtInput}
-              min={nowForInput()}
-              onChange={(event) => setStartAtInput(event.target.value)}
-              className={
-                selectedDayOff
-                  ? "border-destructive text-destructive focus-visible:ring-destructive"
-                  : undefined
-              }
-            />
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setPickerOpen(true)}
+              className={cn(
+                "font-body-md h-auto w-full justify-start gap-2 py-3 text-[15px] font-normal",
+                selectedDayOff && "border-destructive text-destructive",
+              )}
+            >
+              <CalendarIcon className="size-4" />
+              {new Date(startAtInput).toLocaleString("fr-FR", {
+                dateStyle: "full",
+                timeStyle: "short",
+              })}
+            </Button>
             {selectedDayOff && (
               <p className="text-destructive font-body-md">
                 Le barbier est fermé ce jour-là. Choisissez un autre jour.
               </p>
             )}
           </div>
+
+          <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Choisir une date</DialogTitle>
+              </DialogHeader>
+              <DatePicker
+                availability={availability}
+                selected={new Date(startAtInput)}
+                onSelect={(date) =>
+                  setStartAtInput(withDate(startAtInput, date))
+                }
+              />
+              <div className="mt-stack-md flex flex-col gap-2">
+                <label
+                  htmlFor="appointment-time"
+                  className="font-label-md text-label-md text-on-surface-variant"
+                >
+                  Heure
+                </label>
+                <Input
+                  id="appointment-time"
+                  type="time"
+                  value={startAtInput.slice(11, 16)}
+                  onChange={(event) =>
+                    setStartAtInput(withTime(startAtInput, event.target.value))
+                  }
+                />
+              </div>
+              {selectedDayOff && (
+                <p className="text-destructive font-body-md">
+                  Le barbier est fermé ce jour-là. Choisissez un autre jour.
+                </p>
+              )}
+              <DialogFooter>
+                <Button
+                  onClick={() => setPickerOpen(false)}
+                  className="bg-primary text-background"
+                >
+                  Valider
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
 
           {bookingResult?.status === "error" && (
             <p className="text-destructive font-body-md mt-stack-md">
