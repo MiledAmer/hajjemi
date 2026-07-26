@@ -117,6 +117,11 @@ function isOpenNow(rows: BarberAvailability[]) {
   );
 }
 
+function isDayOff(rows: BarberAvailability[], date: Date) {
+  const day = DAY_INDEX[date.getDay()];
+  return !rows.some((r) => r.dayOfWeek === day);
+}
+
 function ServiceItem({
   service,
   selected,
@@ -204,6 +209,8 @@ export function BarberProfileClient({
     (sum, s) => sum + parseDurationMinutes(s.duration),
     0,
   );
+  const selectedDayOff =
+    !!startAtInput && isDayOff(availability, new Date(startAtInput));
 
   function toggleService(name: string) {
     setSelectedNames((prev) => {
@@ -215,7 +222,8 @@ export function BarberProfileClient({
   }
 
   function requestBooking() {
-    if (selectedServices.length === 0 || !startAtInput) return;
+    if (selectedServices.length === 0 || !startAtInput || selectedDayOff)
+      return;
     setConfirmOpen(true);
   }
 
@@ -447,7 +455,17 @@ export function BarberProfileClient({
               value={startAtInput}
               min={nowForInput()}
               onChange={(event) => setStartAtInput(event.target.value)}
+              className={
+                selectedDayOff
+                  ? "border-destructive text-destructive focus-visible:ring-destructive"
+                  : undefined
+              }
             />
+            {selectedDayOff && (
+              <p className="text-destructive font-body-md">
+                Le barbier est fermé ce jour-là. Choisissez un autre jour.
+              </p>
+            )}
           </div>
 
           {bookingResult?.status === "error" && (
@@ -472,7 +490,7 @@ export function BarberProfileClient({
           </span>
         </div>
         <Button
-          disabled={selectedServices.length === 0 || isPending}
+          disabled={selectedServices.length === 0 || isPending || selectedDayOff}
           onClick={requestBooking}
           className="shadow-ambient bg-primary font-headline-md text-background h-auto w-full gap-2 rounded-lg py-3 text-[18px]"
         >
