@@ -92,7 +92,7 @@ export default function InscriptionBarbierPage() {
               content_cut
             </span>
             <span className="font-headline-lg text-headline-lg text-primary tracking-tighter uppercase">
-              Hajjem
+              Hajjemi
             </span>
           </div>
           <Link
@@ -253,7 +253,7 @@ export default function InscriptionBarbierPage() {
       {/* Footer Privacy */}
       <footer className="z-10 mt-auto w-full py-8 text-center">
         <p className="font-label-sm text-label-sm text-on-surface-variant/40">
-          © 2024 Hajjem. Plateforme de gestion premium pour barbiers.
+          © 2026 Hajjemi. Plateforme de gestion premium pour barbiers.
         </p>
       </footer>
     </div>

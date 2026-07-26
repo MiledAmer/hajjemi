@@ -93,7 +93,7 @@ export default function PlansPage() {
         <div className="px-container-margin mx-auto flex h-16 w-full max-w-7xl items-center justify-between">
           <div className="gap-base flex items-center">
             <span className="font-headline-md text-headline-md text-primary font-bold tracking-tighter">
-              HAJJEM
+              HAJJEMI
             </span>
             <span className="font-label-sm text-label-sm border-outline-variant/30 bg-surface-container text-on-surface-variant ml-2 rounded-sm border px-2 py-1 tracking-widest uppercase">
               Pro
@@ -465,14 +465,14 @@ export default function PlansPage() {
         <div className="px-container-margin mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 md:flex-row">
           <div className="flex items-center gap-2">
             <span className="font-headline-md text-headline-md text-on-surface font-bold tracking-tighter opacity-50">
-              HAJJEM
+              HAJJEMI
             </span>
             <span className="font-label-sm text-label-sm text-on-surface-variant uppercase">
               Pro
             </span>
           </div>
           <p className="font-label-sm text-label-sm text-on-surface-variant">
-            © 2024 Hajjem. Réservé aux professionnels du grooming.
+            © 2026 Hajjemi. Réservé aux professionnels du grooming.
           </p>
         </div>
       </footer>

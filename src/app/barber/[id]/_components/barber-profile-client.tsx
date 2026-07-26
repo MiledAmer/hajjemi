@@ -398,7 +398,7 @@ export function BarberProfileClient({
             <ArrowLeft className="size-5" />
           </Button>
           <span className="font-headline-lg text-headline-lg text-primary font-bold tracking-tighter">
-            HAJJEM
+            HAJJEMI
           </span>
         </div>
         <div className="gap-stack-lg flex items-center">

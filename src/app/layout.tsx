@@ -5,7 +5,7 @@ import { type Metadata } from "next";
 import { Hanken_Grotesk } from "next/font/google";
 
 export const metadata: Metadata = {
-  title: "Hajjem - Premium Barber App",
+  title: "Hajjemi - Premium Barber App",
   description: "Réservez votre coupe en un clic.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
 };

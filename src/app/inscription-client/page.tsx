@@ -46,7 +46,7 @@ export default function InscriptionClientPage() {
             </span>
           </div>
           <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-stack-sm tracking-tighter uppercase">
-            Hajjem
+            Hajjemi
           </h1>
           <p className="font-body-md text-on-surface-variant opacity-80">
             Rejoignez l&apos;élite du grooming en Tunisie

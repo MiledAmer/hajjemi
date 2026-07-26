@@ -34,7 +34,7 @@ export default function HomePage() {
       <header className="bg-surface/80 sticky top-0 z-50 hidden w-full shadow-sm backdrop-blur-md md:block">
         <div className="px-container-margin mx-auto flex h-16 w-full max-w-7xl items-center justify-between">
           <span className="font-display-lg text-display-lg text-primary tracking-tighter uppercase">
-            HAJJEM
+            HAJJEMI
           </span>
           <div className="gap-stack-lg flex items-center">
             <Link
@@ -83,7 +83,7 @@ export default function HomePage() {
         <header className="px-container-margin relative z-10 flex w-full items-center justify-between pt-8 pb-4 md:hidden">
           <span className="w-14" />
           <h1 className="font-display-lg text-display-lg text-primary tracking-tighter uppercase">
-            HAJJEM
+            HAJJEMI
           </h1>
           {langSwitch}
         </header>
@@ -236,7 +236,7 @@ export default function HomePage() {
       <footer className="border-surface-container-high bg-surface hidden border-t py-8 md:block">
         <div className="px-container-margin mx-auto flex max-w-7xl items-center justify-between">
           <span className="font-headline-md text-headline-md text-on-surface font-bold tracking-tighter opacity-50">
-            HAJJEM
+            HAJJEMI
           </span>
           <p className="font-label-sm text-label-sm text-on-surface-variant">
             {t.copyright}

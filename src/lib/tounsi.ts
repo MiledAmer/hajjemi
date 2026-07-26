@@ -89,7 +89,7 @@ export const home = {
         text: "Ejri fel wa9t w tmatta3 b service top, bla ma testenna.",
       },
     ],
-    copyright: "© 2026 Hajjem. L'elite mta3 grooming fi Tounes.",
+    copyright: "© 2026 Hajjemi. L'elite mta3 grooming fi Tounes.",
   },
 } as const satisfies Record<Lang, unknown>;
 
