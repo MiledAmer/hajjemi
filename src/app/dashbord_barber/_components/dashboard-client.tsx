@@ -6,14 +6,10 @@ import {
   Bell,
   Calendar,
   Clock,
-  Eraser,
   LayoutDashboard,
   LogOut,
   Phone,
-  Scissors,
   Share2,
-  Smile,
-  Trash2,
   User,
 } from "lucide-react";
 
@@ -31,9 +27,7 @@ import type {
   BarberProfile,
   User as DbUser,
 } from "../../../../generated/prisma";
-import { AddServiceDialog } from "./add-service-dialog";
 import { EditProfileDialog } from "./edit-profile-dialog";
-import { EditServiceDialog } from "./edit-service-dialog";
 
 const BARBER_AVATAR =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAdrTXJGg8DazrU0p10zIpPYOPEaelASF8XNHGnzqCJrMws5gmTWuP4crJC3MJbz6CQ6y7rwO2LUzW4-l-X8Wkjr9kQ9lzIxNBpUx_iBgvBcGKv1cr4HPz2KXQ7cAau5NA5OV95ius9ruL7Pmo_GL-N54LY5NYrh7nDtkATP2XfiTF3vIyU3Dg-8K6p6lxFOQ8kP6P7TgsfWlklVaXKoXpHDfIWaWAVyTlWkszYSN-koPLGJ40ZVIfWdPMCaPeJ3c3cqqCCoUfVV04D";
@@ -41,28 +35,12 @@ const BARBER_AVATAR =
 const BARBER_PROFILE_PORTRAIT =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCJ1PSYFJcFErbgTa0UBXq-bgLu_ZCGgqoc9PWO0dlc367UVNuHC4oFdM5MGt2VIhxXkE2c2rKE2flwFbtaGvQ00mBC9r0OZlYDTSzUnqWyVwehQmYqXQU9jPB6U6s6vmb8owjEzXRbqAv24l_gGulYJ2fxGIsTwtCD7rBPV3U6G4t6u-6nCVTS6jPCGLKE3-90yC7uWOQ24AtjsgkIrPwJ3NbHz3qvycKSWKrszDxSQnaurTy3lQDUUT3VH2iW7BZ4aKNcjP_RaO1v";
 
-type ViewId = "dashboard" | "bookings" | "services" | "profile";
+type ViewId = "dashboard" | "bookings" | "profile";
 
 const navItems: { id: ViewId; icon: typeof LayoutDashboard }[] = [
   { id: "dashboard", icon: LayoutDashboard },
   { id: "bookings", icon: Calendar },
-  { id: "services", icon: Scissors },
   { id: "profile", icon: User },
-];
-
-// ponytail: no Service model in the schema yet — services stay client-only
-// mock data until Catalog is modeled and gets its own CRUD.
-type Service = {
-  name: string;
-  duration: string;
-  price: string;
-  icon: typeof Scissors;
-};
-
-const initialServices: Service[] = [
-  { name: "Coupe Classique", duration: "30 min", price: "25 DT", icon: Scissors },
-  { name: "Barbe VIP", duration: "20 min", price: "15 DT", icon: Smile },
-  { name: "Teinture Barbe", duration: "45 min", price: "40 DT", icon: Eraser },
 ];
 
 type AppointmentWithClient = Appointment & { client: DbUser };
@@ -103,7 +81,6 @@ export function DashboardClient({
 }) {
   const router = useRouter();
   const [view, setView] = useState<ViewId>("dashboard");
-  const [services, setServices] = useState<Service[]>(initialServices);
   const { lang, toggleLang } = useLang();
   const t = dashboardContent[lang];
   const [isPending, startTransition] = useTransition();
@@ -388,71 +365,6 @@ export function DashboardClient({
                       </div>
                     </div>
                   )}
-                </Card>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* View: Services */}
-        {view === "services" && (
-          <section>
-            <div className="mb-stack-lg flex items-center justify-between">
-              <h1 className="font-headline-lg-mobile text-headline-lg-mobile">
-                {t.myServices}
-              </h1>
-              <AddServiceDialog
-                lang={lang}
-                onAdd={(newService) =>
-                  setServices((prev) => [
-                    ...prev,
-                    { ...newService, icon: Scissors },
-                  ])
-                }
-              />
-            </div>
-            <div className="gap-gutter space-y-gutter md:grid md:grid-cols-2 md:space-y-0 lg:grid-cols-3">
-              {services.map((service) => (
-                <Card
-                  key={service.name}
-                  className="bg-surface-container p-gutter flex-row items-center justify-between gap-0 rounded-xl"
-                >
-                  <div className="gap-gutter flex items-center">
-                    <div className="bg-surface-variant text-primary flex size-12 items-center justify-center rounded-lg">
-                      <service.icon className="size-5" />
-                    </div>
-                    <div>
-                      <p className="font-headline-md text-headline-md">
-                        {service.name}
-                      </p>
-                      <p className="text-on-surface-variant font-body-md">
-                        {service.duration} • {service.price}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <EditServiceDialog
-                      lang={lang}
-                      service={service}
-                      onSave={(updated) =>
-                        setServices((prev) =>
-                          prev.map((s) =>
-                            s.name === service.name
-                              ? { ...s, ...updated }
-                              : s,
-                          ),
-                        )
-                      }
-                    />
-                    <Button
-                      aria-label={t.deleteAria}
-                      variant="ghost"
-                      size="icon"
-                      className="text-on-surface-variant hover:text-destructive size-10"
-                    >
-                      <Trash2 className="size-5" />
-                    </Button>
-                  </div>
                 </Card>
               ))}
             </div>
