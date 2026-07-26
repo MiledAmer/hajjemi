@@ -30,6 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { CURRENT_CLIENT_USER_ID } from "@/lib/current-client";
 import { GOVERNORATE_LABELS } from "@/lib/governorate";
+import { barberProfile as content, useLang } from "@/lib/tounsi";
 import { cn } from "@/lib/utils";
 import { createAppointment } from "@/server/appointments";
 import type {
@@ -37,12 +38,6 @@ import type {
   BarberProfile,
   User as DbUser,
 } from "../../../../../generated/prisma";
-
-const navLinks = [
-  { label: "Accueil", href: "/" },
-  { label: "Trouver un coiffeur", href: "/search" },
-  { label: "Espace Barber", href: "/plans" },
-];
 
 // ponytail: no Service model in the schema yet — the bookable service list
 // stays client-only mock data until Catalog is modeled and gets its own CRUD.
@@ -84,8 +79,6 @@ const services: Service[] = [
     price: "45 DT",
   },
 ];
-
-const serviceCategories = ["Populaire", "Coupes", "Barbe", "Soins"];
 
 function parsePriceMillimes(price: string) {
   return Math.round(parseFloat(price) * 1000);
@@ -157,10 +150,14 @@ function DatePicker({
   availability,
   selected,
   onSelect,
+  prevMonthAria,
+  nextMonthAria,
 }: {
   availability: BarberAvailability[];
   selected: Date;
   onSelect: (date: Date) => void;
+  prevMonthAria: string;
+  nextMonthAria: string;
 }) {
   const [month, setMonth] = useState(
     () => new Date(selected.getFullYear(), selected.getMonth(), 1),
@@ -185,7 +182,7 @@ function DatePicker({
           type="button"
           variant="ghost"
           size="icon"
-          aria-label="Mois précédent"
+          aria-label={prevMonthAria}
           onClick={() =>
             setMonth((m) => new Date(m.getFullYear(), m.getMonth() - 1, 1))
           }
@@ -199,7 +196,7 @@ function DatePicker({
           type="button"
           variant="ghost"
           size="icon"
-          aria-label="Mois suivant"
+          aria-label={nextMonthAria}
           onClick={() =>
             setMonth((m) => new Date(m.getFullYear(), m.getMonth() + 1, 1))
           }
@@ -250,10 +247,14 @@ function ServiceItem({
   service,
   selected,
   onToggle,
+  removeAria,
+  addAria,
 }: {
   service: Service;
   selected: boolean;
   onToggle: () => void;
+  removeAria: string;
+  addAria: string;
 }) {
   return (
     <Card className="group border-surface-variant p-stack-md hover:bg-surface-container-high relative flex-row items-center justify-between gap-0 rounded-xl border bg-[#1C1C1E] transition-colors">
@@ -280,7 +281,7 @@ function ServiceItem({
         </span>
         {selected ? (
           <Button
-            aria-label="Retirer service"
+            aria-label={removeAria}
             size="icon"
             onClick={onToggle}
             className="bg-primary text-background size-8 rounded-full"
@@ -289,7 +290,7 @@ function ServiceItem({
           </Button>
         ) : (
           <Button
-            aria-label="Ajouter service"
+            aria-label={addAria}
             variant="secondary"
             size="icon"
             onClick={onToggle}
@@ -311,6 +312,13 @@ export function BarberProfileClient({
   availability: BarberAvailability[];
 }) {
   const router = useRouter();
+  const { lang, toggleLang } = useLang();
+  const t = content[lang];
+  const navLinks = [
+    { label: t.navAccueil, href: "/" },
+    { label: t.navSearch, href: "/search" },
+    { label: t.navPlans, href: "/plans" },
+  ];
   const open = isOpenNow(availability);
   const heroImage = profile.coverImageUrl ?? profile.avatarUrl;
 
@@ -381,7 +389,7 @@ export function BarberProfileClient({
       <header className="bg-surface px-container-margin sticky top-0 z-50 mx-auto hidden h-16 w-full max-w-7xl items-center justify-between shadow-sm md:flex">
         <div className="flex items-center gap-4">
           <Button
-            aria-label="Retour"
+            aria-label={t.backAria}
             variant="ghost"
             size="icon"
             className="text-on-surface-variant hover:text-primary"
@@ -403,6 +411,13 @@ export function BarberProfileClient({
               {link.label}
             </Link>
           ))}
+          <button
+            type="button"
+            onClick={toggleLang}
+            className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary border-outline-variant rounded-full border px-3 py-1 transition-colors"
+          >
+            {t.switchTo}
+          </button>
         </div>
         <Avatar className="bg-surface-container-high focus-visible:ring-primary size-10 focus-visible:ring-2">
           <AvatarImage
@@ -420,7 +435,7 @@ export function BarberProfileClient({
           {/* Mobile Back Button Overlay */}
           <div className="glass-panel absolute top-4 left-4 z-10 flex h-10 w-10 items-center justify-center rounded-full md:hidden">
             <Button
-              aria-label="Retour"
+              aria-label={t.backAria}
               variant="ghost"
               size="icon"
               className="text-on-surface"
@@ -477,7 +492,7 @@ export function BarberProfileClient({
                   className={`size-4 ${open ? "text-primary" : "text-destructive"}`}
                 />
                 <span className="font-label-sm text-label-sm text-on-surface">
-                  {open ? "Ouvert" : "Fermé"}
+                  {open ? t.open : t.closedStatus}
                 </span>
               </Badge>
               <Badge
@@ -520,7 +535,7 @@ export function BarberProfileClient({
                   className={`size-3.5 ${open ? "text-primary" : "text-destructive"}`}
                 />
                 <span className="font-label-sm text-label-sm text-on-surface-variant">
-                  {open ? "Ouv." : "Fermé"}
+                  {open ? t.openShort : t.closedStatus}
                 </span>
               </Badge>
             </div>
@@ -536,13 +551,13 @@ export function BarberProfileClient({
         <section className="fade-in-up mt-stack-lg px-container-margin pb-28 delay-100 md:col-span-7 md:mt-0 md:px-0 md:pb-0">
           <div className="mb-stack-md flex items-center justify-between">
             <h2 className="font-headline-md text-headline-md text-on-surface">
-              Services
+              {t.servicesTitle}
             </h2>
           </div>
 
           {/* Service Categories (Chips) */}
           <div className="hide-scrollbar mb-stack-md gap-stack-sm pb-stack-sm flex overflow-x-auto">
-            {serviceCategories.map((category, index) => (
+            {t.categories.map((category, index) => (
               <Button
                 key={category}
                 variant={index === 0 ? "default" : "outline"}
@@ -565,13 +580,15 @@ export function BarberProfileClient({
                 service={service}
                 selected={selectedNames.has(service.name)}
                 onToggle={() => toggleService(service.name)}
+                removeAria={t.removeServiceAria}
+                addAria={t.addServiceAria}
               />
             ))}
           </div>
 
           <div className="mt-stack-lg flex flex-col gap-2">
             <span className="font-label-md text-label-md text-on-surface-variant">
-              Date et heure du rendez-vous
+              {t.dateTimeLabel}
             </span>
             <Button
               type="button"
@@ -590,7 +607,7 @@ export function BarberProfileClient({
             </Button>
             {selectedDayOff && (
               <p className="text-destructive font-body-md">
-                Le barbier est fermé ce jour-là. Choisissez un autre jour.
+                {t.dayOffWarning}
               </p>
             )}
           </div>
@@ -598,7 +615,7 @@ export function BarberProfileClient({
           <Dialog open={pickerOpen} onOpenChange={setPickerOpen}>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Choisir une date</DialogTitle>
+                <DialogTitle>{t.pickDate}</DialogTitle>
               </DialogHeader>
               <DatePicker
                 availability={availability}
@@ -606,13 +623,15 @@ export function BarberProfileClient({
                 onSelect={(date) =>
                   setStartAtInput(withDate(startAtInput, date))
                 }
+                prevMonthAria={t.prevMonthAria}
+                nextMonthAria={t.nextMonthAria}
               />
               <div className="mt-stack-md flex flex-col gap-2">
                 <label
                   htmlFor="appointment-time"
                   className="font-label-md text-label-md text-on-surface-variant"
                 >
-                  Heure
+                  {t.timeLabel}
                 </label>
                 <Input
                   id="appointment-time"
@@ -625,7 +644,7 @@ export function BarberProfileClient({
               </div>
               {selectedDayOff && (
                 <p className="text-destructive font-body-md">
-                  Le barbier est fermé ce jour-là. Choisissez un autre jour.
+                  {t.dayOffWarning}
                 </p>
               )}
               <DialogFooter>
@@ -633,7 +652,7 @@ export function BarberProfileClient({
                   onClick={() => setPickerOpen(false)}
                   className="bg-primary text-background"
                 >
-                  Valider
+                  {t.confirmPick}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -641,7 +660,7 @@ export function BarberProfileClient({
 
           {bookingResult?.status === "error" && (
             <p className="text-destructive font-body-md mt-stack-md">
-              Échec de la réservation. Réessayez.
+              {t.bookingError}
             </p>
           )}
 
@@ -652,9 +671,7 @@ export function BarberProfileClient({
       <div className="glass-panel pb-safe px-container-margin py-stack-md fixed bottom-0 left-0 z-40 w-full shadow-[0_-8px_16px_rgba(0,0,0,0.4)] md:hidden">
         <div className="mb-2 flex items-center justify-between">
           <span className="font-label-md text-label-md text-on-surface-variant">
-            {selectedServices.length} service
-            {selectedServices.length > 1 ? "s" : ""} sélectionné
-            {selectedServices.length > 1 ? "s" : ""}
+            {t.servicesSelected(selectedServices.length)}
           </span>
           <span className="font-headline-md text-primary text-[20px]">
             {formatMillimes(totalPriceMillimes)}
@@ -665,7 +682,7 @@ export function BarberProfileClient({
           onClick={requestBooking}
           className="shadow-ambient bg-primary font-headline-md text-background h-auto w-full gap-2 rounded-lg py-3 text-[18px]"
         >
-          {isPending ? "Réservation..." : "Réserver maintenant"}
+          {isPending ? t.bookingInProgress : t.bookNow}
           <ArrowRight className="size-5" />
         </Button>
       </div>
@@ -674,7 +691,7 @@ export function BarberProfileClient({
       <div className="fixed right-8 bottom-8 z-50 hidden md:block">
         <Card className="fade-in-up shadow-ambient border-surface-variant bg-surface-container-high w-80 gap-0 rounded-xl border p-4 delay-200">
           <h3 className="font-headline-md border-surface-variant text-on-surface mb-2 border-b pb-2 text-[18px]">
-            Votre Réservation
+            {t.yourBooking}
           </h3>
           {selectedServices.map((s) => (
             <div key={s.name} className="mb-1 flex items-center justify-between">
@@ -688,7 +705,7 @@ export function BarberProfileClient({
           ))}
           <div className="border-surface-variant mt-3 flex items-center justify-between border-t pt-2">
             <span className="font-headline-md text-on-surface text-[16px]">
-              Total
+              {t.total}
             </span>
             <span className="font-headline-md text-primary text-[20px]">
               {formatMillimes(totalPriceMillimes)}
@@ -699,7 +716,7 @@ export function BarberProfileClient({
             onClick={requestBooking}
             className="font-label-md text-label-md bg-primary text-background mt-4 h-auto w-full rounded-lg py-3 shadow-sm hover:opacity-90"
           >
-            {isPending ? "Réservation..." : "Réserver maintenant"}
+            {isPending ? t.bookingInProgress : t.bookNow}
           </Button>
         </Card>
       </div>
@@ -707,11 +724,8 @@ export function BarberProfileClient({
       <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirmer la réservation</DialogTitle>
-            <DialogDescription>
-              Vérifiez les détails avant d&apos;envoyer la demande au
-              barbier.
-            </DialogDescription>
+            <DialogTitle>{t.confirmTitle}</DialogTitle>
+            <DialogDescription>{t.confirmDescription}</DialogDescription>
           </DialogHeader>
           <div className="gap-stack-sm flex flex-col">
             {selectedServices.map((s) => (
@@ -726,7 +740,7 @@ export function BarberProfileClient({
             ))}
             <div className="border-surface-variant mt-2 flex items-center justify-between border-t pt-2">
               <span className="font-body-md text-label-sm text-on-surface-variant">
-                Date et heure
+                {t.confirmDateTime}
               </span>
               <span className="font-label-sm text-label-sm text-on-surface">
                 {startAtInput
@@ -736,7 +750,7 @@ export function BarberProfileClient({
             </div>
             <div className="flex items-center justify-between">
               <span className="font-body-md text-label-sm text-on-surface-variant">
-                Total
+                {t.total}
               </span>
               <span className="font-headline-md text-primary text-[18px]">
                 {formatMillimes(totalPriceMillimes)}
@@ -749,14 +763,14 @@ export function BarberProfileClient({
               onClick={() => setConfirmOpen(false)}
               disabled={isPending}
             >
-              Annuler
+              {t.cancel}
             </Button>
             <Button
               onClick={bookAppointment}
               disabled={isPending}
               className="bg-primary text-background"
             >
-              {isPending ? "Réservation..." : "Confirmer"}
+              {isPending ? t.bookingInProgress : t.confirm}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -768,10 +782,12 @@ export function BarberProfileClient({
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Demande envoyée au barbier</DialogTitle>
+            <DialogTitle>{t.sentTitle}</DialogTitle>
             <DialogDescription>
               {bookingResult?.status === "success" &&
-                `Rendez-vous demandé pour le ${new Date(bookingResult.startAt).toLocaleString("fr-FR")}. En attente de confirmation du barbier.`}
+                t.sentDescription(
+                  new Date(bookingResult.startAt).toLocaleString("fr-FR"),
+                )}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -779,7 +795,7 @@ export function BarberProfileClient({
               onClick={() => setBookingResult(null)}
               className="bg-primary text-background"
             >
-              OK
+              {t.ok}
             </Button>
           </DialogFooter>
         </DialogContent>
