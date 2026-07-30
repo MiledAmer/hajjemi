@@ -49,7 +49,19 @@ export async function listAppointmentsByBarber(barberId: string) {
 export async function listAppointmentsByClient(clientId: string) {
   return db.appointment.findMany({
     where: { clientId },
+    include: { barber: true },
     orderBy: { startAt: "asc" },
+  });
+}
+
+export async function countUnseenAppointmentsForClient(clientId: string) {
+  return db.appointment.count({ where: { clientId, clientSeenAt: null } });
+}
+
+export async function markAppointmentsSeenByClient(clientId: string) {
+  return db.appointment.updateMany({
+    where: { clientId, clientSeenAt: null },
+    data: { clientSeenAt: new Date() },
   });
 }
 
@@ -58,7 +70,18 @@ export async function updateAppointment(
   input: z.infer<typeof updateAppointmentSchema>,
 ) {
   const data = updateAppointmentSchema.parse(input);
-  return db.appointment.update({ where: { id }, data });
+  return db.appointment.update({
+    where: { id },
+    data: {
+      ...data,
+      // Accepting/declining is exactly what the client needs to be notified
+      // of — flag it unseen again even if they'd already checked this
+      // appointment before (e.g. it was reopened).
+      ...(data.status === "CONFIRMED" || data.status === "CANCELLED"
+        ? { clientSeenAt: null }
+        : {}),
+    },
+  });
 }
 
 export async function deleteAppointment(id: string) {

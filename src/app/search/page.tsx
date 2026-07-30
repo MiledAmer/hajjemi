@@ -1,4 +1,6 @@
+import { countUnseenAppointmentsForClient } from "@/server/appointments";
 import { searchBarberProfiles } from "@/server/barber-profiles";
+import { CURRENT_CLIENT_USER_ID } from "@/lib/current-client";
 import { Governorate } from "../../../generated/prisma";
 import { SearchClient } from "./_components/search-client";
 
@@ -16,12 +18,17 @@ export default async function TrouverUnCoiffeurPage({
 }) {
   const params = await searchParams;
   const governorate = parseGovernorate(params.gov);
-  const barbers = await searchBarberProfiles({
-    query: params.q,
-    governorate,
-  });
+  const [barbers, unseenAppointments] = await Promise.all([
+    searchBarberProfiles({ query: params.q, governorate }),
+    countUnseenAppointmentsForClient(CURRENT_CLIENT_USER_ID),
+  ]);
 
   return (
-    <SearchClient barbers={barbers} q={params.q ?? ""} governorate={governorate} />
+    <SearchClient
+      barbers={barbers}
+      q={params.q ?? ""}
+      governorate={governorate}
+      unseenAppointments={unseenAppointments}
+    />
   );
 }

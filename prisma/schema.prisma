@@ -190,6 +190,12 @@ model Appointment {
   endAt   DateTime
   status  AppointmentStatus @default(PENDING)
 
+  /// Null means the client hasn't seen this appointment's current status
+  /// yet — reset to null whenever the barber accepts/declines, and stamped
+  /// with now() once the client opens their appointments list. Drives the
+  /// notification badge without needing a separate Notification model.
+  clientSeenAt DateTime?
+
   /// Snapshot of the sum of its line items at booking time — service
   /// prices can change later, but a confirmed booking's total shouldn't.
   totalPriceMillimes Int

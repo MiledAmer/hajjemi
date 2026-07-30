@@ -4937,6 +4937,7 @@ export namespace Prisma {
     startAt: Date | null
     endAt: Date | null
     status: $Enums.AppointmentStatus | null
+    clientSeenAt: Date | null
     totalPriceMillimes: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -4949,6 +4950,7 @@ export namespace Prisma {
     startAt: Date | null
     endAt: Date | null
     status: $Enums.AppointmentStatus | null
+    clientSeenAt: Date | null
     totalPriceMillimes: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -4961,6 +4963,7 @@ export namespace Prisma {
     startAt: number
     endAt: number
     status: number
+    clientSeenAt: number
     totalPriceMillimes: number
     createdAt: number
     updatedAt: number
@@ -4983,6 +4986,7 @@ export namespace Prisma {
     startAt?: true
     endAt?: true
     status?: true
+    clientSeenAt?: true
     totalPriceMillimes?: true
     createdAt?: true
     updatedAt?: true
@@ -4995,6 +4999,7 @@ export namespace Prisma {
     startAt?: true
     endAt?: true
     status?: true
+    clientSeenAt?: true
     totalPriceMillimes?: true
     createdAt?: true
     updatedAt?: true
@@ -5007,6 +5012,7 @@ export namespace Prisma {
     startAt?: true
     endAt?: true
     status?: true
+    clientSeenAt?: true
     totalPriceMillimes?: true
     createdAt?: true
     updatedAt?: true
@@ -5106,6 +5112,7 @@ export namespace Prisma {
     startAt: Date
     endAt: Date
     status: $Enums.AppointmentStatus
+    clientSeenAt: Date | null
     totalPriceMillimes: number
     createdAt: Date
     updatedAt: Date
@@ -5137,6 +5144,7 @@ export namespace Prisma {
     startAt?: boolean
     endAt?: boolean
     status?: boolean
+    clientSeenAt?: boolean
     totalPriceMillimes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -5151,6 +5159,7 @@ export namespace Prisma {
     startAt?: boolean
     endAt?: boolean
     status?: boolean
+    clientSeenAt?: boolean
     totalPriceMillimes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -5165,6 +5174,7 @@ export namespace Prisma {
     startAt?: boolean
     endAt?: boolean
     status?: boolean
+    clientSeenAt?: boolean
     totalPriceMillimes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -5179,12 +5189,13 @@ export namespace Prisma {
     startAt?: boolean
     endAt?: boolean
     status?: boolean
+    clientSeenAt?: boolean
     totalPriceMillimes?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type AppointmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "clientId" | "barberId" | "startAt" | "endAt" | "status" | "totalPriceMillimes" | "createdAt" | "updatedAt", ExtArgs["result"]["appointment"]>
+  export type AppointmentOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "clientId" | "barberId" | "startAt" | "endAt" | "status" | "clientSeenAt" | "totalPriceMillimes" | "createdAt" | "updatedAt", ExtArgs["result"]["appointment"]>
   export type AppointmentInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     client?: boolean | UserDefaultArgs<ExtArgs>
     barber?: boolean | BarberProfileDefaultArgs<ExtArgs>
@@ -5211,6 +5222,13 @@ export namespace Prisma {
       startAt: Date
       endAt: Date
       status: $Enums.AppointmentStatus
+      /**
+       * Null means the client hasn't seen this appointment's current status
+       * yet — reset to null whenever the barber accepts/declines, and stamped
+       * with now() once the client opens their appointments list. Drives the
+       * notification badge without needing a separate Notification model.
+       */
+      clientSeenAt: Date | null
       /**
        * Snapshot of the sum of its line items at booking time — service
        * prices can change later, but a confirmed booking's total shouldn't.
@@ -5649,6 +5667,7 @@ export namespace Prisma {
     readonly startAt: FieldRef<"Appointment", 'DateTime'>
     readonly endAt: FieldRef<"Appointment", 'DateTime'>
     readonly status: FieldRef<"Appointment", 'AppointmentStatus'>
+    readonly clientSeenAt: FieldRef<"Appointment", 'DateTime'>
     readonly totalPriceMillimes: FieldRef<"Appointment", 'Int'>
     readonly createdAt: FieldRef<"Appointment", 'DateTime'>
     readonly updatedAt: FieldRef<"Appointment", 'DateTime'>
@@ -7223,6 +7242,7 @@ export namespace Prisma {
     startAt: 'startAt',
     endAt: 'endAt',
     status: 'status',
+    clientSeenAt: 'clientSeenAt',
     totalPriceMillimes: 'totalPriceMillimes',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -7650,6 +7670,7 @@ export namespace Prisma {
     startAt?: DateTimeFilter<"Appointment"> | Date | string
     endAt?: DateTimeFilter<"Appointment"> | Date | string
     status?: EnumAppointmentStatusFilter<"Appointment"> | $Enums.AppointmentStatus
+    clientSeenAt?: DateTimeNullableFilter<"Appointment"> | Date | string | null
     totalPriceMillimes?: IntFilter<"Appointment"> | number
     createdAt?: DateTimeFilter<"Appointment"> | Date | string
     updatedAt?: DateTimeFilter<"Appointment"> | Date | string
@@ -7664,6 +7685,7 @@ export namespace Prisma {
     startAt?: SortOrder
     endAt?: SortOrder
     status?: SortOrder
+    clientSeenAt?: SortOrderInput | SortOrder
     totalPriceMillimes?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -7681,6 +7703,7 @@ export namespace Prisma {
     startAt?: DateTimeFilter<"Appointment"> | Date | string
     endAt?: DateTimeFilter<"Appointment"> | Date | string
     status?: EnumAppointmentStatusFilter<"Appointment"> | $Enums.AppointmentStatus
+    clientSeenAt?: DateTimeNullableFilter<"Appointment"> | Date | string | null
     totalPriceMillimes?: IntFilter<"Appointment"> | number
     createdAt?: DateTimeFilter<"Appointment"> | Date | string
     updatedAt?: DateTimeFilter<"Appointment"> | Date | string
@@ -7695,6 +7718,7 @@ export namespace Prisma {
     startAt?: SortOrder
     endAt?: SortOrder
     status?: SortOrder
+    clientSeenAt?: SortOrderInput | SortOrder
     totalPriceMillimes?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -7715,6 +7739,7 @@ export namespace Prisma {
     startAt?: DateTimeWithAggregatesFilter<"Appointment"> | Date | string
     endAt?: DateTimeWithAggregatesFilter<"Appointment"> | Date | string
     status?: EnumAppointmentStatusWithAggregatesFilter<"Appointment"> | $Enums.AppointmentStatus
+    clientSeenAt?: DateTimeNullableWithAggregatesFilter<"Appointment"> | Date | string | null
     totalPriceMillimes?: IntWithAggregatesFilter<"Appointment"> | number
     createdAt?: DateTimeWithAggregatesFilter<"Appointment"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Appointment"> | Date | string
@@ -8039,6 +8064,7 @@ export namespace Prisma {
     startAt: Date | string
     endAt: Date | string
     status?: $Enums.AppointmentStatus
+    clientSeenAt?: Date | string | null
     totalPriceMillimes: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8053,6 +8079,7 @@ export namespace Prisma {
     startAt: Date | string
     endAt: Date | string
     status?: $Enums.AppointmentStatus
+    clientSeenAt?: Date | string | null
     totalPriceMillimes: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8063,6 +8090,7 @@ export namespace Prisma {
     startAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
+    clientSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalPriceMillimes?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8077,6 +8105,7 @@ export namespace Prisma {
     startAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
+    clientSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalPriceMillimes?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8089,6 +8118,7 @@ export namespace Prisma {
     startAt: Date | string
     endAt: Date | string
     status?: $Enums.AppointmentStatus
+    clientSeenAt?: Date | string | null
     totalPriceMillimes: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -8099,6 +8129,7 @@ export namespace Prisma {
     startAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
+    clientSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalPriceMillimes?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8111,6 +8142,7 @@ export namespace Prisma {
     startAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
+    clientSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalPriceMillimes?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -8537,6 +8569,17 @@ export namespace Prisma {
     not?: NestedEnumAppointmentStatusFilter<$PrismaModel> | $Enums.AppointmentStatus
   }
 
+  export type DateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
   export type AppointmentCountOrderByAggregateInput = {
     id?: SortOrder
     clientId?: SortOrder
@@ -8544,6 +8587,7 @@ export namespace Prisma {
     startAt?: SortOrder
     endAt?: SortOrder
     status?: SortOrder
+    clientSeenAt?: SortOrder
     totalPriceMillimes?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8560,6 +8604,7 @@ export namespace Prisma {
     startAt?: SortOrder
     endAt?: SortOrder
     status?: SortOrder
+    clientSeenAt?: SortOrder
     totalPriceMillimes?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8572,6 +8617,7 @@ export namespace Prisma {
     startAt?: SortOrder
     endAt?: SortOrder
     status?: SortOrder
+    clientSeenAt?: SortOrder
     totalPriceMillimes?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -8591,14 +8637,7 @@ export namespace Prisma {
     _max?: NestedEnumAppointmentStatusFilter<$PrismaModel>
   }
 
-  export type EnumSubscriptionStatusFilter<$PrismaModel = never> = {
-    equals?: $Enums.SubscriptionStatus | EnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    not?: NestedEnumSubscriptionStatusFilter<$PrismaModel> | $Enums.SubscriptionStatus
-  }
-
-  export type DateTimeNullableFilter<$PrismaModel = never> = {
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
     notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -8606,7 +8645,17 @@ export namespace Prisma {
     lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type EnumSubscriptionStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.SubscriptionStatus | EnumSubscriptionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumSubscriptionStatusFilter<$PrismaModel> | $Enums.SubscriptionStatus
   }
 
   export type SubscriptionCountOrderByAggregateInput = {
@@ -8647,20 +8696,6 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumSubscriptionStatusFilter<$PrismaModel>
     _max?: NestedEnumSubscriptionStatusFilter<$PrismaModel>
-  }
-
-  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedDateTimeNullableFilter<$PrismaModel>
-    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
   export type BarberProfileCreateNestedOneWithoutUserInput = {
@@ -8943,6 +8978,10 @@ export namespace Prisma {
     set?: $Enums.AppointmentStatus
   }
 
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
+  }
+
   export type UserUpdateOneRequiredWithoutAppointmentsAsClientNestedInput = {
     create?: XOR<UserCreateWithoutAppointmentsAsClientInput, UserUncheckedCreateWithoutAppointmentsAsClientInput>
     connectOrCreate?: UserCreateOrConnectWithoutAppointmentsAsClientInput
@@ -8967,10 +9006,6 @@ export namespace Prisma {
 
   export type EnumSubscriptionStatusFieldUpdateOperationsInput = {
     set?: $Enums.SubscriptionStatus
-  }
-
-  export type NullableDateTimeFieldUpdateOperationsInput = {
-    set?: Date | string | null
   }
 
   export type BarberProfileUpdateOneRequiredWithoutSubscriptionsNestedInput = {
@@ -9192,23 +9227,6 @@ export namespace Prisma {
     not?: NestedEnumAppointmentStatusFilter<$PrismaModel> | $Enums.AppointmentStatus
   }
 
-  export type NestedEnumAppointmentStatusWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.AppointmentStatus | EnumAppointmentStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.AppointmentStatus[] | ListEnumAppointmentStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.AppointmentStatus[] | ListEnumAppointmentStatusFieldRefInput<$PrismaModel>
-    not?: NestedEnumAppointmentStatusWithAggregatesFilter<$PrismaModel> | $Enums.AppointmentStatus
-    _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumAppointmentStatusFilter<$PrismaModel>
-    _max?: NestedEnumAppointmentStatusFilter<$PrismaModel>
-  }
-
-  export type NestedEnumSubscriptionStatusFilter<$PrismaModel = never> = {
-    equals?: $Enums.SubscriptionStatus | EnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    not?: NestedEnumSubscriptionStatusFilter<$PrismaModel> | $Enums.SubscriptionStatus
-  }
-
   export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -9220,14 +9238,14 @@ export namespace Prisma {
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
   }
 
-  export type NestedEnumSubscriptionStatusWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: $Enums.SubscriptionStatus | EnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    in?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    notIn?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
-    not?: NestedEnumSubscriptionStatusWithAggregatesFilter<$PrismaModel> | $Enums.SubscriptionStatus
+  export type NestedEnumAppointmentStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.AppointmentStatus | EnumAppointmentStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.AppointmentStatus[] | ListEnumAppointmentStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.AppointmentStatus[] | ListEnumAppointmentStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumAppointmentStatusWithAggregatesFilter<$PrismaModel> | $Enums.AppointmentStatus
     _count?: NestedIntFilter<$PrismaModel>
-    _min?: NestedEnumSubscriptionStatusFilter<$PrismaModel>
-    _max?: NestedEnumSubscriptionStatusFilter<$PrismaModel>
+    _min?: NestedEnumAppointmentStatusFilter<$PrismaModel>
+    _max?: NestedEnumAppointmentStatusFilter<$PrismaModel>
   }
 
   export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -9242,6 +9260,23 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type NestedEnumSubscriptionStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.SubscriptionStatus | EnumSubscriptionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumSubscriptionStatusFilter<$PrismaModel> | $Enums.SubscriptionStatus
+  }
+
+  export type NestedEnumSubscriptionStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.SubscriptionStatus | EnumSubscriptionStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.SubscriptionStatus[] | ListEnumSubscriptionStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumSubscriptionStatusWithAggregatesFilter<$PrismaModel> | $Enums.SubscriptionStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumSubscriptionStatusFilter<$PrismaModel>
+    _max?: NestedEnumSubscriptionStatusFilter<$PrismaModel>
   }
 
   export type BarberProfileCreateWithoutUserInput = {
@@ -9286,6 +9321,7 @@ export namespace Prisma {
     startAt: Date | string
     endAt: Date | string
     status?: $Enums.AppointmentStatus
+    clientSeenAt?: Date | string | null
     totalPriceMillimes: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9298,6 +9334,7 @@ export namespace Prisma {
     startAt: Date | string
     endAt: Date | string
     status?: $Enums.AppointmentStatus
+    clientSeenAt?: Date | string | null
     totalPriceMillimes: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9382,6 +9419,7 @@ export namespace Prisma {
     startAt?: DateTimeFilter<"Appointment"> | Date | string
     endAt?: DateTimeFilter<"Appointment"> | Date | string
     status?: EnumAppointmentStatusFilter<"Appointment"> | $Enums.AppointmentStatus
+    clientSeenAt?: DateTimeNullableFilter<"Appointment"> | Date | string | null
     totalPriceMillimes?: IntFilter<"Appointment"> | number
     createdAt?: DateTimeFilter<"Appointment"> | Date | string
     updatedAt?: DateTimeFilter<"Appointment"> | Date | string
@@ -9445,6 +9483,7 @@ export namespace Prisma {
     startAt: Date | string
     endAt: Date | string
     status?: $Enums.AppointmentStatus
+    clientSeenAt?: Date | string | null
     totalPriceMillimes: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9457,6 +9496,7 @@ export namespace Prisma {
     startAt: Date | string
     endAt: Date | string
     status?: $Enums.AppointmentStatus
+    clientSeenAt?: Date | string | null
     totalPriceMillimes: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9917,6 +9957,7 @@ export namespace Prisma {
     startAt: Date | string
     endAt: Date | string
     status?: $Enums.AppointmentStatus
+    clientSeenAt?: Date | string | null
     totalPriceMillimes: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -9927,6 +9968,7 @@ export namespace Prisma {
     startAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
+    clientSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalPriceMillimes?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9939,6 +9981,7 @@ export namespace Prisma {
     startAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
+    clientSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalPriceMillimes?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9950,6 +9993,7 @@ export namespace Prisma {
     startAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
+    clientSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalPriceMillimes?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -9968,6 +10012,7 @@ export namespace Prisma {
     startAt: Date | string
     endAt: Date | string
     status?: $Enums.AppointmentStatus
+    clientSeenAt?: Date | string | null
     totalPriceMillimes: number
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -10008,6 +10053,7 @@ export namespace Prisma {
     startAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
+    clientSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalPriceMillimes?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -10020,6 +10066,7 @@ export namespace Prisma {
     startAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
+    clientSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalPriceMillimes?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -10031,6 +10078,7 @@ export namespace Prisma {
     startAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endAt?: DateTimeFieldUpdateOperationsInput | Date | string
     status?: EnumAppointmentStatusFieldUpdateOperationsInput | $Enums.AppointmentStatus
+    clientSeenAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     totalPriceMillimes?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

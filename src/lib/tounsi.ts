@@ -307,6 +307,49 @@ export const barberProfile = {
   },
 } as const satisfies Record<Lang, unknown>;
 
+export const clientAppointments = {
+  fr: {
+    switchTo: "TN",
+    title: "Mes Rendez-vous",
+    subtitle: "Suivez l'état de vos réservations.",
+    backAria: "Retour",
+    pending: "En attente",
+    confirmed: "Confirmés",
+    cancelled: "Annulés",
+    completed: "Terminés",
+    statusPending: "En attente",
+    statusConfirmed: "Confirmé",
+    statusCancelled: "Annulé",
+    statusCompleted: "Terminé",
+    statusNoShow: "Absence",
+    noAppointments: "Aucun rendez-vous pour le moment.",
+    navHome: "Accueil",
+    navExplore: "Explorer",
+    navBookings: "Rendez-vous",
+    navAccount: "Compte",
+  },
+  tn: {
+    switchTo: "FR",
+    title: "Rendez-vous mte3i",
+    subtitle: "Chouf l'état mta3 el rzervations mte3ek.",
+    backAria: "Erj3a",
+    pending: "Fil intidhar",
+    confirmed: "Mou2akdin",
+    cancelled: "Mba5lin",
+    completed: "Kamlin",
+    statusPending: "Fil intidhar",
+    statusConfirmed: "Mou2akad",
+    statusCancelled: "Mba5el",
+    statusCompleted: "Kamel",
+    statusNoShow: "Ma jesh",
+    noAppointments: "Ma3andekech rendez-vous tawa.",
+    navHome: "Accueil",
+    navExplore: "Lawej",
+    navBookings: "Rendez-vous",
+    navAccount: "Compte",
+  },
+} as const satisfies Record<Lang, unknown>;
+
 export const editServiceDialog = {
   fr: {
     editAria: "Modifier",

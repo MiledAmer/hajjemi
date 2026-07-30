@@ -91,10 +91,12 @@ export function SearchClient({
   barbers,
   q,
   governorate,
+  unseenAppointments,
 }: {
   barbers: Barber[];
   q: string;
   governorate: Governorate | undefined;
+  unseenAppointments: number;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -258,17 +260,20 @@ export function SearchClient({
             <Search className="mb-1 size-5" />
             <span className="font-label-sm text-label-sm">{t.navExplore}</span>
           </Link>
-          <button
-            disabled
-            aria-disabled="true"
-            title={t.comingSoon}
-            className="text-on-surface-variant flex w-16 flex-col items-center justify-center opacity-40"
+          <Link
+            href="/appointments"
+            className="text-on-surface-variant hover:text-primary relative flex w-16 flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
           >
-            <Calendar className="mb-1 size-5" />
+            <span className="relative">
+              <Calendar className="mb-1 size-5" />
+              {unseenAppointments > 0 && (
+                <span className="bg-primary absolute -top-1 -right-1 size-2.5 rounded-full" />
+              )}
+            </span>
             <span className="font-label-sm text-label-sm">
               {t.navBookings}
             </span>
-          </button>
+          </Link>
           <button
             disabled
             aria-disabled="true"
