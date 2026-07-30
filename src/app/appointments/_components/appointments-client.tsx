@@ -2,10 +2,26 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
-import { ArrowLeft, Calendar, Home, Scissors, Search, User } from "lucide-react";
+import { useMemo, useState, useTransition } from "react";
+import {
+  ArrowLeft,
+  Bell,
+  Calendar,
+  Home,
+  Scissors,
+  Search,
+  User,
+} from "lucide-react";
 
 import { Card } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { GOVERNORATE_LABELS } from "@/lib/governorate";
 import { clientAppointments as content, useLang } from "@/lib/tounsi";
 import { cn } from "@/lib/utils";
@@ -50,11 +66,32 @@ export function AppointmentsClient({
   const router = useRouter();
   const { lang, toggleLang } = useLang();
   const t = content[lang];
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [, startTransition] = useTransition();
 
-  // Opening this page is what clears the "new status" notification badge.
-  useEffect(() => {
-    void markAppointmentsSeenByClient(CURRENT_CLIENT_USER_ID);
-  }, []);
+  const notifications = useMemo(
+    () =>
+      appointments
+        .filter(
+          (a) =>
+            a.clientSeenAt === null &&
+            (a.status === "CONFIRMED" || a.status === "CANCELLED"),
+        )
+        .sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime()),
+    [appointments],
+  );
+
+  // Reading the notifications (closing the dialog) is what clears the
+  // badge — merely opening the page shouldn't silently dismiss them.
+  function handleNotifOpenChange(open: boolean) {
+    setNotifOpen(open);
+    if (!open && notifications.length > 0) {
+      startTransition(async () => {
+        await markAppointmentsSeenByClient(CURRENT_CLIENT_USER_ID);
+        router.refresh();
+      });
+    }
+  }
 
   const groups = useMemo(() => {
     const byStatus = new Map<AppointmentStatus, AppointmentWithBarber[]>();
@@ -96,15 +133,70 @@ export function AppointmentsClient({
               {t.title}
             </h1>
           </div>
-          <button
-            type="button"
-            onClick={toggleLang}
-            className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary border-outline-variant rounded-full border px-3 py-1 transition-colors"
-          >
-            {t.switchTo}
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleLang}
+              className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary border-outline-variant rounded-full border px-3 py-1 transition-colors"
+            >
+              {t.switchTo}
+            </button>
+            <button
+              type="button"
+              aria-label={t.bellAria}
+              onClick={() => handleNotifOpenChange(true)}
+              className="text-on-surface-variant hover:text-primary relative rounded-full p-2 transition-colors active:scale-95"
+            >
+              <Bell className="size-5" />
+              {notifications.length > 0 && (
+                <span className="bg-primary text-background absolute top-0 right-0 flex size-4 items-center justify-center rounded-full text-[10px] font-bold">
+                  {notifications.length}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
       </header>
+
+      <Dialog open={notifOpen} onOpenChange={handleNotifOpenChange}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.notifTitle}</DialogTitle>
+          </DialogHeader>
+          {notifications.length === 0 ? (
+            <p className="text-on-surface-variant font-body-md py-stack-md text-center">
+              {t.notifEmpty}
+            </p>
+          ) : (
+            <div className="flex flex-col gap-3">
+              {notifications.map((appointment) => (
+                <p
+                  key={appointment.id}
+                  className="font-body-md text-on-surface bg-surface-container-high rounded-lg p-3"
+                >
+                  {appointment.status === "CONFIRMED"
+                    ? t.notifConfirmed(
+                        appointment.barber.businessName,
+                        formatDateTime(appointment.startAt),
+                      )
+                    : t.notifCancelled(
+                        appointment.barber.businessName,
+                        formatDateTime(appointment.startAt),
+                      )}
+                </p>
+              ))}
+            </div>
+          )}
+          <DialogFooter>
+            <Button
+              onClick={() => handleNotifOpenChange(false)}
+              className="bg-primary text-background"
+            >
+              {t.notifClose}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <main className="px-container-margin pt-stack-lg mx-auto w-full max-w-4xl">
         <p className="text-on-surface-variant font-body-md mb-section-gap">
@@ -194,14 +286,13 @@ export function AppointmentsClient({
               {t.navBookings}
             </span>
           </Link>
-          <button
-            disabled
-            aria-disabled="true"
-            className="text-on-surface-variant flex w-16 flex-col items-center justify-center opacity-40"
+          <Link
+            href="/account"
+            className="text-on-surface-variant hover:text-primary flex w-16 flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
           >
             <User className="mb-1 size-5" />
             <span className="font-label-sm text-label-sm">{t.navAccount}</span>
-          </button>
+          </Link>
         </div>
       </nav>
     </div>

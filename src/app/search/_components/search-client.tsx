@@ -274,15 +274,13 @@ export function SearchClient({
               {t.navBookings}
             </span>
           </Link>
-          <button
-            disabled
-            aria-disabled="true"
-            title={t.comingSoon}
-            className="text-on-surface-variant flex w-16 flex-col items-center justify-center opacity-40"
+          <Link
+            href="/account"
+            className="text-on-surface-variant hover:text-primary flex w-16 flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
           >
             <User className="mb-1 size-5" />
             <span className="font-label-sm text-label-sm">{t.navAccount}</span>
-          </button>
+          </Link>
         </div>
       </nav>
     </div>

@@ -327,6 +327,14 @@ export const clientAppointments = {
     navExplore: "Explorer",
     navBookings: "Rendez-vous",
     navAccount: "Compte",
+    bellAria: "Notifications",
+    notifTitle: "Notifications",
+    notifEmpty: "Aucune nouvelle notification.",
+    notifConfirmed: (name: string, when: string) =>
+      `${name} a confirmé votre rendez-vous du ${when}.`,
+    notifCancelled: (name: string, when: string) =>
+      `${name} a annulé votre rendez-vous du ${when}.`,
+    notifClose: "Fermer",
   },
   tn: {
     switchTo: "FR",
@@ -343,6 +351,43 @@ export const clientAppointments = {
     statusCompleted: "Kamel",
     statusNoShow: "Ma jesh",
     noAppointments: "Ma3andekech rendez-vous tawa.",
+    navHome: "Accueil",
+    navExplore: "Lawej",
+    navBookings: "Rendez-vous",
+    navAccount: "Compte",
+    bellAria: "Notifications",
+    notifTitle: "Notifications",
+    notifEmpty: "Ma3andekech notification jdida.",
+    notifConfirmed: (name: string, when: string) =>
+      `${name} 9abel maw3dek mta3 ${when}.`,
+    notifCancelled: (name: string, when: string) =>
+      `${name} refodh maw3dek mta3 ${when}.`,
+    notifClose: "Balek",
+  },
+} as const satisfies Record<Lang, unknown>;
+
+export const clientAccount = {
+  fr: {
+    switchTo: "TN",
+    title: "Mon Compte",
+    backAria: "Retour",
+    phoneLabel: "Téléphone",
+    noPhone: "Aucun numéro renseigné",
+    memberSince: (date: string) => `Membre depuis ${date}`,
+    logout: "Déconnexion",
+    navHome: "Accueil",
+    navExplore: "Explorer",
+    navBookings: "Rendez-vous",
+    navAccount: "Compte",
+  },
+  tn: {
+    switchTo: "FR",
+    title: "Compte mte3i",
+    backAria: "Erj3a",
+    phoneLabel: "Telefon",
+    noPhone: "Ma fama chi numéro",
+    memberSince: (date: string) => `Membre mel ${date}`,
+    logout: "Khrouj",
     navHome: "Accueil",
     navExplore: "Lawej",
     navBookings: "Rendez-vous",
