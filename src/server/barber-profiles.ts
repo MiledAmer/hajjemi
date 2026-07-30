@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { db } from "@/server/db";
+import { deleteObject, keyFromUrl } from "@/server/r2";
 import { Governorate, PlanType } from "../../generated/prisma";
 
 const createBarberProfileSchema = z.object({
@@ -65,7 +66,20 @@ export async function updateBarberProfile(
   input: z.infer<typeof updateBarberProfileSchema>,
 ) {
   const data = updateBarberProfileSchema.parse(input);
-  return db.barberProfile.update({ where: { id }, data });
+  const previous = await db.barberProfile.findUnique({
+    where: { id },
+    select: { avatarUrl: true },
+  });
+  const updated = await db.barberProfile.update({ where: { id }, data });
+
+  const oldAvatarUrl = previous?.avatarUrl;
+  if (oldAvatarUrl && data.avatarUrl && data.avatarUrl !== oldAvatarUrl) {
+    // Best-effort: the DB is already the source of truth for the current
+    // avatar, so a failed delete just leaves an orphaned R2 object.
+    await deleteObject(keyFromUrl(oldAvatarUrl)).catch(() => undefined);
+  }
+
+  return updated;
 }
 
 export async function deleteBarberProfile(id: string) {
