@@ -145,6 +145,13 @@ exports.Prisma.BarberProfileScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.BarberPhotoScalarFieldEnum = {
+  id: 'id',
+  barberId: 'barberId',
+  url: 'url',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.BarberAvailabilityScalarFieldEnum = {
   id: 'id',
   barberId: 'barberId',
@@ -254,6 +261,7 @@ exports.SubscriptionStatus = exports.$Enums.SubscriptionStatus = {
 exports.Prisma.ModelName = {
   User: 'User',
   BarberProfile: 'BarberProfile',
+  BarberPhoto: 'BarberPhoto',
   BarberAvailability: 'BarberAvailability',
   Appointment: 'Appointment',
   Subscription: 'Subscription'

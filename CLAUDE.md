@@ -88,10 +88,14 @@ implemented UI matches the mockups rather than reinventing a palette.
 No routes, components, or Prisma models yet exist for any of this (still just the `Post` scaffold) — search,
 booking, barber profiles/dashboard, and subscription plans are all unbuilt features implied by these mockups.
 
-## Planned third-party integrations
+## Third-party integrations
 
-Not yet implemented, but these are the chosen providers when the corresponding feature is built — don't
-introduce a different provider (e.g. Twilio, S3) without checking with the user first:
+Don't introduce a different provider (e.g. Twilio, S3) for these without checking with the user first:
 
-- **SMS OTP** (phone verification for signup/login): Ooredoo Developer.
-- **Image storage** (barber profile photos, etc.): Cloudflare R2.
+- **SMS OTP** (phone verification for signup/login): Ooredoo Developer. Not yet implemented.
+- **Image storage** (barber avatars, shop photos): Cloudflare R2, S3-compatible, via `@aws-sdk/client-s3`.
+  Client + upload/delete helpers live in `src/server/r2.ts` (needs `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
+  `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL` in `.env` — see `.env.example`). Uploads go
+  through the `uploadImage` server action (`src/server/uploads.ts`), which validates type/size and stores
+  under `avatars/{barberId}/...` or `shops/{barberId}/...` keys. Shop photos persist as rows in the
+  `BarberPhoto` model (`src/server/barber-photos.ts`); avatar URL is a plain column on `BarberProfile`.

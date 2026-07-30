@@ -28,10 +28,13 @@ import { Card } from "@/components/ui/card";
 import { dashboard as dashboardContent, useLang } from "@/lib/tounsi";
 import { updateAppointment } from "@/server/appointments";
 import { setWeeklyHours } from "@/server/barber-availability";
+import { addPhoto, deletePhoto } from "@/server/barber-photos";
 import { updateBarberProfile } from "@/server/barber-profiles";
+import { uploadImage } from "@/server/uploads";
 import type {
   Appointment,
   BarberAvailability,
+  BarberPhoto,
   BarberProfile,
   User as DbUser,
 } from "../../../../generated/prisma";
@@ -82,10 +85,12 @@ export function DashboardClient({
   profile,
   appointments,
   availability,
+  photos,
 }: {
   profile: BarberProfile & { user: DbUser };
   appointments: AppointmentWithClient[];
   availability: BarberAvailability[];
+  photos: BarberPhoto[];
 }) {
   const router = useRouter();
   const [view, setView] = useState<ViewId>("dashboard");
@@ -110,22 +115,50 @@ export function DashboardClient({
     }),
   );
 
-  // ponytail: shop gallery is local-only (object URLs, not persisted) until
-  // a BarberPhoto model + Cloudflare R2 upload exist — see CLAUDE.md.
-  const [shopPhotos, setShopPhotos] = useState<{ id: string; url: string }[]>(
-    [],
+  const [optimisticPhotos, applyPhotosPatch] = useOptimistic(
+    photos,
+    (
+      state,
+      patch:
+        | { type: "add"; photo: BarberPhoto }
+        | { type: "remove"; id: string },
+    ) =>
+      patch.type === "add"
+        ? [...state, patch.photo]
+        : state.filter((p) => p.id !== patch.id),
   );
-  const addShopPhoto = (event: ChangeEvent<HTMLInputElement>) => {
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+
+  async function uploadFile(file: File, kind: "avatar" | "shop") {
+    const formData = new FormData();
+    formData.set("file", file);
+    formData.set("barberId", profile.id);
+    formData.set("kind", kind);
+    const { url } = await uploadImage(formData);
+    return url;
+  }
+
+  function addShopPhoto(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (!file) return;
-    setShopPhotos((photos) => [
-      ...photos,
-      { id: crypto.randomUUID(), url: URL.createObjectURL(file) },
-    ]);
     event.target.value = "";
-  };
-  const removeShopPhoto = (id: string) =>
-    setShopPhotos((photos) => photos.filter((p) => p.id !== id));
+    if (!file) return;
+    setUploadingPhoto(true);
+    startTransition(async () => {
+      const url = await uploadFile(file, "shop");
+      const photo = await addPhoto(profile.id, url);
+      applyPhotosPatch({ type: "add", photo });
+      setUploadingPhoto(false);
+      router.refresh();
+    });
+  }
+
+  function removeShopPhoto(id: string) {
+    startTransition(async () => {
+      applyPhotosPatch({ type: "remove", id });
+      await deletePhoto(id);
+      router.refresh();
+    });
+  }
 
   const mondayRow = availability.find((a) => a.dayOfWeek === "MONDAY");
   const sundayRow = availability.find((a) => a.dayOfWeek === "SUNDAY");
@@ -189,6 +222,7 @@ export function DashboardClient({
       await updateBarberProfile(profile.id, {
         businessName: updated.name,
         bio: updated.bio,
+        avatarUrl: updated.avatarUrl,
       });
       // ponytail: a "Fermé"/free-text Sunday value is treated as closed
       // rather than validated — only an exact "HH:MM - HH:MM" range persists.
@@ -461,6 +495,7 @@ export function DashboardClient({
                         optimisticProfile.avatarUrl ?? BARBER_PROFILE_PORTRAIT,
                     }}
                     onSave={saveProfile}
+                    onUploadAvatar={(file) => uploadFile(file, "avatar")}
                   />
                 </div>
               </div>
@@ -494,12 +529,12 @@ export function DashboardClient({
                 {t.shopPhotos}
               </h3>
               <div className="gap-gutter grid grid-cols-3">
-                {shopPhotos.map((photo) => (
+                {optimisticPhotos.map((photo) => (
                   <div
                     key={photo.id}
                     className="group relative aspect-square overflow-hidden rounded-lg"
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element -- local object URL, not an optimizable remote asset */}
+                    {/* eslint-disable-next-line @next/next/no-img-element -- remote R2 URL, not in next/image's allowed domains */}
                     <img
                       src={photo.url}
                       alt=""
@@ -518,7 +553,8 @@ export function DashboardClient({
                 <label
                   aria-label={t.addPhotoAria}
                   htmlFor="add-shop-photo"
-                  className="border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed"
+                  aria-disabled={uploadingPhoto}
+                  className="border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed aria-disabled:pointer-events-none aria-disabled:opacity-50"
                 >
                   <ImagePlus className="size-6" />
                 </label>
@@ -527,6 +563,7 @@ export function DashboardClient({
                   type="file"
                   accept="image/*"
                   className="hidden"
+                  disabled={uploadingPhoto}
                   onChange={addShopPhoto}
                 />
               </div>

@@ -31,10 +31,12 @@ export function EditProfileDialog({
   lang = "fr",
   profile,
   onSave,
+  onUploadAvatar,
 }: {
   lang?: Lang;
   profile: EditableProfile;
   onSave: (profile: EditableProfile) => void;
+  onUploadAvatar: (file: File) => Promise<string>;
 }) {
   const s = strings[lang];
   const [open, setOpen] = useState(false);
@@ -43,6 +45,7 @@ export function EditProfileDialog({
   const [weekdaysHours, setWeekdaysHours] = useState(profile.weekdaysHours);
   const [sundayHours, setSundayHours] = useState(profile.sundayHours);
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
@@ -55,16 +58,21 @@ export function EditProfileDialog({
     }
   };
 
-  // ponytail: preview-only via a local object URL — no upload happens yet.
-  // Wire this to Cloudflare R2 (see CLAUDE.md) once uploads are built.
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) setAvatarUrl(URL.createObjectURL(file));
+    event.target.value = "";
+    if (!file) return;
+    setIsUploadingAvatar(true);
+    onUploadAvatar(file)
+      .then(setAvatarUrl)
+      .catch(() => undefined)
+      .finally(() => setIsUploadingAvatar(false));
   };
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    if (!name || !bio || !weekdaysHours || !sundayHours) return;
+    if (!name || !bio || !weekdaysHours || !sundayHours || isUploadingAvatar)
+      return;
     onSave({ name, bio, weekdaysHours, sundayHours, avatarUrl });
     setOpen(false);
   };
@@ -154,7 +162,11 @@ export function EditProfileDialog({
             <DialogClose render={<Button type="button" variant="outline" />}>
               {s.cancel}
             </DialogClose>
-            <Button type="submit" className="font-bold">
+            <Button
+              type="submit"
+              disabled={isUploadingAvatar}
+              className="font-bold"
+            >
               {s.save}
             </Button>
           </DialogFooter>
