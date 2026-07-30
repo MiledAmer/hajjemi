@@ -93,9 +93,9 @@ booking, barber profiles/dashboard, and subscription plans are all unbuilt featu
 Don't introduce a different provider (e.g. Twilio, S3) for these without checking with the user first:
 
 - **SMS OTP** (phone verification for signup/login): Ooredoo Developer. Not yet implemented.
-- **Image storage** (barber avatars, shop photos): Cloudflare R2, S3-compatible, via `@aws-sdk/client-s3`.
-  Client + upload/delete helpers live in `src/server/r2.ts` (needs `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`,
-  `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL` in `.env` — see `.env.example`). Uploads go
-  through the `uploadImage` server action (`src/server/uploads.ts`), which validates type/size and stores
-  under `avatars/{barberId}/...` or `shops/{barberId}/...` keys. Shop photos persist as rows in the
-  `BarberPhoto` model (`src/server/barber-photos.ts`); avatar URL is a plain column on `BarberProfile`.
+- **Image storage** (barber avatar only — no shop gallery): Cloudflare R2, S3-compatible, via
+  `@aws-sdk/client-s3`. Client + upload/delete helpers live in `src/server/r2.ts` (needs `R2_ACCOUNT_ID`,
+  `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET_NAME`, `R2_PUBLIC_URL` in `.env` — see
+  `.env.example`; `R2_PUBLIC_URL` must be the bucket's public R2.dev/custom domain, not the private S3 API
+  endpoint). Uploads go through the `uploadImage` server action (`src/server/uploads.ts`), which validates
+  type/size and stores under `avatars/{barberId}/...` keys; the URL is a plain column on `BarberProfile`.

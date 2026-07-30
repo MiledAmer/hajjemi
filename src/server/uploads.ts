@@ -8,11 +8,11 @@ const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
 
 const uploadInputSchema = z.object({
   barberId: z.string().min(1),
-  kind: z.enum(["avatar", "shop"]),
+  kind: z.literal("avatar"),
 });
 
 export async function uploadImage(formData: FormData) {
-  const { barberId, kind } = uploadInputSchema.parse({
+  const { barberId } = uploadInputSchema.parse({
     barberId: formData.get("barberId"),
     kind: formData.get("kind"),
   });
@@ -23,7 +23,7 @@ export async function uploadImage(formData: FormData) {
   if (file.size > MAX_BYTES) throw new Error("Image too large (max 5MB)");
 
   const ext = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
-  const key = `${kind === "avatar" ? "avatars" : "shops"}/${barberId}/${crypto.randomUUID()}.${ext}`;
+  const key = `avatars/${barberId}/${crypto.randomUUID()}.${ext}`;
   const buffer = Buffer.from(await file.arrayBuffer());
   return { url: await uploadObject(key, buffer, file.type) };
 }

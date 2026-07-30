@@ -1,24 +1,16 @@
 "use client";
 
-import {
-  type ChangeEvent,
-  useMemo,
-  useOptimistic,
-  useState,
-  useTransition,
-} from "react";
+import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import {
   Bell,
   Calendar,
   Clock,
-  ImagePlus,
   LayoutDashboard,
   LogOut,
   Phone,
   Share2,
   User,
-  X,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -28,13 +20,11 @@ import { Card } from "@/components/ui/card";
 import { dashboard as dashboardContent, useLang } from "@/lib/tounsi";
 import { updateAppointment } from "@/server/appointments";
 import { setWeeklyHours } from "@/server/barber-availability";
-import { addPhoto, deletePhoto } from "@/server/barber-photos";
 import { updateBarberProfile } from "@/server/barber-profiles";
 import { uploadImage } from "@/server/uploads";
 import type {
   Appointment,
   BarberAvailability,
-  BarberPhoto,
   BarberProfile,
   User as DbUser,
 } from "../../../../generated/prisma";
@@ -85,12 +75,10 @@ export function DashboardClient({
   profile,
   appointments,
   availability,
-  photos,
 }: {
   profile: BarberProfile & { user: DbUser };
   appointments: AppointmentWithClient[];
   availability: BarberAvailability[];
-  photos: BarberPhoto[];
 }) {
   const router = useRouter();
   const [view, setView] = useState<ViewId>("dashboard");
@@ -115,56 +103,13 @@ export function DashboardClient({
     }),
   );
 
-  const [optimisticPhotos, applyPhotosPatch] = useOptimistic(
-    photos,
-    (
-      state,
-      patch:
-        | { type: "add"; photo: BarberPhoto }
-        | { type: "remove"; id: string },
-    ) =>
-      patch.type === "add"
-        ? [...state, patch.photo]
-        : state.filter((p) => p.id !== patch.id),
-  );
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [photoError, setPhotoError] = useState<string | null>(null);
-
-  async function uploadFile(file: File, kind: "avatar" | "shop") {
+  async function uploadAvatarFile(file: File) {
     const formData = new FormData();
     formData.set("file", file);
     formData.set("barberId", profile.id);
-    formData.set("kind", kind);
+    formData.set("kind", "avatar");
     const { url } = await uploadImage(formData);
     return url;
-  }
-
-  function addShopPhoto(event: ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
-    event.target.value = "";
-    if (!file) return;
-    setUploadingPhoto(true);
-    setPhotoError(null);
-    startTransition(async () => {
-      try {
-        const url = await uploadFile(file, "shop");
-        const photo = await addPhoto(profile.id, url);
-        applyPhotosPatch({ type: "add", photo });
-        router.refresh();
-      } catch (error) {
-        setPhotoError(error instanceof Error ? error.message : "Échec de l'envoi");
-      } finally {
-        setUploadingPhoto(false);
-      }
-    });
-  }
-
-  function removeShopPhoto(id: string) {
-    startTransition(async () => {
-      applyPhotosPatch({ type: "remove", id });
-      await deletePhoto(id);
-      router.refresh();
-    });
   }
 
   const mondayRow = availability.find((a) => a.dayOfWeek === "MONDAY");
@@ -502,7 +447,7 @@ export function DashboardClient({
                         optimisticProfile.avatarUrl ?? BARBER_PROFILE_PORTRAIT,
                     }}
                     onSave={saveProfile}
-                    onUploadAvatar={(file) => uploadFile(file, "avatar")}
+                    onUploadAvatar={uploadAvatarFile}
                   />
                 </div>
               </div>
@@ -528,54 +473,6 @@ export function DashboardClient({
                     {optimisticHours.sundayHours}
                   </span>
                 </div>
-              </div>
-            </Card>
-
-            <Card className="bg-surface-container p-gutter gap-stack-md rounded-xl">
-              <h3 className="font-headline-md text-headline-md">
-                {t.shopPhotos}
-              </h3>
-              {photoError && (
-                <p className="text-destructive font-label-sm">{photoError}</p>
-              )}
-              <div className="gap-gutter grid grid-cols-3">
-                {optimisticPhotos.map((photo) => (
-                  <div
-                    key={photo.id}
-                    className="group relative aspect-square overflow-hidden rounded-lg"
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element -- remote R2 URL, not in next/image's allowed domains */}
-                    <img
-                      src={photo.url}
-                      alt=""
-                      className="size-full object-cover"
-                    />
-                    <button
-                      type="button"
-                      aria-label={t.removePhotoAria}
-                      onClick={() => removeShopPhoto(photo.id)}
-                      className="bg-background/70 text-on-background absolute top-1 right-1 flex size-6 items-center justify-center rounded-full"
-                    >
-                      <X className="size-4" />
-                    </button>
-                  </div>
-                ))}
-                <label
-                  aria-label={t.addPhotoAria}
-                  htmlFor="add-shop-photo"
-                  aria-disabled={uploadingPhoto}
-                  className="border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed aria-disabled:pointer-events-none aria-disabled:opacity-50"
-                >
-                  <ImagePlus className="size-6" />
-                </label>
-                <input
-                  id="add-shop-photo"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  disabled={uploadingPhoto}
-                  onChange={addShopPhoto}
-                />
               </div>
             </Card>
 

@@ -29,13 +29,6 @@ export type User = $Result.DefaultSelection<Prisma.$UserPayload>
  */
 export type BarberProfile = $Result.DefaultSelection<Prisma.$BarberProfilePayload>
 /**
- * Model BarberPhoto
- * A shop gallery photo, stored in Cloudflare R2 — `url` is the public R2
- * object URL. One-to-many rather than a single column since a barber can
- * showcase several shop photos.
- */
-export type BarberPhoto = $Result.DefaultSelection<Prisma.$BarberPhotoPayload>
-/**
  * Model BarberAvailability
  * A recurring weekly opening window. Deliberately simple (one row per
  * day/range) rather than a full exception calendar — split/holiday hours
@@ -304,16 +297,6 @@ export class PrismaClient<
     * ```
     */
   get barberProfile(): Prisma.BarberProfileDelegate<ExtArgs, ClientOptions>;
-
-  /**
-   * `prisma.barberPhoto`: Exposes CRUD operations for the **BarberPhoto** model.
-    * Example usage:
-    * ```ts
-    * // Fetch zero or more BarberPhotos
-    * const barberPhotos = await prisma.barberPhoto.findMany()
-    * ```
-    */
-  get barberPhoto(): Prisma.BarberPhotoDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.barberAvailability`: Exposes CRUD operations for the **BarberAvailability** model.
@@ -780,7 +763,6 @@ export namespace Prisma {
   export const ModelName: {
     User: 'User',
     BarberProfile: 'BarberProfile',
-    BarberPhoto: 'BarberPhoto',
     BarberAvailability: 'BarberAvailability',
     Appointment: 'Appointment',
     Subscription: 'Subscription'
@@ -799,7 +781,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "barberProfile" | "barberPhoto" | "barberAvailability" | "appointment" | "subscription"
+      modelProps: "user" | "barberProfile" | "barberAvailability" | "appointment" | "subscription"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -948,80 +930,6 @@ export namespace Prisma {
           count: {
             args: Prisma.BarberProfileCountArgs<ExtArgs>
             result: $Utils.Optional<BarberProfileCountAggregateOutputType> | number
-          }
-        }
-      }
-      BarberPhoto: {
-        payload: Prisma.$BarberPhotoPayload<ExtArgs>
-        fields: Prisma.BarberPhotoFieldRefs
-        operations: {
-          findUnique: {
-            args: Prisma.BarberPhotoFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$BarberPhotoPayload> | null
-          }
-          findUniqueOrThrow: {
-            args: Prisma.BarberPhotoFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$BarberPhotoPayload>
-          }
-          findFirst: {
-            args: Prisma.BarberPhotoFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$BarberPhotoPayload> | null
-          }
-          findFirstOrThrow: {
-            args: Prisma.BarberPhotoFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$BarberPhotoPayload>
-          }
-          findMany: {
-            args: Prisma.BarberPhotoFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$BarberPhotoPayload>[]
-          }
-          create: {
-            args: Prisma.BarberPhotoCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$BarberPhotoPayload>
-          }
-          createMany: {
-            args: Prisma.BarberPhotoCreateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          createManyAndReturn: {
-            args: Prisma.BarberPhotoCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$BarberPhotoPayload>[]
-          }
-          delete: {
-            args: Prisma.BarberPhotoDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$BarberPhotoPayload>
-          }
-          update: {
-            args: Prisma.BarberPhotoUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$BarberPhotoPayload>
-          }
-          deleteMany: {
-            args: Prisma.BarberPhotoDeleteManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateMany: {
-            args: Prisma.BarberPhotoUpdateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.BarberPhotoUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$BarberPhotoPayload>[]
-          }
-          upsert: {
-            args: Prisma.BarberPhotoUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$BarberPhotoPayload>
-          }
-          aggregate: {
-            args: Prisma.BarberPhotoAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateBarberPhoto>
-          }
-          groupBy: {
-            args: Prisma.BarberPhotoGroupByArgs<ExtArgs>
-            result: $Utils.Optional<BarberPhotoGroupByOutputType>[]
-          }
-          count: {
-            args: Prisma.BarberPhotoCountArgs<ExtArgs>
-            result: $Utils.Optional<BarberPhotoCountAggregateOutputType> | number
           }
         }
       }
@@ -1357,7 +1265,6 @@ export namespace Prisma {
   export type GlobalOmitConfig = {
     user?: UserOmit
     barberProfile?: BarberProfileOmit
-    barberPhoto?: BarberPhotoOmit
     barberAvailability?: BarberAvailabilityOmit
     appointment?: AppointmentOmit
     subscription?: SubscriptionOmit
@@ -1475,14 +1382,12 @@ export namespace Prisma {
     availability: number
     appointments: number
     subscriptions: number
-    photos: number
   }
 
   export type BarberProfileCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     availability?: boolean | BarberProfileCountOutputTypeCountAvailabilityArgs
     appointments?: boolean | BarberProfileCountOutputTypeCountAppointmentsArgs
     subscriptions?: boolean | BarberProfileCountOutputTypeCountSubscriptionsArgs
-    photos?: boolean | BarberProfileCountOutputTypeCountPhotosArgs
   }
 
   // Custom InputTypes
@@ -1515,13 +1420,6 @@ export namespace Prisma {
    */
   export type BarberProfileCountOutputTypeCountSubscriptionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: SubscriptionWhereInput
-  }
-
-  /**
-   * BarberProfileCountOutputType without action
-   */
-  export type BarberProfileCountOutputTypeCountPhotosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: BarberPhotoWhereInput
   }
 
 
@@ -2890,7 +2788,6 @@ export namespace Prisma {
     availability?: boolean | BarberProfile$availabilityArgs<ExtArgs>
     appointments?: boolean | BarberProfile$appointmentsArgs<ExtArgs>
     subscriptions?: boolean | BarberProfile$subscriptionsArgs<ExtArgs>
-    photos?: boolean | BarberProfile$photosArgs<ExtArgs>
     _count?: boolean | BarberProfileCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["barberProfile"]>
 
@@ -2944,7 +2841,6 @@ export namespace Prisma {
     availability?: boolean | BarberProfile$availabilityArgs<ExtArgs>
     appointments?: boolean | BarberProfile$appointmentsArgs<ExtArgs>
     subscriptions?: boolean | BarberProfile$subscriptionsArgs<ExtArgs>
-    photos?: boolean | BarberProfile$photosArgs<ExtArgs>
     _count?: boolean | BarberProfileCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type BarberProfileIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2961,7 +2857,6 @@ export namespace Prisma {
       availability: Prisma.$BarberAvailabilityPayload<ExtArgs>[]
       appointments: Prisma.$AppointmentPayload<ExtArgs>[]
       subscriptions: Prisma.$SubscriptionPayload<ExtArgs>[]
-      photos: Prisma.$BarberPhotoPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -3379,7 +3274,6 @@ export namespace Prisma {
     availability<T extends BarberProfile$availabilityArgs<ExtArgs> = {}>(args?: Subset<T, BarberProfile$availabilityArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BarberAvailabilityPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     appointments<T extends BarberProfile$appointmentsArgs<ExtArgs> = {}>(args?: Subset<T, BarberProfile$appointmentsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AppointmentPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     subscriptions<T extends BarberProfile$subscriptionsArgs<ExtArgs> = {}>(args?: Subset<T, BarberProfile$subscriptionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SubscriptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    photos<T extends BarberProfile$photosArgs<ExtArgs> = {}>(args?: Subset<T, BarberProfile$photosArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BarberPhotoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3893,30 +3787,6 @@ export namespace Prisma {
   }
 
   /**
-   * BarberProfile.photos
-   */
-  export type BarberProfile$photosArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the BarberPhoto
-     */
-    select?: BarberPhotoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the BarberPhoto
-     */
-    omit?: BarberPhotoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BarberPhotoInclude<ExtArgs> | null
-    where?: BarberPhotoWhereInput
-    orderBy?: BarberPhotoOrderByWithRelationInput | BarberPhotoOrderByWithRelationInput[]
-    cursor?: BarberPhotoWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: BarberPhotoScalarFieldEnum | BarberPhotoScalarFieldEnum[]
-  }
-
-  /**
    * BarberProfile without action
    */
   export type BarberProfileDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3932,1056 +3802,6 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: BarberProfileInclude<ExtArgs> | null
-  }
-
-
-  /**
-   * Model BarberPhoto
-   */
-
-  export type AggregateBarberPhoto = {
-    _count: BarberPhotoCountAggregateOutputType | null
-    _min: BarberPhotoMinAggregateOutputType | null
-    _max: BarberPhotoMaxAggregateOutputType | null
-  }
-
-  export type BarberPhotoMinAggregateOutputType = {
-    id: string | null
-    barberId: string | null
-    url: string | null
-    createdAt: Date | null
-  }
-
-  export type BarberPhotoMaxAggregateOutputType = {
-    id: string | null
-    barberId: string | null
-    url: string | null
-    createdAt: Date | null
-  }
-
-  export type BarberPhotoCountAggregateOutputType = {
-    id: number
-    barberId: number
-    url: number
-    createdAt: number
-    _all: number
-  }
-
-
-  export type BarberPhotoMinAggregateInputType = {
-    id?: true
-    barberId?: true
-    url?: true
-    createdAt?: true
-  }
-
-  export type BarberPhotoMaxAggregateInputType = {
-    id?: true
-    barberId?: true
-    url?: true
-    createdAt?: true
-  }
-
-  export type BarberPhotoCountAggregateInputType = {
-    id?: true
-    barberId?: true
-    url?: true
-    createdAt?: true
-    _all?: true
-  }
-
-  export type BarberPhotoAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which BarberPhoto to aggregate.
-     */
-    where?: BarberPhotoWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of BarberPhotos to fetch.
-     */
-    orderBy?: BarberPhotoOrderByWithRelationInput | BarberPhotoOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the start position
-     */
-    cursor?: BarberPhotoWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` BarberPhotos from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` BarberPhotos.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Count returned BarberPhotos
-    **/
-    _count?: true | BarberPhotoCountAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the minimum value
-    **/
-    _min?: BarberPhotoMinAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the maximum value
-    **/
-    _max?: BarberPhotoMaxAggregateInputType
-  }
-
-  export type GetBarberPhotoAggregateType<T extends BarberPhotoAggregateArgs> = {
-        [P in keyof T & keyof AggregateBarberPhoto]: P extends '_count' | 'count'
-      ? T[P] extends true
-        ? number
-        : GetScalarType<T[P], AggregateBarberPhoto[P]>
-      : GetScalarType<T[P], AggregateBarberPhoto[P]>
-  }
-
-
-
-
-  export type BarberPhotoGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: BarberPhotoWhereInput
-    orderBy?: BarberPhotoOrderByWithAggregationInput | BarberPhotoOrderByWithAggregationInput[]
-    by: BarberPhotoScalarFieldEnum[] | BarberPhotoScalarFieldEnum
-    having?: BarberPhotoScalarWhereWithAggregatesInput
-    take?: number
-    skip?: number
-    _count?: BarberPhotoCountAggregateInputType | true
-    _min?: BarberPhotoMinAggregateInputType
-    _max?: BarberPhotoMaxAggregateInputType
-  }
-
-  export type BarberPhotoGroupByOutputType = {
-    id: string
-    barberId: string
-    url: string
-    createdAt: Date
-    _count: BarberPhotoCountAggregateOutputType | null
-    _min: BarberPhotoMinAggregateOutputType | null
-    _max: BarberPhotoMaxAggregateOutputType | null
-  }
-
-  type GetBarberPhotoGroupByPayload<T extends BarberPhotoGroupByArgs> = Prisma.PrismaPromise<
-    Array<
-      PickEnumerable<BarberPhotoGroupByOutputType, T['by']> &
-        {
-          [P in ((keyof T) & (keyof BarberPhotoGroupByOutputType))]: P extends '_count'
-            ? T[P] extends boolean
-              ? number
-              : GetScalarType<T[P], BarberPhotoGroupByOutputType[P]>
-            : GetScalarType<T[P], BarberPhotoGroupByOutputType[P]>
-        }
-      >
-    >
-
-
-  export type BarberPhotoSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    barberId?: boolean
-    url?: boolean
-    createdAt?: boolean
-    barber?: boolean | BarberProfileDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["barberPhoto"]>
-
-  export type BarberPhotoSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    barberId?: boolean
-    url?: boolean
-    createdAt?: boolean
-    barber?: boolean | BarberProfileDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["barberPhoto"]>
-
-  export type BarberPhotoSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    barberId?: boolean
-    url?: boolean
-    createdAt?: boolean
-    barber?: boolean | BarberProfileDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["barberPhoto"]>
-
-  export type BarberPhotoSelectScalar = {
-    id?: boolean
-    barberId?: boolean
-    url?: boolean
-    createdAt?: boolean
-  }
-
-  export type BarberPhotoOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "barberId" | "url" | "createdAt", ExtArgs["result"]["barberPhoto"]>
-  export type BarberPhotoInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    barber?: boolean | BarberProfileDefaultArgs<ExtArgs>
-  }
-  export type BarberPhotoIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    barber?: boolean | BarberProfileDefaultArgs<ExtArgs>
-  }
-  export type BarberPhotoIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    barber?: boolean | BarberProfileDefaultArgs<ExtArgs>
-  }
-
-  export type $BarberPhotoPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "BarberPhoto"
-    objects: {
-      barber: Prisma.$BarberProfilePayload<ExtArgs>
-    }
-    scalars: $Extensions.GetPayloadResult<{
-      id: string
-      barberId: string
-      url: string
-      createdAt: Date
-    }, ExtArgs["result"]["barberPhoto"]>
-    composites: {}
-  }
-
-  type BarberPhotoGetPayload<S extends boolean | null | undefined | BarberPhotoDefaultArgs> = $Result.GetResult<Prisma.$BarberPhotoPayload, S>
-
-  type BarberPhotoCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<BarberPhotoFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: BarberPhotoCountAggregateInputType | true
-    }
-
-  export interface BarberPhotoDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['BarberPhoto'], meta: { name: 'BarberPhoto' } }
-    /**
-     * Find zero or one BarberPhoto that matches the filter.
-     * @param {BarberPhotoFindUniqueArgs} args - Arguments to find a BarberPhoto
-     * @example
-     * // Get one BarberPhoto
-     * const barberPhoto = await prisma.barberPhoto.findUnique({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUnique<T extends BarberPhotoFindUniqueArgs>(args: SelectSubset<T, BarberPhotoFindUniqueArgs<ExtArgs>>): Prisma__BarberPhotoClient<$Result.GetResult<Prisma.$BarberPhotoPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find one BarberPhoto that matches the filter or throw an error with `error.code='P2025'`
-     * if no matches were found.
-     * @param {BarberPhotoFindUniqueOrThrowArgs} args - Arguments to find a BarberPhoto
-     * @example
-     * // Get one BarberPhoto
-     * const barberPhoto = await prisma.barberPhoto.findUniqueOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUniqueOrThrow<T extends BarberPhotoFindUniqueOrThrowArgs>(args: SelectSubset<T, BarberPhotoFindUniqueOrThrowArgs<ExtArgs>>): Prisma__BarberPhotoClient<$Result.GetResult<Prisma.$BarberPhotoPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first BarberPhoto that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {BarberPhotoFindFirstArgs} args - Arguments to find a BarberPhoto
-     * @example
-     * // Get one BarberPhoto
-     * const barberPhoto = await prisma.barberPhoto.findFirst({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirst<T extends BarberPhotoFindFirstArgs>(args?: SelectSubset<T, BarberPhotoFindFirstArgs<ExtArgs>>): Prisma__BarberPhotoClient<$Result.GetResult<Prisma.$BarberPhotoPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first BarberPhoto that matches the filter or
-     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {BarberPhotoFindFirstOrThrowArgs} args - Arguments to find a BarberPhoto
-     * @example
-     * // Get one BarberPhoto
-     * const barberPhoto = await prisma.barberPhoto.findFirstOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirstOrThrow<T extends BarberPhotoFindFirstOrThrowArgs>(args?: SelectSubset<T, BarberPhotoFindFirstOrThrowArgs<ExtArgs>>): Prisma__BarberPhotoClient<$Result.GetResult<Prisma.$BarberPhotoPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find zero or more BarberPhotos that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {BarberPhotoFindManyArgs} args - Arguments to filter and select certain fields only.
-     * @example
-     * // Get all BarberPhotos
-     * const barberPhotos = await prisma.barberPhoto.findMany()
-     * 
-     * // Get first 10 BarberPhotos
-     * const barberPhotos = await prisma.barberPhoto.findMany({ take: 10 })
-     * 
-     * // Only select the `id`
-     * const barberPhotoWithIdOnly = await prisma.barberPhoto.findMany({ select: { id: true } })
-     * 
-     */
-    findMany<T extends BarberPhotoFindManyArgs>(args?: SelectSubset<T, BarberPhotoFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BarberPhotoPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
-
-    /**
-     * Create a BarberPhoto.
-     * @param {BarberPhotoCreateArgs} args - Arguments to create a BarberPhoto.
-     * @example
-     * // Create one BarberPhoto
-     * const BarberPhoto = await prisma.barberPhoto.create({
-     *   data: {
-     *     // ... data to create a BarberPhoto
-     *   }
-     * })
-     * 
-     */
-    create<T extends BarberPhotoCreateArgs>(args: SelectSubset<T, BarberPhotoCreateArgs<ExtArgs>>): Prisma__BarberPhotoClient<$Result.GetResult<Prisma.$BarberPhotoPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Create many BarberPhotos.
-     * @param {BarberPhotoCreateManyArgs} args - Arguments to create many BarberPhotos.
-     * @example
-     * // Create many BarberPhotos
-     * const barberPhoto = await prisma.barberPhoto.createMany({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     *     
-     */
-    createMany<T extends BarberPhotoCreateManyArgs>(args?: SelectSubset<T, BarberPhotoCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Create many BarberPhotos and returns the data saved in the database.
-     * @param {BarberPhotoCreateManyAndReturnArgs} args - Arguments to create many BarberPhotos.
-     * @example
-     * // Create many BarberPhotos
-     * const barberPhoto = await prisma.barberPhoto.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many BarberPhotos and only return the `id`
-     * const barberPhotoWithIdOnly = await prisma.barberPhoto.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends BarberPhotoCreateManyAndReturnArgs>(args?: SelectSubset<T, BarberPhotoCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BarberPhotoPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Delete a BarberPhoto.
-     * @param {BarberPhotoDeleteArgs} args - Arguments to delete one BarberPhoto.
-     * @example
-     * // Delete one BarberPhoto
-     * const BarberPhoto = await prisma.barberPhoto.delete({
-     *   where: {
-     *     // ... filter to delete one BarberPhoto
-     *   }
-     * })
-     * 
-     */
-    delete<T extends BarberPhotoDeleteArgs>(args: SelectSubset<T, BarberPhotoDeleteArgs<ExtArgs>>): Prisma__BarberPhotoClient<$Result.GetResult<Prisma.$BarberPhotoPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Update one BarberPhoto.
-     * @param {BarberPhotoUpdateArgs} args - Arguments to update one BarberPhoto.
-     * @example
-     * // Update one BarberPhoto
-     * const barberPhoto = await prisma.barberPhoto.update({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    update<T extends BarberPhotoUpdateArgs>(args: SelectSubset<T, BarberPhotoUpdateArgs<ExtArgs>>): Prisma__BarberPhotoClient<$Result.GetResult<Prisma.$BarberPhotoPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Delete zero or more BarberPhotos.
-     * @param {BarberPhotoDeleteManyArgs} args - Arguments to filter BarberPhotos to delete.
-     * @example
-     * // Delete a few BarberPhotos
-     * const { count } = await prisma.barberPhoto.deleteMany({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     * 
-     */
-    deleteMany<T extends BarberPhotoDeleteManyArgs>(args?: SelectSubset<T, BarberPhotoDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more BarberPhotos.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {BarberPhotoUpdateManyArgs} args - Arguments to update one or more rows.
-     * @example
-     * // Update many BarberPhotos
-     * const barberPhoto = await prisma.barberPhoto.updateMany({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    updateMany<T extends BarberPhotoUpdateManyArgs>(args: SelectSubset<T, BarberPhotoUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more BarberPhotos and returns the data updated in the database.
-     * @param {BarberPhotoUpdateManyAndReturnArgs} args - Arguments to update many BarberPhotos.
-     * @example
-     * // Update many BarberPhotos
-     * const barberPhoto = await prisma.barberPhoto.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more BarberPhotos and only return the `id`
-     * const barberPhotoWithIdOnly = await prisma.barberPhoto.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends BarberPhotoUpdateManyAndReturnArgs>(args: SelectSubset<T, BarberPhotoUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BarberPhotoPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Create or update one BarberPhoto.
-     * @param {BarberPhotoUpsertArgs} args - Arguments to update or create a BarberPhoto.
-     * @example
-     * // Update or create a BarberPhoto
-     * const barberPhoto = await prisma.barberPhoto.upsert({
-     *   create: {
-     *     // ... data to create a BarberPhoto
-     *   },
-     *   update: {
-     *     // ... in case it already exists, update
-     *   },
-     *   where: {
-     *     // ... the filter for the BarberPhoto we want to update
-     *   }
-     * })
-     */
-    upsert<T extends BarberPhotoUpsertArgs>(args: SelectSubset<T, BarberPhotoUpsertArgs<ExtArgs>>): Prisma__BarberPhotoClient<$Result.GetResult<Prisma.$BarberPhotoPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-
-    /**
-     * Count the number of BarberPhotos.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {BarberPhotoCountArgs} args - Arguments to filter BarberPhotos to count.
-     * @example
-     * // Count the number of BarberPhotos
-     * const count = await prisma.barberPhoto.count({
-     *   where: {
-     *     // ... the filter for the BarberPhotos we want to count
-     *   }
-     * })
-    **/
-    count<T extends BarberPhotoCountArgs>(
-      args?: Subset<T, BarberPhotoCountArgs>,
-    ): Prisma.PrismaPromise<
-      T extends $Utils.Record<'select', any>
-        ? T['select'] extends true
-          ? number
-          : GetScalarType<T['select'], BarberPhotoCountAggregateOutputType>
-        : number
-    >
-
-    /**
-     * Allows you to perform aggregations operations on a BarberPhoto.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {BarberPhotoAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
-     * @example
-     * // Ordered by age ascending
-     * // Where email contains prisma.io
-     * // Limited to the 10 users
-     * const aggregations = await prisma.user.aggregate({
-     *   _avg: {
-     *     age: true,
-     *   },
-     *   where: {
-     *     email: {
-     *       contains: "prisma.io",
-     *     },
-     *   },
-     *   orderBy: {
-     *     age: "asc",
-     *   },
-     *   take: 10,
-     * })
-    **/
-    aggregate<T extends BarberPhotoAggregateArgs>(args: Subset<T, BarberPhotoAggregateArgs>): Prisma.PrismaPromise<GetBarberPhotoAggregateType<T>>
-
-    /**
-     * Group by BarberPhoto.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {BarberPhotoGroupByArgs} args - Group by arguments.
-     * @example
-     * // Group by city, order by createdAt, get count
-     * const result = await prisma.user.groupBy({
-     *   by: ['city', 'createdAt'],
-     *   orderBy: {
-     *     createdAt: true
-     *   },
-     *   _count: {
-     *     _all: true
-     *   },
-     * })
-     * 
-    **/
-    groupBy<
-      T extends BarberPhotoGroupByArgs,
-      HasSelectOrTake extends Or<
-        Extends<'skip', Keys<T>>,
-        Extends<'take', Keys<T>>
-      >,
-      OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: BarberPhotoGroupByArgs['orderBy'] }
-        : { orderBy?: BarberPhotoGroupByArgs['orderBy'] },
-      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
-      ByFields extends MaybeTupleToUnion<T['by']>,
-      ByValid extends Has<ByFields, OrderFields>,
-      HavingFields extends GetHavingFields<T['having']>,
-      HavingValid extends Has<ByFields, HavingFields>,
-      ByEmpty extends T['by'] extends never[] ? True : False,
-      InputErrors extends ByEmpty extends True
-      ? `Error: "by" must not be empty.`
-      : HavingValid extends False
-      ? {
-          [P in HavingFields]: P extends ByFields
-            ? never
-            : P extends string
-            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
-            : [
-                Error,
-                'Field ',
-                P,
-                ` in "having" needs to be provided in "by"`,
-              ]
-        }[HavingFields]
-      : 'take' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "take", you also need to provide "orderBy"'
-      : 'skip' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "skip", you also need to provide "orderBy"'
-      : ByValid extends True
-      ? {}
-      : {
-          [P in OrderFields]: P extends ByFields
-            ? never
-            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-        }[OrderFields]
-    >(args: SubsetIntersection<T, BarberPhotoGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBarberPhotoGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
-  /**
-   * Fields of the BarberPhoto model
-   */
-  readonly fields: BarberPhotoFieldRefs;
-  }
-
-  /**
-   * The delegate class that acts as a "Promise-like" for BarberPhoto.
-   * Why is this prefixed with `Prisma__`?
-   * Because we want to prevent naming conflicts as mentioned in
-   * https://github.com/prisma/prisma-client-js/issues/707
-   */
-  export interface Prisma__BarberPhotoClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
-    readonly [Symbol.toStringTag]: "PrismaPromise"
-    barber<T extends BarberProfileDefaultArgs<ExtArgs> = {}>(args?: Subset<T, BarberProfileDefaultArgs<ExtArgs>>): Prisma__BarberProfileClient<$Result.GetResult<Prisma.$BarberProfilePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    /**
-     * Attaches callbacks for the resolution and/or rejection of the Promise.
-     * @param onfulfilled The callback to execute when the Promise is resolved.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of which ever callback is executed.
-     */
-    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
-    /**
-     * Attaches a callback for only the rejection of the Promise.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of the callback.
-     */
-    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
-    /**
-     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
-     * resolved value cannot be modified from the callback.
-     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
-     * @returns A Promise for the completion of the callback.
-     */
-    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
-  }
-
-
-
-
-  /**
-   * Fields of the BarberPhoto model
-   */
-  interface BarberPhotoFieldRefs {
-    readonly id: FieldRef<"BarberPhoto", 'String'>
-    readonly barberId: FieldRef<"BarberPhoto", 'String'>
-    readonly url: FieldRef<"BarberPhoto", 'String'>
-    readonly createdAt: FieldRef<"BarberPhoto", 'DateTime'>
-  }
-    
-
-  // Custom InputTypes
-  /**
-   * BarberPhoto findUnique
-   */
-  export type BarberPhotoFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the BarberPhoto
-     */
-    select?: BarberPhotoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the BarberPhoto
-     */
-    omit?: BarberPhotoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BarberPhotoInclude<ExtArgs> | null
-    /**
-     * Filter, which BarberPhoto to fetch.
-     */
-    where: BarberPhotoWhereUniqueInput
-  }
-
-  /**
-   * BarberPhoto findUniqueOrThrow
-   */
-  export type BarberPhotoFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the BarberPhoto
-     */
-    select?: BarberPhotoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the BarberPhoto
-     */
-    omit?: BarberPhotoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BarberPhotoInclude<ExtArgs> | null
-    /**
-     * Filter, which BarberPhoto to fetch.
-     */
-    where: BarberPhotoWhereUniqueInput
-  }
-
-  /**
-   * BarberPhoto findFirst
-   */
-  export type BarberPhotoFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the BarberPhoto
-     */
-    select?: BarberPhotoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the BarberPhoto
-     */
-    omit?: BarberPhotoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BarberPhotoInclude<ExtArgs> | null
-    /**
-     * Filter, which BarberPhoto to fetch.
-     */
-    where?: BarberPhotoWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of BarberPhotos to fetch.
-     */
-    orderBy?: BarberPhotoOrderByWithRelationInput | BarberPhotoOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for BarberPhotos.
-     */
-    cursor?: BarberPhotoWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` BarberPhotos from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` BarberPhotos.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of BarberPhotos.
-     */
-    distinct?: BarberPhotoScalarFieldEnum | BarberPhotoScalarFieldEnum[]
-  }
-
-  /**
-   * BarberPhoto findFirstOrThrow
-   */
-  export type BarberPhotoFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the BarberPhoto
-     */
-    select?: BarberPhotoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the BarberPhoto
-     */
-    omit?: BarberPhotoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BarberPhotoInclude<ExtArgs> | null
-    /**
-     * Filter, which BarberPhoto to fetch.
-     */
-    where?: BarberPhotoWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of BarberPhotos to fetch.
-     */
-    orderBy?: BarberPhotoOrderByWithRelationInput | BarberPhotoOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for BarberPhotos.
-     */
-    cursor?: BarberPhotoWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` BarberPhotos from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` BarberPhotos.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of BarberPhotos.
-     */
-    distinct?: BarberPhotoScalarFieldEnum | BarberPhotoScalarFieldEnum[]
-  }
-
-  /**
-   * BarberPhoto findMany
-   */
-  export type BarberPhotoFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the BarberPhoto
-     */
-    select?: BarberPhotoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the BarberPhoto
-     */
-    omit?: BarberPhotoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BarberPhotoInclude<ExtArgs> | null
-    /**
-     * Filter, which BarberPhotos to fetch.
-     */
-    where?: BarberPhotoWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of BarberPhotos to fetch.
-     */
-    orderBy?: BarberPhotoOrderByWithRelationInput | BarberPhotoOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for listing BarberPhotos.
-     */
-    cursor?: BarberPhotoWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` BarberPhotos from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` BarberPhotos.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of BarberPhotos.
-     */
-    distinct?: BarberPhotoScalarFieldEnum | BarberPhotoScalarFieldEnum[]
-  }
-
-  /**
-   * BarberPhoto create
-   */
-  export type BarberPhotoCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the BarberPhoto
-     */
-    select?: BarberPhotoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the BarberPhoto
-     */
-    omit?: BarberPhotoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BarberPhotoInclude<ExtArgs> | null
-    /**
-     * The data needed to create a BarberPhoto.
-     */
-    data: XOR<BarberPhotoCreateInput, BarberPhotoUncheckedCreateInput>
-  }
-
-  /**
-   * BarberPhoto createMany
-   */
-  export type BarberPhotoCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to create many BarberPhotos.
-     */
-    data: BarberPhotoCreateManyInput | BarberPhotoCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * BarberPhoto createManyAndReturn
-   */
-  export type BarberPhotoCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the BarberPhoto
-     */
-    select?: BarberPhotoSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the BarberPhoto
-     */
-    omit?: BarberPhotoOmit<ExtArgs> | null
-    /**
-     * The data used to create many BarberPhotos.
-     */
-    data: BarberPhotoCreateManyInput | BarberPhotoCreateManyInput[]
-    skipDuplicates?: boolean
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BarberPhotoIncludeCreateManyAndReturn<ExtArgs> | null
-  }
-
-  /**
-   * BarberPhoto update
-   */
-  export type BarberPhotoUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the BarberPhoto
-     */
-    select?: BarberPhotoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the BarberPhoto
-     */
-    omit?: BarberPhotoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BarberPhotoInclude<ExtArgs> | null
-    /**
-     * The data needed to update a BarberPhoto.
-     */
-    data: XOR<BarberPhotoUpdateInput, BarberPhotoUncheckedUpdateInput>
-    /**
-     * Choose, which BarberPhoto to update.
-     */
-    where: BarberPhotoWhereUniqueInput
-  }
-
-  /**
-   * BarberPhoto updateMany
-   */
-  export type BarberPhotoUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update BarberPhotos.
-     */
-    data: XOR<BarberPhotoUpdateManyMutationInput, BarberPhotoUncheckedUpdateManyInput>
-    /**
-     * Filter which BarberPhotos to update
-     */
-    where?: BarberPhotoWhereInput
-    /**
-     * Limit how many BarberPhotos to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * BarberPhoto updateManyAndReturn
-   */
-  export type BarberPhotoUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the BarberPhoto
-     */
-    select?: BarberPhotoSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the BarberPhoto
-     */
-    omit?: BarberPhotoOmit<ExtArgs> | null
-    /**
-     * The data used to update BarberPhotos.
-     */
-    data: XOR<BarberPhotoUpdateManyMutationInput, BarberPhotoUncheckedUpdateManyInput>
-    /**
-     * Filter which BarberPhotos to update
-     */
-    where?: BarberPhotoWhereInput
-    /**
-     * Limit how many BarberPhotos to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BarberPhotoIncludeUpdateManyAndReturn<ExtArgs> | null
-  }
-
-  /**
-   * BarberPhoto upsert
-   */
-  export type BarberPhotoUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the BarberPhoto
-     */
-    select?: BarberPhotoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the BarberPhoto
-     */
-    omit?: BarberPhotoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BarberPhotoInclude<ExtArgs> | null
-    /**
-     * The filter to search for the BarberPhoto to update in case it exists.
-     */
-    where: BarberPhotoWhereUniqueInput
-    /**
-     * In case the BarberPhoto found by the `where` argument doesn't exist, create a new BarberPhoto with this data.
-     */
-    create: XOR<BarberPhotoCreateInput, BarberPhotoUncheckedCreateInput>
-    /**
-     * In case the BarberPhoto was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<BarberPhotoUpdateInput, BarberPhotoUncheckedUpdateInput>
-  }
-
-  /**
-   * BarberPhoto delete
-   */
-  export type BarberPhotoDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the BarberPhoto
-     */
-    select?: BarberPhotoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the BarberPhoto
-     */
-    omit?: BarberPhotoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BarberPhotoInclude<ExtArgs> | null
-    /**
-     * Filter which BarberPhoto to delete.
-     */
-    where: BarberPhotoWhereUniqueInput
-  }
-
-  /**
-   * BarberPhoto deleteMany
-   */
-  export type BarberPhotoDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which BarberPhotos to delete
-     */
-    where?: BarberPhotoWhereInput
-    /**
-     * Limit how many BarberPhotos to delete.
-     */
-    limit?: number
-  }
-
-  /**
-   * BarberPhoto without action
-   */
-  export type BarberPhotoDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the BarberPhoto
-     */
-    select?: BarberPhotoSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the BarberPhoto
-     */
-    omit?: BarberPhotoOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: BarberPhotoInclude<ExtArgs> | null
   }
 
 
@@ -8385,16 +7205,6 @@ export namespace Prisma {
   export type BarberProfileScalarFieldEnum = (typeof BarberProfileScalarFieldEnum)[keyof typeof BarberProfileScalarFieldEnum]
 
 
-  export const BarberPhotoScalarFieldEnum: {
-    id: 'id',
-    barberId: 'barberId',
-    url: 'url',
-    createdAt: 'createdAt'
-  };
-
-  export type BarberPhotoScalarFieldEnum = (typeof BarberPhotoScalarFieldEnum)[keyof typeof BarberPhotoScalarFieldEnum]
-
-
   export const BarberAvailabilityScalarFieldEnum: {
     id: 'id',
     barberId: 'barberId',
@@ -8698,7 +7508,6 @@ export namespace Prisma {
     availability?: BarberAvailabilityListRelationFilter
     appointments?: AppointmentListRelationFilter
     subscriptions?: SubscriptionListRelationFilter
-    photos?: BarberPhotoListRelationFilter
   }
 
   export type BarberProfileOrderByWithRelationInput = {
@@ -8717,7 +7526,6 @@ export namespace Prisma {
     availability?: BarberAvailabilityOrderByRelationAggregateInput
     appointments?: AppointmentOrderByRelationAggregateInput
     subscriptions?: SubscriptionOrderByRelationAggregateInput
-    photos?: BarberPhotoOrderByRelationAggregateInput
   }
 
   export type BarberProfileWhereUniqueInput = Prisma.AtLeast<{
@@ -8739,7 +7547,6 @@ export namespace Prisma {
     availability?: BarberAvailabilityListRelationFilter
     appointments?: AppointmentListRelationFilter
     subscriptions?: SubscriptionListRelationFilter
-    photos?: BarberPhotoListRelationFilter
   }, "id" | "userId">
 
   export type BarberProfileOrderByWithAggregationInput = {
@@ -8774,56 +7581,6 @@ export namespace Prisma {
     planType?: EnumPlanTypeWithAggregatesFilter<"BarberProfile"> | $Enums.PlanType
     createdAt?: DateTimeWithAggregatesFilter<"BarberProfile"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"BarberProfile"> | Date | string
-  }
-
-  export type BarberPhotoWhereInput = {
-    AND?: BarberPhotoWhereInput | BarberPhotoWhereInput[]
-    OR?: BarberPhotoWhereInput[]
-    NOT?: BarberPhotoWhereInput | BarberPhotoWhereInput[]
-    id?: StringFilter<"BarberPhoto"> | string
-    barberId?: StringFilter<"BarberPhoto"> | string
-    url?: StringFilter<"BarberPhoto"> | string
-    createdAt?: DateTimeFilter<"BarberPhoto"> | Date | string
-    barber?: XOR<BarberProfileScalarRelationFilter, BarberProfileWhereInput>
-  }
-
-  export type BarberPhotoOrderByWithRelationInput = {
-    id?: SortOrder
-    barberId?: SortOrder
-    url?: SortOrder
-    createdAt?: SortOrder
-    barber?: BarberProfileOrderByWithRelationInput
-  }
-
-  export type BarberPhotoWhereUniqueInput = Prisma.AtLeast<{
-    id?: string
-    AND?: BarberPhotoWhereInput | BarberPhotoWhereInput[]
-    OR?: BarberPhotoWhereInput[]
-    NOT?: BarberPhotoWhereInput | BarberPhotoWhereInput[]
-    barberId?: StringFilter<"BarberPhoto"> | string
-    url?: StringFilter<"BarberPhoto"> | string
-    createdAt?: DateTimeFilter<"BarberPhoto"> | Date | string
-    barber?: XOR<BarberProfileScalarRelationFilter, BarberProfileWhereInput>
-  }, "id">
-
-  export type BarberPhotoOrderByWithAggregationInput = {
-    id?: SortOrder
-    barberId?: SortOrder
-    url?: SortOrder
-    createdAt?: SortOrder
-    _count?: BarberPhotoCountOrderByAggregateInput
-    _max?: BarberPhotoMaxOrderByAggregateInput
-    _min?: BarberPhotoMinOrderByAggregateInput
-  }
-
-  export type BarberPhotoScalarWhereWithAggregatesInput = {
-    AND?: BarberPhotoScalarWhereWithAggregatesInput | BarberPhotoScalarWhereWithAggregatesInput[]
-    OR?: BarberPhotoScalarWhereWithAggregatesInput[]
-    NOT?: BarberPhotoScalarWhereWithAggregatesInput | BarberPhotoScalarWhereWithAggregatesInput[]
-    id?: StringWithAggregatesFilter<"BarberPhoto"> | string
-    barberId?: StringWithAggregatesFilter<"BarberPhoto"> | string
-    url?: StringWithAggregatesFilter<"BarberPhoto"> | string
-    createdAt?: DateTimeWithAggregatesFilter<"BarberPhoto"> | Date | string
   }
 
   export type BarberAvailabilityWhereInput = {
@@ -9128,7 +7885,6 @@ export namespace Prisma {
     availability?: BarberAvailabilityCreateNestedManyWithoutBarberInput
     appointments?: AppointmentCreateNestedManyWithoutBarberInput
     subscriptions?: SubscriptionCreateNestedManyWithoutBarberInput
-    photos?: BarberPhotoCreateNestedManyWithoutBarberInput
   }
 
   export type BarberProfileUncheckedCreateInput = {
@@ -9146,7 +7902,6 @@ export namespace Prisma {
     availability?: BarberAvailabilityUncheckedCreateNestedManyWithoutBarberInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutBarberInput
     subscriptions?: SubscriptionUncheckedCreateNestedManyWithoutBarberInput
-    photos?: BarberPhotoUncheckedCreateNestedManyWithoutBarberInput
   }
 
   export type BarberProfileUpdateInput = {
@@ -9164,7 +7919,6 @@ export namespace Prisma {
     availability?: BarberAvailabilityUpdateManyWithoutBarberNestedInput
     appointments?: AppointmentUpdateManyWithoutBarberNestedInput
     subscriptions?: SubscriptionUpdateManyWithoutBarberNestedInput
-    photos?: BarberPhotoUpdateManyWithoutBarberNestedInput
   }
 
   export type BarberProfileUncheckedUpdateInput = {
@@ -9182,7 +7936,6 @@ export namespace Prisma {
     availability?: BarberAvailabilityUncheckedUpdateManyWithoutBarberNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutBarberNestedInput
     subscriptions?: SubscriptionUncheckedUpdateManyWithoutBarberNestedInput
-    photos?: BarberPhotoUncheckedUpdateManyWithoutBarberNestedInput
   }
 
   export type BarberProfileCreateManyInput = {
@@ -9224,54 +7977,6 @@ export namespace Prisma {
     planType?: EnumPlanTypeFieldUpdateOperationsInput | $Enums.PlanType
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type BarberPhotoCreateInput = {
-    id?: string
-    url: string
-    createdAt?: Date | string
-    barber: BarberProfileCreateNestedOneWithoutPhotosInput
-  }
-
-  export type BarberPhotoUncheckedCreateInput = {
-    id?: string
-    barberId: string
-    url: string
-    createdAt?: Date | string
-  }
-
-  export type BarberPhotoUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    url?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    barber?: BarberProfileUpdateOneRequiredWithoutPhotosNestedInput
-  }
-
-  export type BarberPhotoUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    barberId?: StringFieldUpdateOperationsInput | string
-    url?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type BarberPhotoCreateManyInput = {
-    id?: string
-    barberId: string
-    url: string
-    createdAt?: Date | string
-  }
-
-  export type BarberPhotoUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    url?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type BarberPhotoUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    barberId?: StringFieldUpdateOperationsInput | string
-    url?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type BarberAvailabilityCreateInput = {
@@ -9672,21 +8377,11 @@ export namespace Prisma {
     none?: SubscriptionWhereInput
   }
 
-  export type BarberPhotoListRelationFilter = {
-    every?: BarberPhotoWhereInput
-    some?: BarberPhotoWhereInput
-    none?: BarberPhotoWhereInput
-  }
-
   export type BarberAvailabilityOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
   export type SubscriptionOrderByRelationAggregateInput = {
-    _count?: SortOrder
-  }
-
-  export type BarberPhotoOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -9752,32 +8447,6 @@ export namespace Prisma {
     _max?: NestedEnumPlanTypeFilter<$PrismaModel>
   }
 
-  export type BarberProfileScalarRelationFilter = {
-    is?: BarberProfileWhereInput
-    isNot?: BarberProfileWhereInput
-  }
-
-  export type BarberPhotoCountOrderByAggregateInput = {
-    id?: SortOrder
-    barberId?: SortOrder
-    url?: SortOrder
-    createdAt?: SortOrder
-  }
-
-  export type BarberPhotoMaxOrderByAggregateInput = {
-    id?: SortOrder
-    barberId?: SortOrder
-    url?: SortOrder
-    createdAt?: SortOrder
-  }
-
-  export type BarberPhotoMinOrderByAggregateInput = {
-    id?: SortOrder
-    barberId?: SortOrder
-    url?: SortOrder
-    createdAt?: SortOrder
-  }
-
   export type EnumDayOfWeekFilter<$PrismaModel = never> = {
     equals?: $Enums.DayOfWeek | EnumDayOfWeekFieldRefInput<$PrismaModel>
     in?: $Enums.DayOfWeek[] | ListEnumDayOfWeekFieldRefInput<$PrismaModel>
@@ -9794,6 +8463,11 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntFilter<$PrismaModel> | number
+  }
+
+  export type BarberProfileScalarRelationFilter = {
+    is?: BarberProfileWhereInput
+    isNot?: BarberProfileWhereInput
   }
 
   export type BarberAvailabilityCountOrderByAggregateInput = {
@@ -10106,13 +8780,6 @@ export namespace Prisma {
     connect?: SubscriptionWhereUniqueInput | SubscriptionWhereUniqueInput[]
   }
 
-  export type BarberPhotoCreateNestedManyWithoutBarberInput = {
-    create?: XOR<BarberPhotoCreateWithoutBarberInput, BarberPhotoUncheckedCreateWithoutBarberInput> | BarberPhotoCreateWithoutBarberInput[] | BarberPhotoUncheckedCreateWithoutBarberInput[]
-    connectOrCreate?: BarberPhotoCreateOrConnectWithoutBarberInput | BarberPhotoCreateOrConnectWithoutBarberInput[]
-    createMany?: BarberPhotoCreateManyBarberInputEnvelope
-    connect?: BarberPhotoWhereUniqueInput | BarberPhotoWhereUniqueInput[]
-  }
-
   export type BarberAvailabilityUncheckedCreateNestedManyWithoutBarberInput = {
     create?: XOR<BarberAvailabilityCreateWithoutBarberInput, BarberAvailabilityUncheckedCreateWithoutBarberInput> | BarberAvailabilityCreateWithoutBarberInput[] | BarberAvailabilityUncheckedCreateWithoutBarberInput[]
     connectOrCreate?: BarberAvailabilityCreateOrConnectWithoutBarberInput | BarberAvailabilityCreateOrConnectWithoutBarberInput[]
@@ -10132,13 +8799,6 @@ export namespace Prisma {
     connectOrCreate?: SubscriptionCreateOrConnectWithoutBarberInput | SubscriptionCreateOrConnectWithoutBarberInput[]
     createMany?: SubscriptionCreateManyBarberInputEnvelope
     connect?: SubscriptionWhereUniqueInput | SubscriptionWhereUniqueInput[]
-  }
-
-  export type BarberPhotoUncheckedCreateNestedManyWithoutBarberInput = {
-    create?: XOR<BarberPhotoCreateWithoutBarberInput, BarberPhotoUncheckedCreateWithoutBarberInput> | BarberPhotoCreateWithoutBarberInput[] | BarberPhotoUncheckedCreateWithoutBarberInput[]
-    connectOrCreate?: BarberPhotoCreateOrConnectWithoutBarberInput | BarberPhotoCreateOrConnectWithoutBarberInput[]
-    createMany?: BarberPhotoCreateManyBarberInputEnvelope
-    connect?: BarberPhotoWhereUniqueInput | BarberPhotoWhereUniqueInput[]
   }
 
   export type EnumGovernorateFieldUpdateOperationsInput = {
@@ -10199,20 +8859,6 @@ export namespace Prisma {
     deleteMany?: SubscriptionScalarWhereInput | SubscriptionScalarWhereInput[]
   }
 
-  export type BarberPhotoUpdateManyWithoutBarberNestedInput = {
-    create?: XOR<BarberPhotoCreateWithoutBarberInput, BarberPhotoUncheckedCreateWithoutBarberInput> | BarberPhotoCreateWithoutBarberInput[] | BarberPhotoUncheckedCreateWithoutBarberInput[]
-    connectOrCreate?: BarberPhotoCreateOrConnectWithoutBarberInput | BarberPhotoCreateOrConnectWithoutBarberInput[]
-    upsert?: BarberPhotoUpsertWithWhereUniqueWithoutBarberInput | BarberPhotoUpsertWithWhereUniqueWithoutBarberInput[]
-    createMany?: BarberPhotoCreateManyBarberInputEnvelope
-    set?: BarberPhotoWhereUniqueInput | BarberPhotoWhereUniqueInput[]
-    disconnect?: BarberPhotoWhereUniqueInput | BarberPhotoWhereUniqueInput[]
-    delete?: BarberPhotoWhereUniqueInput | BarberPhotoWhereUniqueInput[]
-    connect?: BarberPhotoWhereUniqueInput | BarberPhotoWhereUniqueInput[]
-    update?: BarberPhotoUpdateWithWhereUniqueWithoutBarberInput | BarberPhotoUpdateWithWhereUniqueWithoutBarberInput[]
-    updateMany?: BarberPhotoUpdateManyWithWhereWithoutBarberInput | BarberPhotoUpdateManyWithWhereWithoutBarberInput[]
-    deleteMany?: BarberPhotoScalarWhereInput | BarberPhotoScalarWhereInput[]
-  }
-
   export type BarberAvailabilityUncheckedUpdateManyWithoutBarberNestedInput = {
     create?: XOR<BarberAvailabilityCreateWithoutBarberInput, BarberAvailabilityUncheckedCreateWithoutBarberInput> | BarberAvailabilityCreateWithoutBarberInput[] | BarberAvailabilityUncheckedCreateWithoutBarberInput[]
     connectOrCreate?: BarberAvailabilityCreateOrConnectWithoutBarberInput | BarberAvailabilityCreateOrConnectWithoutBarberInput[]
@@ -10253,34 +8899,6 @@ export namespace Prisma {
     update?: SubscriptionUpdateWithWhereUniqueWithoutBarberInput | SubscriptionUpdateWithWhereUniqueWithoutBarberInput[]
     updateMany?: SubscriptionUpdateManyWithWhereWithoutBarberInput | SubscriptionUpdateManyWithWhereWithoutBarberInput[]
     deleteMany?: SubscriptionScalarWhereInput | SubscriptionScalarWhereInput[]
-  }
-
-  export type BarberPhotoUncheckedUpdateManyWithoutBarberNestedInput = {
-    create?: XOR<BarberPhotoCreateWithoutBarberInput, BarberPhotoUncheckedCreateWithoutBarberInput> | BarberPhotoCreateWithoutBarberInput[] | BarberPhotoUncheckedCreateWithoutBarberInput[]
-    connectOrCreate?: BarberPhotoCreateOrConnectWithoutBarberInput | BarberPhotoCreateOrConnectWithoutBarberInput[]
-    upsert?: BarberPhotoUpsertWithWhereUniqueWithoutBarberInput | BarberPhotoUpsertWithWhereUniqueWithoutBarberInput[]
-    createMany?: BarberPhotoCreateManyBarberInputEnvelope
-    set?: BarberPhotoWhereUniqueInput | BarberPhotoWhereUniqueInput[]
-    disconnect?: BarberPhotoWhereUniqueInput | BarberPhotoWhereUniqueInput[]
-    delete?: BarberPhotoWhereUniqueInput | BarberPhotoWhereUniqueInput[]
-    connect?: BarberPhotoWhereUniqueInput | BarberPhotoWhereUniqueInput[]
-    update?: BarberPhotoUpdateWithWhereUniqueWithoutBarberInput | BarberPhotoUpdateWithWhereUniqueWithoutBarberInput[]
-    updateMany?: BarberPhotoUpdateManyWithWhereWithoutBarberInput | BarberPhotoUpdateManyWithWhereWithoutBarberInput[]
-    deleteMany?: BarberPhotoScalarWhereInput | BarberPhotoScalarWhereInput[]
-  }
-
-  export type BarberProfileCreateNestedOneWithoutPhotosInput = {
-    create?: XOR<BarberProfileCreateWithoutPhotosInput, BarberProfileUncheckedCreateWithoutPhotosInput>
-    connectOrCreate?: BarberProfileCreateOrConnectWithoutPhotosInput
-    connect?: BarberProfileWhereUniqueInput
-  }
-
-  export type BarberProfileUpdateOneRequiredWithoutPhotosNestedInput = {
-    create?: XOR<BarberProfileCreateWithoutPhotosInput, BarberProfileUncheckedCreateWithoutPhotosInput>
-    connectOrCreate?: BarberProfileCreateOrConnectWithoutPhotosInput
-    upsert?: BarberProfileUpsertWithoutPhotosInput
-    connect?: BarberProfileWhereUniqueInput
-    update?: XOR<XOR<BarberProfileUpdateToOneWithWhereWithoutPhotosInput, BarberProfileUpdateWithoutPhotosInput>, BarberProfileUncheckedUpdateWithoutPhotosInput>
   }
 
   export type BarberProfileCreateNestedOneWithoutAvailabilityInput = {
@@ -10640,7 +9258,6 @@ export namespace Prisma {
     availability?: BarberAvailabilityCreateNestedManyWithoutBarberInput
     appointments?: AppointmentCreateNestedManyWithoutBarberInput
     subscriptions?: SubscriptionCreateNestedManyWithoutBarberInput
-    photos?: BarberPhotoCreateNestedManyWithoutBarberInput
   }
 
   export type BarberProfileUncheckedCreateWithoutUserInput = {
@@ -10657,7 +9274,6 @@ export namespace Prisma {
     availability?: BarberAvailabilityUncheckedCreateNestedManyWithoutBarberInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutBarberInput
     subscriptions?: SubscriptionUncheckedCreateNestedManyWithoutBarberInput
-    photos?: BarberPhotoUncheckedCreateNestedManyWithoutBarberInput
   }
 
   export type BarberProfileCreateOrConnectWithoutUserInput = {
@@ -10722,7 +9338,6 @@ export namespace Prisma {
     availability?: BarberAvailabilityUpdateManyWithoutBarberNestedInput
     appointments?: AppointmentUpdateManyWithoutBarberNestedInput
     subscriptions?: SubscriptionUpdateManyWithoutBarberNestedInput
-    photos?: BarberPhotoUpdateManyWithoutBarberNestedInput
   }
 
   export type BarberProfileUncheckedUpdateWithoutUserInput = {
@@ -10739,7 +9354,6 @@ export namespace Prisma {
     availability?: BarberAvailabilityUncheckedUpdateManyWithoutBarberNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutBarberNestedInput
     subscriptions?: SubscriptionUncheckedUpdateManyWithoutBarberNestedInput
-    photos?: BarberPhotoUncheckedUpdateManyWithoutBarberNestedInput
   }
 
   export type AppointmentUpsertWithWhereUniqueWithoutClientInput = {
@@ -10886,28 +9500,6 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type BarberPhotoCreateWithoutBarberInput = {
-    id?: string
-    url: string
-    createdAt?: Date | string
-  }
-
-  export type BarberPhotoUncheckedCreateWithoutBarberInput = {
-    id?: string
-    url: string
-    createdAt?: Date | string
-  }
-
-  export type BarberPhotoCreateOrConnectWithoutBarberInput = {
-    where: BarberPhotoWhereUniqueInput
-    create: XOR<BarberPhotoCreateWithoutBarberInput, BarberPhotoUncheckedCreateWithoutBarberInput>
-  }
-
-  export type BarberPhotoCreateManyBarberInputEnvelope = {
-    data: BarberPhotoCreateManyBarberInput | BarberPhotoCreateManyBarberInput[]
-    skipDuplicates?: boolean
-  }
-
   export type UserUpsertWithoutBarberProfileInput = {
     update: XOR<UserUpdateWithoutBarberProfileInput, UserUncheckedUpdateWithoutBarberProfileInput>
     create: XOR<UserCreateWithoutBarberProfileInput, UserUncheckedCreateWithoutBarberProfileInput>
@@ -11015,116 +9607,6 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Subscription"> | Date | string
   }
 
-  export type BarberPhotoUpsertWithWhereUniqueWithoutBarberInput = {
-    where: BarberPhotoWhereUniqueInput
-    update: XOR<BarberPhotoUpdateWithoutBarberInput, BarberPhotoUncheckedUpdateWithoutBarberInput>
-    create: XOR<BarberPhotoCreateWithoutBarberInput, BarberPhotoUncheckedCreateWithoutBarberInput>
-  }
-
-  export type BarberPhotoUpdateWithWhereUniqueWithoutBarberInput = {
-    where: BarberPhotoWhereUniqueInput
-    data: XOR<BarberPhotoUpdateWithoutBarberInput, BarberPhotoUncheckedUpdateWithoutBarberInput>
-  }
-
-  export type BarberPhotoUpdateManyWithWhereWithoutBarberInput = {
-    where: BarberPhotoScalarWhereInput
-    data: XOR<BarberPhotoUpdateManyMutationInput, BarberPhotoUncheckedUpdateManyWithoutBarberInput>
-  }
-
-  export type BarberPhotoScalarWhereInput = {
-    AND?: BarberPhotoScalarWhereInput | BarberPhotoScalarWhereInput[]
-    OR?: BarberPhotoScalarWhereInput[]
-    NOT?: BarberPhotoScalarWhereInput | BarberPhotoScalarWhereInput[]
-    id?: StringFilter<"BarberPhoto"> | string
-    barberId?: StringFilter<"BarberPhoto"> | string
-    url?: StringFilter<"BarberPhoto"> | string
-    createdAt?: DateTimeFilter<"BarberPhoto"> | Date | string
-  }
-
-  export type BarberProfileCreateWithoutPhotosInput = {
-    id?: string
-    businessName: string
-    bio?: string | null
-    governorate: $Enums.Governorate
-    address?: string | null
-    avatarUrl?: string | null
-    coverImageUrl?: string | null
-    planType?: $Enums.PlanType
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    user: UserCreateNestedOneWithoutBarberProfileInput
-    availability?: BarberAvailabilityCreateNestedManyWithoutBarberInput
-    appointments?: AppointmentCreateNestedManyWithoutBarberInput
-    subscriptions?: SubscriptionCreateNestedManyWithoutBarberInput
-  }
-
-  export type BarberProfileUncheckedCreateWithoutPhotosInput = {
-    id?: string
-    userId: string
-    businessName: string
-    bio?: string | null
-    governorate: $Enums.Governorate
-    address?: string | null
-    avatarUrl?: string | null
-    coverImageUrl?: string | null
-    planType?: $Enums.PlanType
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    availability?: BarberAvailabilityUncheckedCreateNestedManyWithoutBarberInput
-    appointments?: AppointmentUncheckedCreateNestedManyWithoutBarberInput
-    subscriptions?: SubscriptionUncheckedCreateNestedManyWithoutBarberInput
-  }
-
-  export type BarberProfileCreateOrConnectWithoutPhotosInput = {
-    where: BarberProfileWhereUniqueInput
-    create: XOR<BarberProfileCreateWithoutPhotosInput, BarberProfileUncheckedCreateWithoutPhotosInput>
-  }
-
-  export type BarberProfileUpsertWithoutPhotosInput = {
-    update: XOR<BarberProfileUpdateWithoutPhotosInput, BarberProfileUncheckedUpdateWithoutPhotosInput>
-    create: XOR<BarberProfileCreateWithoutPhotosInput, BarberProfileUncheckedCreateWithoutPhotosInput>
-    where?: BarberProfileWhereInput
-  }
-
-  export type BarberProfileUpdateToOneWithWhereWithoutPhotosInput = {
-    where?: BarberProfileWhereInput
-    data: XOR<BarberProfileUpdateWithoutPhotosInput, BarberProfileUncheckedUpdateWithoutPhotosInput>
-  }
-
-  export type BarberProfileUpdateWithoutPhotosInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    businessName?: StringFieldUpdateOperationsInput | string
-    bio?: NullableStringFieldUpdateOperationsInput | string | null
-    governorate?: EnumGovernorateFieldUpdateOperationsInput | $Enums.Governorate
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    planType?: EnumPlanTypeFieldUpdateOperationsInput | $Enums.PlanType
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    user?: UserUpdateOneRequiredWithoutBarberProfileNestedInput
-    availability?: BarberAvailabilityUpdateManyWithoutBarberNestedInput
-    appointments?: AppointmentUpdateManyWithoutBarberNestedInput
-    subscriptions?: SubscriptionUpdateManyWithoutBarberNestedInput
-  }
-
-  export type BarberProfileUncheckedUpdateWithoutPhotosInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    userId?: StringFieldUpdateOperationsInput | string
-    businessName?: StringFieldUpdateOperationsInput | string
-    bio?: NullableStringFieldUpdateOperationsInput | string | null
-    governorate?: EnumGovernorateFieldUpdateOperationsInput | $Enums.Governorate
-    address?: NullableStringFieldUpdateOperationsInput | string | null
-    avatarUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    coverImageUrl?: NullableStringFieldUpdateOperationsInput | string | null
-    planType?: EnumPlanTypeFieldUpdateOperationsInput | $Enums.PlanType
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    availability?: BarberAvailabilityUncheckedUpdateManyWithoutBarberNestedInput
-    appointments?: AppointmentUncheckedUpdateManyWithoutBarberNestedInput
-    subscriptions?: SubscriptionUncheckedUpdateManyWithoutBarberNestedInput
-  }
-
   export type BarberProfileCreateWithoutAvailabilityInput = {
     id?: string
     businessName: string
@@ -11139,7 +9621,6 @@ export namespace Prisma {
     user: UserCreateNestedOneWithoutBarberProfileInput
     appointments?: AppointmentCreateNestedManyWithoutBarberInput
     subscriptions?: SubscriptionCreateNestedManyWithoutBarberInput
-    photos?: BarberPhotoCreateNestedManyWithoutBarberInput
   }
 
   export type BarberProfileUncheckedCreateWithoutAvailabilityInput = {
@@ -11156,7 +9637,6 @@ export namespace Prisma {
     updatedAt?: Date | string
     appointments?: AppointmentUncheckedCreateNestedManyWithoutBarberInput
     subscriptions?: SubscriptionUncheckedCreateNestedManyWithoutBarberInput
-    photos?: BarberPhotoUncheckedCreateNestedManyWithoutBarberInput
   }
 
   export type BarberProfileCreateOrConnectWithoutAvailabilityInput = {
@@ -11189,7 +9669,6 @@ export namespace Prisma {
     user?: UserUpdateOneRequiredWithoutBarberProfileNestedInput
     appointments?: AppointmentUpdateManyWithoutBarberNestedInput
     subscriptions?: SubscriptionUpdateManyWithoutBarberNestedInput
-    photos?: BarberPhotoUpdateManyWithoutBarberNestedInput
   }
 
   export type BarberProfileUncheckedUpdateWithoutAvailabilityInput = {
@@ -11206,7 +9685,6 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     appointments?: AppointmentUncheckedUpdateManyWithoutBarberNestedInput
     subscriptions?: SubscriptionUncheckedUpdateManyWithoutBarberNestedInput
-    photos?: BarberPhotoUncheckedUpdateManyWithoutBarberNestedInput
   }
 
   export type UserCreateWithoutAppointmentsAsClientInput = {
@@ -11252,7 +9730,6 @@ export namespace Prisma {
     user: UserCreateNestedOneWithoutBarberProfileInput
     availability?: BarberAvailabilityCreateNestedManyWithoutBarberInput
     subscriptions?: SubscriptionCreateNestedManyWithoutBarberInput
-    photos?: BarberPhotoCreateNestedManyWithoutBarberInput
   }
 
   export type BarberProfileUncheckedCreateWithoutAppointmentsInput = {
@@ -11269,7 +9746,6 @@ export namespace Prisma {
     updatedAt?: Date | string
     availability?: BarberAvailabilityUncheckedCreateNestedManyWithoutBarberInput
     subscriptions?: SubscriptionUncheckedCreateNestedManyWithoutBarberInput
-    photos?: BarberPhotoUncheckedCreateNestedManyWithoutBarberInput
   }
 
   export type BarberProfileCreateOrConnectWithoutAppointmentsInput = {
@@ -11337,7 +9813,6 @@ export namespace Prisma {
     user?: UserUpdateOneRequiredWithoutBarberProfileNestedInput
     availability?: BarberAvailabilityUpdateManyWithoutBarberNestedInput
     subscriptions?: SubscriptionUpdateManyWithoutBarberNestedInput
-    photos?: BarberPhotoUpdateManyWithoutBarberNestedInput
   }
 
   export type BarberProfileUncheckedUpdateWithoutAppointmentsInput = {
@@ -11354,7 +9829,6 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     availability?: BarberAvailabilityUncheckedUpdateManyWithoutBarberNestedInput
     subscriptions?: SubscriptionUncheckedUpdateManyWithoutBarberNestedInput
-    photos?: BarberPhotoUncheckedUpdateManyWithoutBarberNestedInput
   }
 
   export type BarberProfileCreateWithoutSubscriptionsInput = {
@@ -11371,7 +9845,6 @@ export namespace Prisma {
     user: UserCreateNestedOneWithoutBarberProfileInput
     availability?: BarberAvailabilityCreateNestedManyWithoutBarberInput
     appointments?: AppointmentCreateNestedManyWithoutBarberInput
-    photos?: BarberPhotoCreateNestedManyWithoutBarberInput
   }
 
   export type BarberProfileUncheckedCreateWithoutSubscriptionsInput = {
@@ -11388,7 +9861,6 @@ export namespace Prisma {
     updatedAt?: Date | string
     availability?: BarberAvailabilityUncheckedCreateNestedManyWithoutBarberInput
     appointments?: AppointmentUncheckedCreateNestedManyWithoutBarberInput
-    photos?: BarberPhotoUncheckedCreateNestedManyWithoutBarberInput
   }
 
   export type BarberProfileCreateOrConnectWithoutSubscriptionsInput = {
@@ -11421,7 +9893,6 @@ export namespace Prisma {
     user?: UserUpdateOneRequiredWithoutBarberProfileNestedInput
     availability?: BarberAvailabilityUpdateManyWithoutBarberNestedInput
     appointments?: AppointmentUpdateManyWithoutBarberNestedInput
-    photos?: BarberPhotoUpdateManyWithoutBarberNestedInput
   }
 
   export type BarberProfileUncheckedUpdateWithoutSubscriptionsInput = {
@@ -11438,7 +9909,6 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     availability?: BarberAvailabilityUncheckedUpdateManyWithoutBarberNestedInput
     appointments?: AppointmentUncheckedUpdateManyWithoutBarberNestedInput
-    photos?: BarberPhotoUncheckedUpdateManyWithoutBarberNestedInput
   }
 
   export type AppointmentCreateManyClientInput = {
@@ -11509,12 +9979,6 @@ export namespace Prisma {
     status?: $Enums.SubscriptionStatus
     startedAt?: Date | string
     endsAt?: Date | string | null
-    createdAt?: Date | string
-  }
-
-  export type BarberPhotoCreateManyBarberInput = {
-    id?: string
-    url: string
     createdAt?: Date | string
   }
 
@@ -11596,24 +10060,6 @@ export namespace Prisma {
     status?: EnumSubscriptionStatusFieldUpdateOperationsInput | $Enums.SubscriptionStatus
     startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     endsAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type BarberPhotoUpdateWithoutBarberInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    url?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type BarberPhotoUncheckedUpdateWithoutBarberInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    url?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type BarberPhotoUncheckedUpdateManyWithoutBarberInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    url?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

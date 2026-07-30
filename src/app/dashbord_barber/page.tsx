@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import { listAppointmentsByBarber } from "@/server/appointments";
 import { listAvailability } from "@/server/barber-availability";
-import { listPhotosByBarber } from "@/server/barber-photos";
 import { getBarberProfile } from "@/server/barber-profiles";
 import { CURRENT_BARBER_PROFILE_ID } from "@/lib/current-barber";
 import { DashboardClient } from "./_components/dashboard-client";
@@ -11,11 +10,10 @@ import { DashboardClient } from "./_components/dashboard-client";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardBarberPage() {
-  const [profile, appointments, availability, photos] = await Promise.all([
+  const [profile, appointments, availability] = await Promise.all([
     getBarberProfile(CURRENT_BARBER_PROFILE_ID),
     listAppointmentsByBarber(CURRENT_BARBER_PROFILE_ID),
     listAvailability(CURRENT_BARBER_PROFILE_ID),
-    listPhotosByBarber(CURRENT_BARBER_PROFILE_ID),
   ]);
 
   if (!profile) notFound();
@@ -25,7 +23,6 @@ export default async function DashboardBarberPage() {
       profile={profile}
       appointments={appointments}
       availability={availability}
-      photos={photos}
     />
   );
 }

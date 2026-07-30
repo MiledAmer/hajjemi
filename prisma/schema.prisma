@@ -148,23 +148,8 @@ model BarberProfile {
   availability  BarberAvailability[]
   appointments  Appointment[]
   subscriptions Subscription[]
-  photos        BarberPhoto[]
 
   @@map("barber_profiles")
-}
-
-/// A shop gallery photo, stored in Cloudflare R2 — `url` is the public R2
-/// object URL. One-to-many rather than a single column since a barber can
-/// showcase several shop photos.
-model BarberPhoto {
-  id        String        @id @default(cuid())
-  barberId  String
-  barber    BarberProfile @relation(fields: [barberId], references: [id], onDelete: Cascade)
-  url       String
-  createdAt DateTime      @default(now())
-
-  @@index([barberId])
-  @@map("barber_photos")
 }
 
 // ---------------------------------------------------------------------------
