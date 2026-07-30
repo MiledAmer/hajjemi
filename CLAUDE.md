@@ -87,3 +87,11 @@ implemented UI matches the mockups rather than reinventing a palette.
 
 No routes, components, or Prisma models yet exist for any of this (still just the `Post` scaffold) — search,
 booking, barber profiles/dashboard, and subscription plans are all unbuilt features implied by these mockups.
+
+## Planned third-party integrations
+
+Not yet implemented, but these are the chosen providers when the corresponding feature is built — don't
+introduce a different provider (e.g. Twilio, S3) without checking with the user first:
+
+- **SMS OTP** (phone verification for signup/login): Ooredoo Developer.
+- **Image storage** (barber profile photos, etc.): Cloudflare R2.

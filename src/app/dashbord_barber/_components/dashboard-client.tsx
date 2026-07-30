@@ -1,16 +1,24 @@
 "use client";
 
-import { useMemo, useOptimistic, useState, useTransition } from "react";
+import {
+  type ChangeEvent,
+  useMemo,
+  useOptimistic,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
 import {
   Bell,
   Calendar,
   Clock,
+  ImagePlus,
   LayoutDashboard,
   LogOut,
   Phone,
   Share2,
   User,
+  X,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -93,11 +101,31 @@ export function DashboardClient({
   );
   const [optimisticProfile, applyProfilePatch] = useOptimistic(
     profile,
-    (state, patch: Partial<Pick<BarberProfile, "businessName" | "bio">>) => ({
+    (
+      state,
+      patch: Partial<Pick<BarberProfile, "businessName" | "bio" | "avatarUrl">>,
+    ) => ({
       ...state,
       ...patch,
     }),
   );
+
+  // ponytail: shop gallery is local-only (object URLs, not persisted) until
+  // a BarberPhoto model + Cloudflare R2 upload exist — see CLAUDE.md.
+  const [shopPhotos, setShopPhotos] = useState<{ id: string; url: string }[]>(
+    [],
+  );
+  const addShopPhoto = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setShopPhotos((photos) => [
+      ...photos,
+      { id: crypto.randomUUID(), url: URL.createObjectURL(file) },
+    ]);
+    event.target.value = "";
+  };
+  const removeShopPhoto = (id: string) =>
+    setShopPhotos((photos) => photos.filter((p) => p.id !== id));
 
   const mondayRow = availability.find((a) => a.dayOfWeek === "MONDAY");
   const sundayRow = availability.find((a) => a.dayOfWeek === "SUNDAY");
@@ -146,9 +174,14 @@ export function DashboardClient({
     bio: string;
     weekdaysHours: string;
     sundayHours: string;
+    avatarUrl: string;
   }) {
     startTransition(async () => {
-      applyProfilePatch({ businessName: updated.name, bio: updated.bio });
+      applyProfilePatch({
+        businessName: updated.name,
+        bio: updated.bio,
+        avatarUrl: updated.avatarUrl,
+      });
       applyHoursPatch({
         weekdaysHours: updated.weekdaysHours,
         sundayHours: updated.sundayHours,
@@ -180,7 +213,7 @@ export function DashboardClient({
             <Avatar className="border-primary/20 size-10 border">
               <AvatarImage
                 alt="Portrait du barbier"
-                src={profile.avatarUrl ?? BARBER_AVATAR}
+                src={optimisticProfile.avatarUrl ?? BARBER_AVATAR}
               />
               <AvatarFallback>{optimisticProfile.businessName[0]}</AvatarFallback>
             </Avatar>
@@ -383,7 +416,7 @@ export function DashboardClient({
                 <Avatar className="border-primary size-24 border-2 p-1">
                   <AvatarImage
                     alt={`Portrait de ${profile.user.name}`}
-                    src={profile.avatarUrl ?? BARBER_PROFILE_PORTRAIT}
+                    src={optimisticProfile.avatarUrl ?? BARBER_PROFILE_PORTRAIT}
                   />
                   <AvatarFallback>{optimisticProfile.businessName[0]}</AvatarFallback>
                 </Avatar>
@@ -424,6 +457,8 @@ export function DashboardClient({
                       bio: optimisticProfile.bio ?? t.bio,
                       weekdaysHours: optimisticHours.weekdaysHours,
                       sundayHours: optimisticHours.sundayHours,
+                      avatarUrl:
+                        optimisticProfile.avatarUrl ?? BARBER_PROFILE_PORTRAIT,
                     }}
                     onSave={saveProfile}
                   />
@@ -451,6 +486,49 @@ export function DashboardClient({
                     {optimisticHours.sundayHours}
                   </span>
                 </div>
+              </div>
+            </Card>
+
+            <Card className="bg-surface-container p-gutter gap-stack-md rounded-xl">
+              <h3 className="font-headline-md text-headline-md">
+                {t.shopPhotos}
+              </h3>
+              <div className="gap-gutter grid grid-cols-3">
+                {shopPhotos.map((photo) => (
+                  <div
+                    key={photo.id}
+                    className="group relative aspect-square overflow-hidden rounded-lg"
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element -- local object URL, not an optimizable remote asset */}
+                    <img
+                      src={photo.url}
+                      alt=""
+                      className="size-full object-cover"
+                    />
+                    <button
+                      type="button"
+                      aria-label={t.removePhotoAria}
+                      onClick={() => removeShopPhoto(photo.id)}
+                      className="bg-background/70 text-on-background absolute top-1 right-1 flex size-6 items-center justify-center rounded-full"
+                    >
+                      <X className="size-4" />
+                    </button>
+                  </div>
+                ))}
+                <label
+                  aria-label={t.addPhotoAria}
+                  htmlFor="add-shop-photo"
+                  className="border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary flex aspect-square cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed"
+                >
+                  <ImagePlus className="size-6" />
+                </label>
+                <input
+                  id="add-shop-photo"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={addShopPhoto}
+                />
               </div>
             </Card>
 

@@ -126,6 +126,9 @@ export const dashboard = {
     sunday: "Dimanche",
     closed: "Fermé",
     logout: "Déconnexion",
+    shopPhotos: "Photos du salon",
+    addPhotoAria: "Ajouter une photo",
+    removePhotoAria: "Supprimer la photo",
   },
   tn: {
     switchTo: "FR",
@@ -159,6 +162,9 @@ export const dashboard = {
     sunday: "El Ahad",
     closed: "Ma8lou9",
     logout: "Khrouj",
+    shopPhotos: "Sowar mte3 el salon",
+    addPhotoAria: "Zid soura",
+    removePhotoAria: "Na7i soura",
   },
 } as const satisfies Record<Lang, unknown>;
 
@@ -185,6 +191,7 @@ export const editProfileDialog = {
   fr: {
     editAria: "Modifier le profil",
     title: "Modifier le profil",
+    changePhotoAria: "Changer la photo de profil",
     name: "Nom",
     bio: "Description",
     weekdays: "Lundi - Samedi",
@@ -195,6 +202,7 @@ export const editProfileDialog = {
   tn: {
     editAria: "Badel Profil",
     title: "Badel Profil",
+    changePhotoAria: "Badel soura mte3 profil",
     name: "Esm",
     bio: "Description",
     weekdays: "Ethnin - Sebt",

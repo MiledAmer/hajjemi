@@ -1,8 +1,9 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
-import { SquarePen } from "lucide-react";
+import { type ChangeEvent, type FormEvent, useState } from "react";
+import { Camera, SquarePen } from "lucide-react";
 
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -23,6 +24,7 @@ export type EditableProfile = {
   bio: string;
   weekdaysHours: string;
   sundayHours: string;
+  avatarUrl: string;
 };
 
 export function EditProfileDialog({
@@ -40,6 +42,7 @@ export function EditProfileDialog({
   const [bio, setBio] = useState(profile.bio);
   const [weekdaysHours, setWeekdaysHours] = useState(profile.weekdaysHours);
   const [sundayHours, setSundayHours] = useState(profile.sundayHours);
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
@@ -48,13 +51,21 @@ export function EditProfileDialog({
       setBio(profile.bio);
       setWeekdaysHours(profile.weekdaysHours);
       setSundayHours(profile.sundayHours);
+      setAvatarUrl(profile.avatarUrl);
     }
+  };
+
+  // ponytail: preview-only via a local object URL — no upload happens yet.
+  // Wire this to Cloudflare R2 (see CLAUDE.md) once uploads are built.
+  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) setAvatarUrl(URL.createObjectURL(file));
   };
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     if (!name || !bio || !weekdaysHours || !sundayHours) return;
-    onSave({ name, bio, weekdaysHours, sundayHours });
+    onSave({ name, bio, weekdaysHours, sundayHours, avatarUrl });
     setOpen(false);
   };
 
@@ -79,6 +90,27 @@ export function EditProfileDialog({
               {s.title}
             </DialogTitle>
           </DialogHeader>
+
+          <div className="relative mx-auto mb-2 size-24">
+            <Avatar className="border-primary size-24 border-2 p-1">
+              <AvatarImage alt={s.changePhotoAria} src={avatarUrl} />
+              <AvatarFallback>{name[0]}</AvatarFallback>
+            </Avatar>
+            <label
+              aria-label={s.changePhotoAria}
+              htmlFor="edit-profile-avatar"
+              className="bg-primary text-on-primary absolute right-0 bottom-0 flex size-8 cursor-pointer items-center justify-center rounded-full shadow-lg active:scale-90"
+            >
+              <Camera className="size-4" />
+            </label>
+            <input
+              id="edit-profile-avatar"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarChange}
+            />
+          </div>
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="edit-profile-name">{s.name}</Label>
