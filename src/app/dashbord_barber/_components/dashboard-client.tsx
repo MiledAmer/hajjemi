@@ -128,6 +128,7 @@ export function DashboardClient({
         : state.filter((p) => p.id !== patch.id),
   );
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
 
   async function uploadFile(file: File, kind: "avatar" | "shop") {
     const formData = new FormData();
@@ -143,12 +144,18 @@ export function DashboardClient({
     event.target.value = "";
     if (!file) return;
     setUploadingPhoto(true);
+    setPhotoError(null);
     startTransition(async () => {
-      const url = await uploadFile(file, "shop");
-      const photo = await addPhoto(profile.id, url);
-      applyPhotosPatch({ type: "add", photo });
-      setUploadingPhoto(false);
-      router.refresh();
+      try {
+        const url = await uploadFile(file, "shop");
+        const photo = await addPhoto(profile.id, url);
+        applyPhotosPatch({ type: "add", photo });
+        router.refresh();
+      } catch (error) {
+        setPhotoError(error instanceof Error ? error.message : "Échec de l'envoi");
+      } finally {
+        setUploadingPhoto(false);
+      }
     });
   }
 
@@ -528,6 +535,9 @@ export function DashboardClient({
               <h3 className="font-headline-md text-headline-md">
                 {t.shopPhotos}
               </h3>
+              {photoError && (
+                <p className="text-destructive font-label-sm">{photoError}</p>
+              )}
               <div className="gap-gutter grid grid-cols-3">
                 {optimisticPhotos.map((photo) => (
                   <div

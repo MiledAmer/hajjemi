@@ -10,6 +10,11 @@ const config = {
   // (e.g. testing over a mobile hotspot at 192.168.49.x) without the
   // cross-origin dev warning. Has no effect in production builds.
   allowedDevOrigins: ["192.168.1.0/24", "192.168.49.0/24"],
+  experimental: {
+    // Default 1mb is smaller than the 5MB image cap in src/server/uploads.ts —
+    // photos over 1mb were silently rejected before reaching R2.
+    serverActions: { bodySizeLimit: "6mb" },
+  },
 };
 
 export default config;

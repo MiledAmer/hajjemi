@@ -46,6 +46,7 @@ export function EditProfileDialog({
   const [sundayHours, setSundayHours] = useState(profile.sundayHours);
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState<string | null>(null);
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
@@ -63,9 +64,12 @@ export function EditProfileDialog({
     event.target.value = "";
     if (!file) return;
     setIsUploadingAvatar(true);
+    setAvatarError(null);
     onUploadAvatar(file)
       .then(setAvatarUrl)
-      .catch(() => undefined)
+      .catch((error: unknown) =>
+        setAvatarError(error instanceof Error ? error.message : "Échec de l'envoi"),
+      )
       .finally(() => setIsUploadingAvatar(false));
   };
 
@@ -119,6 +123,11 @@ export function EditProfileDialog({
               onChange={handleAvatarChange}
             />
           </div>
+          {avatarError && (
+            <p className="text-destructive font-label-sm text-center">
+              {avatarError}
+            </p>
+          )}
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="edit-profile-name">{s.name}</Label>
