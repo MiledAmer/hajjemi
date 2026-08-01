@@ -4,9 +4,7 @@ import {
   Calendar,
   CheckCircle2,
   LayoutDashboard,
-  LineChart,
   Menu,
-  TrendingUp,
   User,
   Users,
   X,
@@ -60,29 +58,24 @@ const previewAppointments = [
   },
 ];
 
-const basicFeatures = [
-  { label: "Jusqu'à 10 rendez-vous/mois", included: true },
+const freeFeatures = [
+  { label: "1 barbier", included: true },
+  { label: "Usage simple de la plateforme", included: true },
   { label: "Profil standard sur l'application", included: true },
-  { label: "Gestion de 3 services de base", included: true },
   { label: "Statistiques avancées", included: false },
   { label: "Visibilité boostée (Top Recherche)", included: false },
 ];
 
 const proFeatures = [
-  { label: "Rendez-vous illimités", icon: CheckCircle2, emphasis: true },
+  { label: "1 utilisateur", icon: CheckCircle2, emphasis: true },
+  { label: "Rendez-vous illimités", icon: CheckCircle2 },
   { label: "Profil Premium certifié", icon: CheckCircle2 },
-  { label: "Catalogue de services illimité", icon: CheckCircle2 },
-  {
-    label: "Statistiques avancées & rapports",
-    icon: LineChart,
-    emphasis: true,
-  },
-  {
-    label: "Visibilité boostée (Algorithme)",
-    icon: TrendingUp,
-    emphasis: true,
-    accent: true,
-  },
+];
+
+const salonFeatures = [
+  { label: "Jusqu'à 3 utilisateurs", icon: Users, emphasis: true },
+  { label: "Tout le plan Pro", icon: CheckCircle2 },
+  { label: "Gestion d'équipe", icon: Users },
 ];
 
 export default function PlansPage() {
@@ -349,8 +342,8 @@ export default function PlansPage() {
               </p>
             </div>
 
-            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-2">
-              {/* Basic Plan */}
+            <div className="mx-auto grid max-w-6xl grid-cols-1 gap-8 md:grid-cols-3">
+              {/* Free Plan */}
               <Card className="border-surface-container-high bg-surface-container-low hover:border-outline-variant relative gap-0 overflow-hidden rounded-2xl border-2 p-8 transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
                 <div className="mb-8">
                   <Badge
@@ -360,7 +353,7 @@ export default function PlansPage() {
                     Démarrage
                   </Badge>
                   <h3 className="font-headline-md text-headline-md text-on-surface mb-2 font-bold">
-                    Basic
+                    Free
                   </h3>
                   <div className="flex items-baseline gap-1">
                     <span className="font-display-lg text-display-lg text-on-surface font-bold">
@@ -371,13 +364,13 @@ export default function PlansPage() {
                     </span>
                   </div>
                   <p className="font-body-md text-body-md text-on-surface-variant mt-4">
-                    L&apos;essentiel pour digitaliser votre prise de rendez-vous
-                    et découvrir la plateforme.
+                    Un barbier, usage simple de la plateforme pour digitaliser
+                    votre prise de rendez-vous.
                   </p>
                 </div>
                 <div className="flex-1">
                   <ul className="mb-8 flex flex-col gap-4">
-                    {basicFeatures.map((feature) => (
+                    {freeFeatures.map((feature) => (
                       <li
                         key={feature.label}
                         className={`flex items-start gap-3 ${feature.included ? "" : "opacity-40"}`}
@@ -422,7 +415,7 @@ export default function PlansPage() {
                   </h3>
                   <div className="flex items-baseline gap-1">
                     <span className="font-display-lg text-display-lg text-primary font-bold">
-                      49
+                      20
                     </span>
                     <span className="font-label-md text-label-md text-on-surface-variant">
                       DT / mois
@@ -442,7 +435,7 @@ export default function PlansPage() {
                       >
                         <feature.icon className="text-primary mt-0.5 size-5" />
                         <span
-                          className={`font-body-md text-body-md text-on-surface ${feature.emphasis ? "font-semibold" : ""} ${feature.accent ? "text-primary" : ""}`}
+                          className={`font-body-md text-body-md text-on-surface ${feature.emphasis ? "font-semibold" : ""}`}
                         >
                           {feature.label}
                         </span>
@@ -453,6 +446,56 @@ export default function PlansPage() {
                 <Button className="font-label-md text-label-md bg-primary text-on-primary hover:bg-primary-fixed-dim relative z-10 h-auto w-full gap-2 rounded-lg px-6 py-4 font-bold shadow-[0_4px_12px_rgba(212,175,55,0.3)]">
                   Passer au niveau Pro
                   <BadgeCheck className="size-5" />
+                </Button>
+              </Card>
+
+              {/* Salon Plan */}
+              <Card className="border-surface-container-high bg-surface-container-low hover:border-outline-variant relative gap-0 overflow-hidden rounded-2xl border-2 p-8 transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
+                <div className="mb-8">
+                  <Badge
+                    variant="outline"
+                    className="font-label-sm text-label-sm border-outline-variant/30 bg-surface-container text-on-surface-variant mb-4 inline-block rounded-sm tracking-wider uppercase"
+                  >
+                    Équipe
+                  </Badge>
+                  <h3 className="font-headline-md text-headline-md text-on-surface mb-2 font-bold">
+                    Salon
+                  </h3>
+                  <div className="flex items-baseline gap-1">
+                    <span className="font-display-lg text-display-lg text-on-surface font-bold">
+                      55
+                    </span>
+                    <span className="font-label-md text-label-md text-on-surface-variant">
+                      DT / mois
+                    </span>
+                  </div>
+                  <p className="font-body-md text-body-md text-on-surface-variant mt-4">
+                    Pour les salons jusqu&apos;à 3 utilisateurs, avec la gestion
+                    d&apos;équipe complète.
+                  </p>
+                </div>
+                <div className="flex-1">
+                  <ul className="mb-8 flex flex-col gap-4">
+                    {salonFeatures.map((feature) => (
+                      <li
+                        key={feature.label}
+                        className="flex items-start gap-3"
+                      >
+                        <feature.icon className="text-secondary mt-0.5 size-5" />
+                        <span
+                          className={`font-body-md text-body-md text-on-surface ${feature.emphasis ? "font-semibold" : ""}`}
+                        >
+                          {feature.label}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <Button
+                  variant="outline"
+                  className="font-label-md text-label-md border-outline-variant bg-surface-container text-on-surface hover:bg-surface-container-high h-auto w-full rounded-lg px-6 py-4 font-bold"
+                >
+                  Choisir Salon
                 </Button>
               </Card>
             </div>

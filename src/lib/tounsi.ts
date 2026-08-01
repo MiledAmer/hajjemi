@@ -222,7 +222,7 @@ export const search = {
     comingSoon: "Bientôt disponible",
     navHome: "Accueil",
     navExplore: "Explorer",
-    navBookings: "Rendez-vous",
+    navBookings: "RDV",
     navAccount: "Compte",
   },
   tn: {
@@ -240,7 +240,7 @@ export const search = {
     comingSoon: "Jeya 9rib",
     navHome: "Accueil",
     navExplore: "Lawej",
-    navBookings: "Rendez-vous",
+    navBookings: "RDV",
     navAccount: "Compte",
   },
 } as const satisfies Record<Lang, unknown>;
@@ -325,7 +325,7 @@ export const clientAppointments = {
     noAppointments: "Aucun rendez-vous pour le moment.",
     navHome: "Accueil",
     navExplore: "Explorer",
-    navBookings: "Rendez-vous",
+    navBookings: "RDV",
     navAccount: "Compte",
     bellAria: "Notifications",
     notifTitle: "Notifications",
@@ -353,7 +353,7 @@ export const clientAppointments = {
     noAppointments: "Ma3andekech rendez-vous tawa.",
     navHome: "Accueil",
     navExplore: "Lawej",
-    navBookings: "Rendez-vous",
+    navBookings: "RDV",
     navAccount: "Compte",
     bellAria: "Notifications",
     notifTitle: "Notifications",
@@ -377,7 +377,7 @@ export const clientAccount = {
     logout: "Déconnexion",
     navHome: "Accueil",
     navExplore: "Explorer",
-    navBookings: "Rendez-vous",
+    navBookings: "RDV",
     navAccount: "Compte",
   },
   tn: {
@@ -390,7 +390,7 @@ export const clientAccount = {
     logout: "Khrouj",
     navHome: "Accueil",
     navExplore: "Lawej",
-    navBookings: "Rendez-vous",
+    navBookings: "RDV",
     navAccount: "Compte",
   },
 } as const satisfies Record<Lang, unknown>;
