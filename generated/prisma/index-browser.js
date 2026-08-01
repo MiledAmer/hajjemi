@@ -224,7 +224,8 @@ exports.Governorate = exports.$Enums.Governorate = {
 
 exports.PlanType = exports.$Enums.PlanType = {
   BASIC: 'BASIC',
-  PRO: 'PRO'
+  PRO: 'PRO',
+  SALON: 'SALON'
 };
 
 exports.DayOfWeek = exports.$Enums.DayOfWeek = {

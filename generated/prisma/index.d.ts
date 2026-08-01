@@ -116,7 +116,8 @@ export type AppointmentStatus = (typeof AppointmentStatus)[keyof typeof Appointm
 
 export const PlanType: {
   BASIC: 'BASIC',
-  PRO: 'PRO'
+  PRO: 'PRO',
+  SALON: 'SALON'
 };
 
 export type PlanType = (typeof PlanType)[keyof typeof PlanType]

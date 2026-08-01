@@ -47,3 +47,23 @@ export async function updateSubscription(
 export async function deleteSubscription(id: string) {
   return db.subscription.delete({ where: { id } });
 }
+
+/// Records a paid subscription after Flouci confirms payment: one ACTIVE
+/// 30-day row plus the denormalized planType mirror on BarberProfile. Any
+/// previously ACTIVE subscription is marked EXPIRED so only one is live.
+export async function activateSubscription(barberId: string, plan: PlanType) {
+  const endsAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+  await db.$transaction([
+    db.subscription.updateMany({
+      where: { barberId, status: SubscriptionStatus.ACTIVE },
+      data: { status: SubscriptionStatus.EXPIRED, endsAt: new Date() },
+    }),
+    db.subscription.create({
+      data: { barberId, planType: plan, status: SubscriptionStatus.ACTIVE, endsAt },
+    }),
+    db.barberProfile.update({
+      where: { id: barberId },
+      data: { planType: plan },
+    }),
+  ]);
+}

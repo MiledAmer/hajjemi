@@ -14,6 +14,7 @@ import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { startSubscription } from "./actions";
 
 const navLinks = ["Avantages", "Tarifs"];
 
@@ -62,8 +63,6 @@ const freeFeatures = [
   { label: "1 barbier", included: true },
   { label: "Usage simple de la plateforme", included: true },
   { label: "Profil standard sur l'application", included: true },
-  { label: "Statistiques avancées", included: false },
-  { label: "Visibilité boostée (Top Recherche)", included: false },
 ];
 
 const proFeatures = [
@@ -443,10 +442,16 @@ export default function PlansPage() {
                     ))}
                   </ul>
                 </div>
-                <Button className="font-label-md text-label-md bg-primary text-on-primary hover:bg-primary-fixed-dim relative z-10 h-auto w-full gap-2 rounded-lg px-6 py-4 font-bold shadow-[0_4px_12px_rgba(212,175,55,0.3)]">
-                  Passer au niveau Pro
-                  <BadgeCheck className="size-5" />
-                </Button>
+                <form action={startSubscription} className="relative z-10">
+                  <input type="hidden" name="plan" value="PRO" />
+                  <Button
+                    type="submit"
+                    className="font-label-md text-label-md bg-primary text-on-primary hover:bg-primary-fixed-dim h-auto w-full gap-2 rounded-lg px-6 py-4 font-bold shadow-[0_4px_12px_rgba(212,175,55,0.3)]"
+                  >
+                    Passer au niveau Pro
+                    <BadgeCheck className="size-5" />
+                  </Button>
+                </form>
               </Card>
 
               {/* Salon Plan */}
@@ -491,12 +496,16 @@ export default function PlansPage() {
                     ))}
                   </ul>
                 </div>
-                <Button
-                  variant="outline"
-                  className="font-label-md text-label-md border-outline-variant bg-surface-container text-on-surface hover:bg-surface-container-high h-auto w-full rounded-lg px-6 py-4 font-bold"
-                >
-                  Choisir Salon
-                </Button>
+                <form action={startSubscription}>
+                  <input type="hidden" name="plan" value="SALON" />
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    className="font-label-md text-label-md border-outline-variant bg-surface-container text-on-surface hover:bg-surface-container-high h-auto w-full rounded-lg px-6 py-4 font-bold"
+                  >
+                    Choisir Salon
+                  </Button>
+                </form>
               </Card>
             </div>
           </div>

@@ -20,6 +20,9 @@ export const env = createEnv({
     R2_BUCKET_NAME: z.string().min(1),
     // Public base URL objects are served from (R2.dev subdomain or a custom domain).
     R2_PUBLIC_URL: z.string().url(),
+    // Flouci payment gateway (barber plan subscriptions). See src/server/flouci.ts.
+    FLOUCI_APP_TOKEN: z.string().min(1),
+    FLOUCI_APP_SECRET: z.string().min(1),
   },
 
   /**
@@ -44,6 +47,8 @@ export const env = createEnv({
     R2_SECRET_ACCESS_KEY: process.env.R2_SECRET_ACCESS_KEY,
     R2_BUCKET_NAME: process.env.R2_BUCKET_NAME,
     R2_PUBLIC_URL: process.env.R2_PUBLIC_URL,
+    FLOUCI_APP_TOKEN: process.env.FLOUCI_APP_TOKEN,
+    FLOUCI_APP_SECRET: process.env.FLOUCI_APP_SECRET,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
