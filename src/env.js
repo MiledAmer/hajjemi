@@ -23,6 +23,11 @@ export const env = createEnv({
     // Flouci payment gateway (barber plan subscriptions). See src/server/flouci.ts.
     FLOUCI_APP_TOKEN: z.string().min(1),
     FLOUCI_APP_SECRET: z.string().min(1),
+    // Ooredoo Developer (CAMARA OTP SMS) — see src/server/sms.ts.
+    OOREDOO_CLIENT_ID: z.string().min(1),
+    OOREDOO_CLIENT_SECRET: z.string().min(1),
+    OOREDOO_TOKEN_URL: z.string().url(),
+    OOREDOO_API_BASE_URL: z.string().url(),
   },
 
   /**
@@ -49,6 +54,10 @@ export const env = createEnv({
     R2_PUBLIC_URL: process.env.R2_PUBLIC_URL,
     FLOUCI_APP_TOKEN: process.env.FLOUCI_APP_TOKEN,
     FLOUCI_APP_SECRET: process.env.FLOUCI_APP_SECRET,
+    OOREDOO_CLIENT_ID: process.env.OOREDOO_CLIENT_ID,
+    OOREDOO_CLIENT_SECRET: process.env.OOREDOO_CLIENT_SECRET,
+    OOREDOO_TOKEN_URL: process.env.OOREDOO_TOKEN_URL,
+    OOREDOO_API_BASE_URL: process.env.OOREDOO_API_BASE_URL,
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   /**
