@@ -21,13 +21,16 @@ export const env = createEnv({
     // Public base URL objects are served from (R2.dev subdomain or a custom domain).
     R2_PUBLIC_URL: z.string().url(),
     // Flouci payment gateway (barber plan subscriptions). See src/server/flouci.ts.
-    FLOUCI_APP_TOKEN: z.string().min(1),
-    FLOUCI_APP_SECRET: z.string().min(1),
+    // Optional until we have real credentials; payments fail at runtime without them.
+    FLOUCI_APP_TOKEN: z.string().min(1).optional(),
+    FLOUCI_APP_SECRET: z.string().min(1).optional(),
     // Ooredoo Developer (CAMARA OTP SMS) — see src/server/sms.ts.
     OOREDOO_CLIENT_ID: z.string().min(1),
     OOREDOO_CLIENT_SECRET: z.string().min(1),
     OOREDOO_TOKEN_URL: z.string().url(),
     OOREDOO_API_BASE_URL: z.string().url(),
+    // Clerk auth (email + password sign-in).
+    CLERK_SECRET_KEY: z.string().min(1),
   },
 
   /**
@@ -36,7 +39,7 @@ export const env = createEnv({
    * `NEXT_PUBLIC_`.
    */
   client: {
-    // NEXT_PUBLIC_CLIENTVAR: z.string(),
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1),
   },
 
   /**
@@ -58,7 +61,9 @@ export const env = createEnv({
     OOREDOO_CLIENT_SECRET: process.env.OOREDOO_CLIENT_SECRET,
     OOREDOO_TOKEN_URL: process.env.OOREDOO_TOKEN_URL,
     OOREDOO_API_BASE_URL: process.env.OOREDOO_API_BASE_URL,
-    // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+    CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
+    NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
+      process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
   },
   /**
    * Run `build` or `dev` with `SKIP_ENV_VALIDATION` to skip env validation. This is especially

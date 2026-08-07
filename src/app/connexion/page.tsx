@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Eye, EyeOff, Lock, Phone } from "lucide-react";
+import { useSignIn } from "@clerk/nextjs";
+import { Eye, EyeOff, Lock, Mail, MessageSquare } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,8 +13,69 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function ConnexionPage() {
+  const router = useRouter();
+  const { signIn } = useSignIn();
   const [role, setRole] = useState<"client" | "barbier">("client");
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  // Set when Clerk asks to verify a new device; switches the form to the code step.
+  const [needsEmailCode, setNeedsEmailCode] = useState(false);
+  const [code, setCode] = useState("");
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setPending(true);
+    try {
+      if (!needsEmailCode) {
+        // Clear any sign-in attempt left over from a previous failed submit.
+        await signIn.reset();
+        const { error } = await signIn.password({
+          emailAddress: email,
+          password,
+        });
+        if (error) {
+          console.error("signIn.password error:", error);
+          setError(error.message ?? "Email ou mot de passe incorrect.");
+          return;
+        }
+        if (signIn.status === "needs_client_trust") {
+          // New device: Clerk wants an email code before opening the session.
+          const { error: sendError } = await signIn.mfa.sendEmailCode();
+          if (sendError) {
+            console.error("sendEmailCode error:", sendError);
+            setError("Échec de l'envoi du code. Réessayez.");
+            return;
+          }
+          setNeedsEmailCode(true);
+          return;
+        }
+      } else {
+        const { error } = await signIn.mfa.verifyEmailCode({ code });
+        if (error) {
+          setError("Code invalide ou expiré.");
+          return;
+        }
+      }
+      if (signIn.status !== "complete") {
+        console.error("Unhandled sign-in status:", signIn.status);
+        setError(`Connexion incomplète (${signIn.status}). Réessayez.`);
+        return;
+      }
+      const { error: finalizeError } = await signIn.finalize();
+      if (finalizeError) {
+        console.error("signIn.finalize error:", finalizeError);
+        setError(finalizeError.message ?? "Connexion incomplète. Réessayez.");
+        return;
+      }
+      router.push(role === "barbier" ? "/dashbord_barber" : "/search");
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
     <div className="bg-background relative flex min-h-screen flex-col items-center justify-center overflow-hidden">
@@ -64,69 +127,120 @@ export default function ConnexionPage() {
               </TabsList>
             </Tabs>
 
-            <form className="space-y-gutter">
-              {/* Phone Field */}
-              <div className="space-y-stack-sm">
-                <Label htmlFor="phone">Numéro de téléphone</Label>
-                <div className="gold-glow relative">
-                  <Phone className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                  <Input
-                    id="phone"
-                    placeholder="22 123 456"
-                    type="tel"
-                    className="h-auto rounded-lg py-3 pl-10"
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Password Field (barbier only) */}
-              {role === "barbier" && (
+            <form className="space-y-gutter" onSubmit={handleSubmit}>
+              {needsEmailCode ? (
+                /* New-device verification code step */
                 <div className="space-y-stack-sm">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Mot de passe</Label>
-                    <a
-                      className="font-label-sm text-label-sm text-primary transition-opacity hover:opacity-80"
-                      href="#"
-                    >
-                      Mot de passe oublié ?
-                    </a>
-                  </div>
+                  <Label htmlFor="code">Code de vérification</Label>
+                  <p className="font-body-md text-on-surface-variant text-sm">
+                    Un code a été envoyé par e-mail à {email}.
+                  </p>
                   <div className="gold-glow relative">
-                    <Lock className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                    <MessageSquare className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                     <Input
-                      id="password"
-                      placeholder="••••••••"
-                      type={showPassword ? "text" : "password"}
-                      className="h-auto rounded-lg py-3 pr-10 pl-10"
+                      id="code"
+                      placeholder="123456"
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      className="h-auto rounded-lg py-3 pl-10"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
                       required
                     />
-                    <button
-                      className="text-outline hover:text-primary absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
-                      type="button"
-                      aria-label={
-                        showPassword
-                          ? "Masquer le mot de passe"
-                          : "Afficher le mot de passe"
-                      }
-                      onClick={() => setShowPassword((v) => !v)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="size-4" />
-                      ) : (
-                        <Eye className="size-4" />
-                      )}
-                    </button>
                   </div>
+                  <button
+                    className="font-label-sm text-label-sm text-primary hover:opacity-80"
+                    type="button"
+                    onClick={() => {
+                      setNeedsEmailCode(false);
+                      setCode("");
+                    }}
+                  >
+                    Retour
+                  </button>
                 </div>
+              ) : (
+                <>
+                  {/* Email Field */}
+                  <div className="space-y-stack-sm">
+                    <Label htmlFor="email">Adresse e-mail</Label>
+                    <div className="gold-glow relative">
+                      <Mail className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                      <Input
+                        id="email"
+                        placeholder="vous@exemple.com"
+                        type="email"
+                        autoComplete="email"
+                        className="h-auto rounded-lg py-3 pl-10"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  {/* Password Field */}
+                  <div className="space-y-stack-sm">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password">Mot de passe</Label>
+                      <a
+                        className="font-label-sm text-label-sm text-primary transition-opacity hover:opacity-80"
+                        href="#"
+                      >
+                        Mot de passe oublié ?
+                      </a>
+                    </div>
+                    <div className="gold-glow relative">
+                      <Lock className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                      <Input
+                        id="password"
+                        placeholder="••••••••"
+                        type={showPassword ? "text" : "password"}
+                        autoComplete="current-password"
+                        className="h-auto rounded-lg py-3 pr-10 pl-10"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                      <button
+                        className="text-outline hover:text-primary absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
+                        type="button"
+                        aria-label={
+                          showPassword
+                            ? "Masquer le mot de passe"
+                            : "Afficher le mot de passe"
+                        }
+                        onClick={() => setShowPassword((v) => !v)}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="size-4" />
+                        ) : (
+                          <Eye className="size-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {error && (
+                <p className="font-body-md text-sm text-red-400" role="alert">
+                  {error}
+                </p>
               )}
 
               {/* Action Button */}
               <Button
                 className="mt-base font-headline-md text-headline-md h-auto w-full rounded-lg py-4"
                 type="submit"
+                disabled={pending}
               >
-                Se connecter
+                {pending
+                  ? "Veuillez patienter..."
+                  : needsEmailCode
+                    ? "Vérifier le code"
+                    : "Se connecter"}
               </Button>
             </form>
           </CardContent>

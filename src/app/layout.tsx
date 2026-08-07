@@ -1,6 +1,7 @@
 /* eslint-disable @next/next/no-page-custom-font */
 import "@/styles/globals.css";
 
+import { ClerkProvider } from "@clerk/nextjs";
 import { type Metadata } from "next";
 import { Hanken_Grotesk } from "next/font/google";
 
@@ -20,7 +21,8 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="fr" className={`dark ${hanken.variable}`}>
+    <ClerkProvider>
+      <html lang="fr" className={`dark ${hanken.variable}`}>
       <head>
         <link
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
@@ -28,8 +30,9 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-surface font-body-md text-on-surface selection:bg-primary-container selection:text-on-primary-container min-h-screen overflow-x-hidden">
-        {children}
-      </body>
-    </html>
+          {children}
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
