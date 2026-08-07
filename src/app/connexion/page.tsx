@@ -139,13 +139,22 @@ export default function ConnexionPage() {
                     <MessageSquare className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
                     <Input
                       id="code"
-                      placeholder="123456"
+                      placeholder="••••••"
                       type="text"
                       inputMode="numeric"
                       autoComplete="one-time-code"
-                      className="h-auto rounded-lg py-3 pl-10"
+                      className="h-auto rounded-lg py-3 pl-10 text-center text-2xl tracking-[0.5em]"
                       value={code}
-                      onChange={(e) => setCode(e.target.value)}
+                      onChange={(e) => {
+                        // Keep digits only (ignores spaces from a pasted code).
+                        const digits = e.target.value
+                          .replace(/\D/g, "")
+                          .slice(0, 6);
+                        setCode(digits);
+                        // Auto-submit once all 6 digits are in.
+                        if (digits.length === 6 && !pending)
+                          e.target.form?.requestSubmit();
+                      }}
                       required
                     />
                   </div>
