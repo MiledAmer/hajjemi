@@ -2,6 +2,7 @@
 
 import { useMemo, useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { useClerk } from "@clerk/nextjs";
 import {
   Bell,
   Calendar,
@@ -81,6 +82,7 @@ export function DashboardClient({
   availability: BarberAvailability[];
 }) {
   const router = useRouter();
+  const { signOut } = useClerk();
   const [view, setView] = useState<ViewId>("dashboard");
   const { lang, toggleLang } = useLang();
   const t = dashboardContent[lang];
@@ -478,6 +480,7 @@ export function DashboardClient({
 
             <Button
               variant="ghost"
+              onClick={() => signOut(() => router.push("/connexion"))}
               className="text-destructive bg-destructive/10 mt-stack-lg h-auto w-full gap-2 rounded-xl py-4 font-bold"
             >
               <LogOut className="size-5" />

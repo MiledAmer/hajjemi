@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Calendar, Home, LogOut, Phone, Search, User } from "lucide-react";
+import { useClerk } from "@clerk/nextjs";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import type { User as DbUser } from "../../../../generated/prisma";
 
 export function AccountClient({ user }: { user: DbUser }) {
   const router = useRouter();
+  const { signOut } = useClerk();
   const { lang, toggleLang } = useLang();
   const t = content[lang];
 
@@ -85,7 +87,7 @@ export function AccountClient({ user }: { user: DbUser }) {
 
         <Button
           variant="ghost"
-          onClick={() => router.push("/connexion")}
+          onClick={() => signOut(() => router.push("/connexion"))}
           className="text-destructive bg-destructive/10 mt-stack-lg h-auto w-full gap-2 rounded-xl py-4 font-bold"
         >
           <LogOut className="size-5" />
