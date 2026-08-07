@@ -1,7 +1,7 @@
 // Ooredoo Developer (CAMARA One-Time-Password SMS) client — sends an OTP by
 // SMS to a Tunisian number and validates it. Spec: CAMARA one-time-password-sms
-//   POST {base}/one-time-password-sms/v1/send-code     → { authenticationId }
-//   POST {base}/one-time-password-sms/v1/validate-code → 204 on success
+//   POST {base}/camara-api/one-time-password-sms/v1rc1/send-code     → { authenticationId }
+//   POST {base}/camara-api/one-time-password-sms/v1rc1/validate-code → 204 on success
 // Auth: OAuth2 client-credentials against the portal's token endpoint.
 // Portal: https://developer.ooredoo.com/ (Tunisia)
 import { env } from "@/env";
@@ -43,14 +43,17 @@ export function toTunisianE164(input: string): string {
 
 async function camaraPost(path: string, body: unknown): Promise<Response> {
   const token = await getAccessToken();
-  return fetch(`${env.OOREDOO_API_BASE_URL}/one-time-password-sms/v1/${path}`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
+  return fetch(
+    `${env.OOREDOO_API_BASE_URL}/camara-api/one-time-password-sms/v1rc1/${path}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(body),
     },
-    body: JSON.stringify(body),
-  });
+  );
 }
 
 /** Sends an OTP SMS. Returns the authenticationId to keep for validation.
