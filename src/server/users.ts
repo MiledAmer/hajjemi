@@ -1,6 +1,7 @@
 "use server";
 
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
+import { currentUser } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { db } from "@/server/db";
 import { Role } from "../../generated/prisma";
@@ -46,6 +47,13 @@ export async function createUser(input: z.infer<typeof createUserSchema>) {
       passwordHash: hashPassword(data.password),
     },
   });
+}
+
+// Role of the signed-in Clerk user, from publicMetadata ({ "role": "barbier" }).
+export async function getSessionRole() {
+  const user = await currentUser();
+  if (!user) return null;
+  return user.publicMetadata.role === "barbier" ? "barbier" : "client";
 }
 
 export async function getUser(id: string) {

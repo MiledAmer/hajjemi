@@ -3,18 +3,19 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useSignIn } from "@clerk/nextjs";
+import { useClerk, useSignIn } from "@clerk/nextjs";
 import { Eye, EyeOff, Lock, Mail, MessageSquare } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getSessionRole } from "@/server/users";
 
 export default function ConnexionPage() {
   const router = useRouter();
   const { signIn } = useSignIn();
+  const { signOut } = useClerk();
   const [role, setRole] = useState<"client" | "barbier">("client");
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -24,6 +25,7 @@ export default function ConnexionPage() {
   // Set when Clerk asks to verify a new device; switches the form to the code step.
   const [needsEmailCode, setNeedsEmailCode] = useState(false);
   const [code, setCode] = useState("");
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -71,8 +73,18 @@ export default function ConnexionPage() {
         setError(finalizeError.message ?? "Connexion incomplète. Réessayez.");
         return;
       }
-      // Role comes from Clerk publicMetadata, resolved server-side.
-      router.push("/apres-connexion");
+      // Real role comes from Clerk publicMetadata (server-side). If it
+      // doesn't match the selected tab, end the session and stay here.
+      const actualRole = await getSessionRole();
+      if (actualRole !== role) {
+        await signOut(() => {
+          setError("Ce compte ne correspond pas au profil sélectionné.");
+          setNeedsEmailCode(false);
+          setCode("");
+        });
+        return;
+      }
+      router.push(role === "barbier" ? "/dashbord_barber" : "/search");
     } finally {
       setPending(false);
     }
@@ -118,15 +130,22 @@ export default function ConnexionPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-0">
-            <Tabs
-              value={role}
-              onValueChange={(value) => setRole(value as typeof role)}
-            >
-              <TabsList className="mb-stack-lg grid w-full grid-cols-2">
-                <TabsTrigger value="client">Client</TabsTrigger>
-                <TabsTrigger value="barbier">Barbier</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="bg-muted mb-stack-lg grid w-full grid-cols-2 rounded-lg p-[3px]">
+              {(["client", "barbier"] as const).map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={() => setRole(r)}
+                  className={
+                    role === r
+                      ? "bg-background text-foreground rounded-md py-1.5 text-sm font-medium shadow-sm"
+                      : "text-foreground/60 hover:text-foreground rounded-md py-1.5 text-sm font-medium transition-colors"
+                  }
+                >
+                  {r === "client" ? "Client" : "Barbier"}
+                </button>
+              ))}
+            </div>
 
             <form className="space-y-gutter" onSubmit={handleSubmit}>
               {needsEmailCode ? (
