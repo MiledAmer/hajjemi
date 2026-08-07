@@ -71,7 +71,8 @@ export default function ConnexionPage() {
         setError(finalizeError.message ?? "Connexion incomplète. Réessayez.");
         return;
       }
-      router.push(role === "barbier" ? "/dashbord_barber" : "/search");
+      // Role comes from Clerk publicMetadata, resolved server-side.
+      router.push("/apres-connexion");
     } finally {
       setPending(false);
     }
