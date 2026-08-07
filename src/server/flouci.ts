@@ -53,8 +53,8 @@ export async function verifyFlouciPayment(
 ): Promise<{ amountMillimes: number } | null> {
   const res = await fetch(`${API_BASE}/verify_payment/${paymentId}`, {
     headers: {
-      apppublic: env.FLOUCI_APP_TOKEN,
-      appsecret: env.FLOUCI_APP_SECRET,
+      apppublic: env.FLOUCI_APP_TOKEN ?? "",
+      appsecret: env.FLOUCI_APP_SECRET ?? "",
     },
   });
   const data = (await res.json()) as {
