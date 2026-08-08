@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useAuth } from "@clerk/nextjs";
 import {
   Calendar,
   Home,
@@ -37,9 +38,9 @@ function BarberCard({
   viewProfileLabel: string;
 }) {
   return (
-    <Card className="gap-0 overflow-hidden border-surface-container-high bg-[#1C1C1E] p-0 shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-transform active:scale-[0.98]">
+    <Card className="border-surface-container-high gap-0 overflow-hidden bg-[#1C1C1E] p-0 shadow-[0_4px_12px_rgba(0,0,0,0.5)] transition-transform active:scale-[0.98]">
       <div className="relative h-40 w-full">
-        {barber.coverImageUrl ?? barber.avatarUrl ? (
+        {(barber.coverImageUrl ?? barber.avatarUrl) ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             className="h-full w-full object-cover"
@@ -102,6 +103,7 @@ export function SearchClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [queryInput, setQueryInput] = useState(q);
+  const { isSignedIn } = useAuth();
   const { lang, toggleLang } = useLang();
   const t = content[lang];
   const navLinks = [
@@ -166,13 +168,24 @@ export function SearchClient({
             >
               {t.switchTo}
             </button>
-            <Avatar className="border-outline-variant bg-surface-container-high size-10 shrink-0 cursor-pointer border transition-opacity hover:opacity-80">
-              <AvatarImage
-                alt={t.avatarAlt}
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnsSXzu2i44E7vz6WoQBEjfmBXUf6HtCnlYAt1oW6buiuRYStu_8PluM1ytGZwzCQ6_5YKe4l2jXPfWgjdPOyPP5HJWGlv4jU7rVW82-0XZWpZ-hdJO9ewrUuwH4smLu0zHCmrPrY30zZQdXnraEkGOyIAoIkIRJSXFLnrDLOyYe8gvXejYLab6GdVL6AOgYc1p9wUYpe6Uljo-tFThiC8JCsooIxDBRSlFQVtmnKP8-B1r9sfzIEv3a6vXtnln5YszcPWSm3v98F_"
-              />
-              <AvatarFallback>U</AvatarFallback>
-            </Avatar>
+            {isSignedIn ? (
+              <Link href="/account" aria-label={t.navAccount}>
+                <Avatar className="border-outline-variant bg-surface-container-high size-10 shrink-0 cursor-pointer border transition-opacity hover:opacity-80">
+                  <AvatarImage
+                    alt={t.avatarAlt}
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnsSXzu2i44E7vz6WoQBEjfmBXUf6HtCnlYAt1oW6buiuRYStu_8PluM1ytGZwzCQ6_5YKe4l2jXPfWgjdPOyPP5HJWGlv4jU7rVW82-0XZWpZ-hdJO9ewrUuwH4smLu0zHCmrPrY30zZQdXnraEkGOyIAoIkIRJSXFLnrDLOyYe8gvXejYLab6GdVL6AOgYc1p9wUYpe6Uljo-tFThiC8JCsooIxDBRSlFQVtmnKP8-B1r9sfzIEv3a6vXtnln5YszcPWSm3v98F_"
+                  />
+                  <AvatarFallback>U</AvatarFallback>
+                </Avatar>
+              </Link>
+            ) : (
+              <Link
+                href="/connexion"
+                className="font-label-md text-label-md bg-primary rounded-full px-4 py-2 font-bold text-[#121212] transition-opacity hover:opacity-90"
+              >
+                {t.connexion}
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -243,46 +256,52 @@ export function SearchClient({
         )}
       </main>
 
-      {/* BottomNavBar (Mobile Only) */}
-      <nav className="bg-surface-container text-primary fixed bottom-0 z-50 w-full rounded-t-xl shadow-[0_-4px_12px_rgba(0,0,0,0.5)] md:hidden">
-        <div className="pb-safe flex h-20 items-center justify-around px-4">
-          <Link
-            href="/"
-            className="text-on-surface-variant hover:text-primary flex w-16 flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
-          >
-            <Home className="mb-1 size-5" />
-            <span className="font-label-sm text-label-sm">{t.navHome}</span>
-          </Link>
-          <Link
-            href="/search"
-            className="bg-primary-container text-on-primary-container hover:text-primary flex min-w-16 flex-col items-center justify-center rounded-full px-4 py-1 transition-all duration-200 active:translate-y-0.5"
-          >
-            <Search className="mb-1 size-5" />
-            <span className="font-label-sm text-label-sm">{t.navExplore}</span>
-          </Link>
-          <Link
-            href="/appointments"
-            className="text-on-surface-variant hover:text-primary relative flex w-16 flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
-          >
-            <span className="relative">
-              <Calendar className="mb-1 size-5" />
-              {unseenAppointments > 0 && (
-                <span className="bg-primary absolute -top-1 -right-1 size-2.5 rounded-full" />
-              )}
-            </span>
-            <span className="font-label-sm text-label-sm">
-              {t.navBookings}
-            </span>
-          </Link>
-          <Link
-            href="/account"
-            className="text-on-surface-variant hover:text-primary flex w-16 flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
-          >
-            <User className="mb-1 size-5" />
-            <span className="font-label-sm text-label-sm">{t.navAccount}</span>
-          </Link>
-        </div>
-      </nav>
+      {/* BottomNavBar (Mobile Only, signed-in users) */}
+      {isSignedIn && (
+        <nav className="bg-surface-container text-primary fixed bottom-0 z-50 w-full rounded-t-xl shadow-[0_-4px_12px_rgba(0,0,0,0.5)] md:hidden">
+          <div className="pb-safe flex h-20 items-center justify-around px-4">
+            <Link
+              href="/"
+              className="text-on-surface-variant hover:text-primary flex w-16 flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
+            >
+              <Home className="mb-1 size-5" />
+              <span className="font-label-sm text-label-sm">{t.navHome}</span>
+            </Link>
+            <Link
+              href="/search"
+              className="bg-primary-container text-on-primary-container hover:text-primary flex min-w-16 flex-col items-center justify-center rounded-full px-4 py-1 transition-all duration-200 active:translate-y-0.5"
+            >
+              <Search className="mb-1 size-5" />
+              <span className="font-label-sm text-label-sm">
+                {t.navExplore}
+              </span>
+            </Link>
+            <Link
+              href="/appointments"
+              className="text-on-surface-variant hover:text-primary relative flex w-16 flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
+            >
+              <span className="relative">
+                <Calendar className="mb-1 size-5" />
+                {unseenAppointments > 0 && (
+                  <span className="bg-primary absolute -top-1 -right-1 size-2.5 rounded-full" />
+                )}
+              </span>
+              <span className="font-label-sm text-label-sm">
+                {t.navBookings}
+              </span>
+            </Link>
+            <Link
+              href="/account"
+              className="text-on-surface-variant hover:text-primary flex w-16 flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
+            >
+              <User className="mb-1 size-5" />
+              <span className="font-label-sm text-label-sm">
+                {t.navAccount}
+              </span>
+            </Link>
+          </div>
+        </nav>
+      )}
     </div>
   );
 }
