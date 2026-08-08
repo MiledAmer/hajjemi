@@ -1,6 +1,24 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-export default clerkMiddleware();
+const isPublicRoute = createRouteMatcher([
+  "/",
+  "/search(.*)",
+  "/barber(.*)",
+  "/connexion(.*)",
+  "/inscription-client(.*)",
+  "/inscription-barbier(.*)",
+]);
+
+export default clerkMiddleware(async (auth, req) => {
+  if (!isPublicRoute(req)) {
+    const { userId } = await auth();
+    if (!userId) {
+      const url = new URL("/connexion", req.url);
+      url.searchParams.set("redirect_url", req.url);
+      return Response.redirect(url);
+    }
+  }
+});
 
 export const config = {
   matcher: [

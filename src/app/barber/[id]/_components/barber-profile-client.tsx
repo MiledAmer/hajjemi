@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useAuth } from "@clerk/nextjs";
 import {
   ArrowLeft,
   ArrowRight,
@@ -255,6 +256,7 @@ export function BarberProfileClient({
   appointments: Appointment[];
 }) {
   const router = useRouter();
+  const { isSignedIn } = useAuth();
   const { lang, toggleLang } = useLang();
   const t = content[lang];
   const navLinks = [
@@ -289,6 +291,12 @@ export function BarberProfileClient({
   })();
 
   function requestBooking() {
+    if (!isSignedIn) {
+      router.push(
+        `/connexion?redirect_url=${encodeURIComponent(window.location.href)}`,
+      );
+      return;
+    }
     if (!startAtInput || selectedDayOff || !daySlots.includes(selectedMinutes))
       return;
     setConfirmOpen(true);

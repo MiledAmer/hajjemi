@@ -113,6 +113,13 @@ export default function ConnexionPage() {
         });
         return;
       }
+      const redirectUrl = new URLSearchParams(window.location.search).get(
+        "redirect_url",
+      );
+      if (redirectUrl?.startsWith(window.location.origin)) {
+        router.push(redirectUrl.slice(window.location.origin.length));
+        return;
+      }
       router.push(role === "barbier" ? "/dashbord_barber" : "/search");
     } finally {
       setPending(false);
