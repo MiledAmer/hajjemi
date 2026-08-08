@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useClerk, useSignIn } from "@clerk/nextjs";
-import { Eye, EyeOff, Lock, Mail, MessageSquare } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail, MessageSquare, Phone } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,6 +25,10 @@ export default function ConnexionPage() {
   // Set when Clerk asks to verify a new device; switches the form to the code step.
   const [needsEmailCode, setNeedsEmailCode] = useState(false);
   const [code, setCode] = useState("");
+  // SMS OTP mode: enter phone → receive code → verify.
+  const [method, setMethod] = useState<"password" | "sms">("password");
+  const [phone, setPhone] = useState("");
+  const [smsSent, setSmsSent] = useState(false);
 
 
   async function handleSubmit(e: React.FormEvent) {
@@ -32,7 +36,31 @@ export default function ConnexionPage() {
     setError(null);
     setPending(true);
     try {
-      if (!needsEmailCode) {
+      if (method === "sms") {
+        if (!smsSent) {
+          await signIn.reset();
+          // 8-digit local numbers get the Tunisian prefix; full E.164
+          // (e.g. Clerk test numbers like +15555550100) passes through.
+          const e164 = phone.startsWith("+")
+            ? phone.replace(/\s/g, "")
+            : `+216${phone.replace(/\s/g, "")}`;
+          const { error } = await signIn.phoneCode.sendCode({
+            phoneNumber: e164,
+          });
+          if (error) {
+            console.error("phoneCode.sendCode error:", error);
+            setError(error.message ?? "Échec de l'envoi du SMS. Réessayez.");
+            return;
+          }
+          setSmsSent(true);
+          return;
+        }
+        const { error } = await signIn.phoneCode.verifyCode({ code });
+        if (error) {
+          setError("Code invalide ou expiré.");
+          return;
+        }
+      } else if (!needsEmailCode) {
         // Clear any sign-in attempt left over from a previous failed submit.
         await signIn.reset();
         const { error } = await signIn.password({
@@ -80,6 +108,7 @@ export default function ConnexionPage() {
         await signOut(() => {
           setError("Ce compte ne correspond pas au profil sélectionné.");
           setNeedsEmailCode(false);
+          setSmsSent(false);
           setCode("");
         });
         return;
@@ -148,12 +177,14 @@ export default function ConnexionPage() {
             </div>
 
             <form className="space-y-gutter" onSubmit={handleSubmit}>
-              {needsEmailCode ? (
-                /* New-device verification code step */
+              {needsEmailCode || smsSent ? (
+                /* Verification code step (new-device email code or SMS OTP) */
                 <div className="space-y-stack-sm">
                   <Label htmlFor="code">Code de vérification</Label>
                   <p className="font-body-md text-on-surface-variant text-sm">
-                    Un code a été envoyé par e-mail à {email}.
+                    {smsSent
+                      ? `Un code a été envoyé par SMS au ${phone}.`
+                      : `Un code a été envoyé par e-mail à ${email}.`}
                   </p>
                   <div className="gold-glow relative">
                     <MessageSquare className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
@@ -183,11 +214,30 @@ export default function ConnexionPage() {
                     type="button"
                     onClick={() => {
                       setNeedsEmailCode(false);
+                      setSmsSent(false);
                       setCode("");
                     }}
                   >
                     Retour
                   </button>
+                </div>
+              ) : method === "sms" ? (
+                /* Phone field for SMS OTP */
+                <div className="space-y-stack-sm">
+                  <Label htmlFor="phone">Numéro de téléphone</Label>
+                  <div className="gold-glow relative">
+                    <Phone className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                    <Input
+                      id="phone"
+                      placeholder="22 123 456"
+                      type="tel"
+                      autoComplete="tel"
+                      className="h-auto rounded-lg py-3 pl-10"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
               ) : (
                 <>
@@ -267,10 +317,27 @@ export default function ConnexionPage() {
               >
                 {pending
                   ? "Veuillez patienter..."
-                  : needsEmailCode
+                  : needsEmailCode || smsSent
                     ? "Vérifier le code"
-                    : "Se connecter"}
+                    : method === "sms"
+                      ? "Recevoir le code"
+                      : "Se connecter"}
               </Button>
+
+              {!needsEmailCode && !smsSent && (
+                <button
+                  className="font-label-sm text-label-sm text-primary block w-full text-center hover:opacity-80"
+                  type="button"
+                  onClick={() => {
+                    setMethod((m) => (m === "sms" ? "password" : "sms"));
+                    setError(null);
+                  }}
+                >
+                  {method === "sms"
+                    ? "Se connecter avec un mot de passe"
+                    : "Se connecter par SMS"}
+                </button>
+              )}
             </form>
           </CardContent>
         </Card>
