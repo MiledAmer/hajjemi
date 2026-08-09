@@ -3,6 +3,7 @@ import {
   BadgeCheck,
   Calendar,
   CheckCircle2,
+  Gem,
   LayoutDashboard,
   Menu,
   User,
@@ -349,7 +350,7 @@ export default function PlansPage() {
                     variant="outline"
                     className="font-label-sm text-label-sm border-outline-variant/30 bg-surface-container text-on-surface-variant mb-4 inline-block rounded-sm tracking-wider uppercase"
                   >
-                    Démarrage
+                    Essai gratuit
                   </Badge>
                   <h3 className="font-headline-md text-headline-md text-on-surface mb-2 font-bold">
                     Free
@@ -359,12 +360,12 @@ export default function PlansPage() {
                       0
                     </span>
                     <span className="font-label-md text-label-md text-on-surface-variant">
-                      DT / mois
+                      DT — 1 mois d&apos;essai
                     </span>
                   </div>
                   <p className="font-body-md text-body-md text-on-surface-variant mt-4">
-                    Un barbier, usage simple de la plateforme pour digitaliser
-                    votre prise de rendez-vous.
+                    Un mois d&apos;essai gratuit : un barbier, usage simple de
+                    la plateforme pour digitaliser votre prise de rendez-vous.
                   </p>
                 </div>
                 <div className="flex-1">
@@ -454,20 +455,25 @@ export default function PlansPage() {
                 </form>
               </Card>
 
-              {/* Salon Plan */}
-              <Card className="border-surface-container-high bg-surface-container-low hover:border-outline-variant relative gap-0 overflow-hidden rounded-2xl border-2 p-8 transition-all hover:shadow-[0_8px_24px_rgba(0,0,0,0.4)]">
-                <div className="mb-8">
+              {/* Salon Plan — "diamond" tier */}
+              <Card className="relative gap-0 overflow-hidden rounded-2xl border-2 border-cyan-300/40 bg-[#10151a] p-8 shadow-[0_8px_32px_rgba(103,232,249,0.12)] transition-all hover:border-cyan-300/70 hover:shadow-[0_8px_40px_rgba(103,232,249,0.25)]">
+                <div className="font-label-sm text-label-sm absolute top-0 right-0 rounded-bl-lg bg-gradient-to-r from-cyan-200 to-cyan-400 px-6 py-1.5 font-bold tracking-wider text-[#0b1014] uppercase">
+                  Diamond
+                </div>
+                <div className="pointer-events-none absolute top-0 left-0 h-40 w-40 rounded-full bg-cyan-300/15 blur-3xl" />
+                <div className="relative z-10 mb-8">
                   <Badge
                     variant="outline"
-                    className="font-label-sm text-label-sm border-outline-variant/30 bg-surface-container text-on-surface-variant mb-4 inline-block rounded-sm tracking-wider uppercase"
+                    className="font-label-sm text-label-sm mb-4 inline-flex items-center gap-1 rounded-sm border-cyan-300/40 bg-cyan-300/10 tracking-wider text-cyan-200 uppercase"
                   >
+                    <Gem className="size-3.5" />
                     Équipe
                   </Badge>
-                  <h3 className="font-headline-md text-headline-md text-on-surface mb-2 font-bold">
+                  <h3 className="font-headline-md text-headline-md mb-2 bg-gradient-to-r from-cyan-100 via-white to-cyan-300 bg-clip-text font-bold text-transparent">
                     Salon
                   </h3>
                   <div className="flex items-baseline gap-1">
-                    <span className="font-display-lg text-display-lg text-on-surface font-bold">
+                    <span className="font-display-lg text-display-lg bg-gradient-to-r from-cyan-200 to-cyan-400 bg-clip-text font-bold text-transparent">
                       55
                     </span>
                     <span className="font-label-md text-label-md text-on-surface-variant">
@@ -479,14 +485,14 @@ export default function PlansPage() {
                     d&apos;équipe complète.
                   </p>
                 </div>
-                <div className="flex-1">
+                <div className="relative z-10 flex-1">
                   <ul className="mb-8 flex flex-col gap-4">
                     {salonFeatures.map((feature) => (
                       <li
                         key={feature.label}
                         className="flex items-start gap-3"
                       >
-                        <feature.icon className="text-secondary mt-0.5 size-5" />
+                        <feature.icon className="mt-0.5 size-5 text-cyan-300" />
                         <span
                           className={`font-body-md text-body-md text-on-surface ${feature.emphasis ? "font-semibold" : ""}`}
                         >
@@ -496,14 +502,14 @@ export default function PlansPage() {
                     ))}
                   </ul>
                 </div>
-                <form action={startSubscription}>
+                <form action={startSubscription} className="relative z-10">
                   <input type="hidden" name="plan" value="SALON" />
                   <Button
                     type="submit"
-                    variant="outline"
-                    className="font-label-md text-label-md border-outline-variant bg-surface-container text-on-surface hover:bg-surface-container-high h-auto w-full rounded-lg px-6 py-4 font-bold"
+                    className="font-label-md text-label-md h-auto w-full gap-2 rounded-lg bg-gradient-to-r from-cyan-200 to-cyan-400 px-6 py-4 font-bold text-[#0b1014] shadow-[0_4px_16px_rgba(103,232,249,0.3)] hover:opacity-90"
                   >
                     Choisir Salon
+                    <Gem className="size-5" />
                   </Button>
                 </form>
               </Card>
