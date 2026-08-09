@@ -154,6 +154,26 @@ body {
   }
 }
 
+.pulse-gold {
+  animation: pulseGold 2.4s ease-in-out infinite;
+}
+
+@keyframes pulseGold {
+  0%,
+  100% {
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
+  }
+  50% {
+    box-shadow: 0 4px 24px rgba(212, 175, 55, 0.55);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-gold {
+    animation: none;
+  }
+}
+
 .delay-100 {
   animation-delay: 100ms;
 }
