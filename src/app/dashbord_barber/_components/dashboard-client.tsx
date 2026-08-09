@@ -327,9 +327,6 @@ export function DashboardClient({
                     <p className="font-headline-md text-headline-md">
                       {appointment.client.name}
                     </p>
-                    <p className="text-on-surface-variant font-body-md">
-                      {(appointment.totalPriceMillimes / 1000).toFixed(3)} DT
-                    </p>
                   </div>
                   <div className="text-right">
                     <p className="font-headline-md text-primary">
@@ -374,9 +371,6 @@ export function DashboardClient({
                       </Badge>
                       <p className="font-headline-md text-headline-md">
                         {booking.client.name}
-                      </p>
-                      <p className="text-on-surface-variant font-body-md">
-                        {(booking.totalPriceMillimes / 1000).toFixed(3)} DT
                       </p>
                     </div>
                     <div className="text-right">
@@ -472,12 +466,6 @@ export function DashboardClient({
                                   className={`font-headline-md text-headline-md truncate ${confirmed ? "" : "text-on-surface-variant"}`}
                                 >
                                   {booking.client.name}
-                                </p>
-                                <p className="text-on-surface-variant font-body-md text-sm">
-                                  {(booking.totalPriceMillimes / 1000).toFixed(
-                                    3,
-                                  )}{" "}
-                                  DT
                                 </p>
                               </div>
                               <Badge
