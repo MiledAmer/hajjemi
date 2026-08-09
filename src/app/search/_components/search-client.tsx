@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useUser } from "@clerk/nextjs";
 import {
   Calendar,
   Home,
@@ -103,7 +103,7 @@ export function SearchClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [queryInput, setQueryInput] = useState(q);
-  const { isSignedIn } = useAuth();
+  const { isSignedIn, user } = useUser();
   const { lang, toggleLang } = useLang();
   const t = content[lang];
   const navLinks = [
@@ -171,11 +171,12 @@ export function SearchClient({
             {isSignedIn ? (
               <Link href="/account" aria-label={t.navAccount}>
                 <Avatar className="border-outline-variant bg-surface-container-high size-10 shrink-0 cursor-pointer border transition-opacity hover:opacity-80">
-                  <AvatarImage
-                    alt={t.avatarAlt}
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnsSXzu2i44E7vz6WoQBEjfmBXUf6HtCnlYAt1oW6buiuRYStu_8PluM1ytGZwzCQ6_5YKe4l2jXPfWgjdPOyPP5HJWGlv4jU7rVW82-0XZWpZ-hdJO9ewrUuwH4smLu0zHCmrPrY30zZQdXnraEkGOyIAoIkIRJSXFLnrDLOyYe8gvXejYLab6GdVL6AOgYc1p9wUYpe6Uljo-tFThiC8JCsooIxDBRSlFQVtmnKP8-B1r9sfzIEv3a6vXtnln5YszcPWSm3v98F_"
-                  />
-                  <AvatarFallback>U</AvatarFallback>
+                  {user?.hasImage && (
+                    <AvatarImage alt={t.avatarAlt} src={user.imageUrl} />
+                  )}
+                  <AvatarFallback className="bg-primary-container text-on-primary-container font-bold uppercase">
+                    {(user?.firstName ?? user?.fullName ?? "U").charAt(0)}
+                  </AvatarFallback>
                 </Avatar>
               </Link>
             ) : (
