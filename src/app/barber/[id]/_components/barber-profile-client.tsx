@@ -684,7 +684,7 @@ export function BarberProfileClient({
             </Link>
             <Link
               href="/search"
-              className="text-on-surface-variant hover:text-primary flex w-16 flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
+              className="bg-primary-container text-on-primary-container hover:text-primary flex min-w-16 flex-col items-center justify-center rounded-full px-4 py-1 transition-all duration-200 active:translate-y-0.5"
             >
               <Search className="mb-1 size-5" />
               <span className="font-label-sm text-label-sm">
