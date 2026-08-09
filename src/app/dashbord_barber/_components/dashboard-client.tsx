@@ -239,13 +239,21 @@ export function DashboardClient({
       <header className="bg-surface px-container-margin py-base sticky top-0 z-40 flex h-16 w-full items-center justify-between shadow-sm">
         <div className="mx-auto flex w-full max-w-7xl items-center justify-between">
           <div className="gap-base flex items-center">
-            <Avatar className="border-primary/20 size-10 border">
-              <AvatarImage
-                alt="Portrait du barbier"
-                src={optimisticProfile.avatarUrl ?? BARBER_AVATAR}
-              />
-              <AvatarFallback>{optimisticProfile.businessName[0]}</AvatarFallback>
-            </Avatar>
+            <button
+              type="button"
+              aria-label={t.nav.profile}
+              onClick={() => setView("profile")}
+            >
+              <Avatar className="border-primary/20 size-10 cursor-pointer border transition-opacity hover:opacity-80">
+                <AvatarImage
+                  alt="Portrait du barbier"
+                  src={optimisticProfile.avatarUrl ?? BARBER_AVATAR}
+                />
+                <AvatarFallback>
+                  {optimisticProfile.businessName[0]}
+                </AvatarFallback>
+              </Avatar>
+            </button>
             <span className="font-headline-md text-headline-md text-primary font-bold">
               {optimisticProfile.businessName}
             </span>
@@ -261,7 +269,12 @@ export function DashboardClient({
                     : "font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
                 }
               >
-                {t.nav[item.id]}
+                <span className="relative">
+                  {t.nav[item.id]}
+                  {item.id === "requests" && pendingRequests.length > 0 && (
+                    <span className="bg-primary absolute -top-1 -right-2.5 size-2 rounded-full" />
+                  )}
+                </span>
               </button>
             ))}
           </nav>
@@ -273,14 +286,6 @@ export function DashboardClient({
             >
               {t.switchTo}
             </button>
-            <Button
-              aria-label="Notifications"
-              variant="ghost"
-              size="icon"
-              className="text-on-surface-variant"
-            >
-              <Bell className="size-5" />
-            </Button>
           </div>
         </div>
       </header>
@@ -599,7 +604,12 @@ export function DashboardClient({
                 : "text-on-surface-variant hover:text-primary flex flex-col items-center justify-center transition-all duration-200 active:scale-90"
             }
           >
-            <item.icon className="size-5" />
+            <span className="relative">
+              <item.icon className="size-5" />
+              {item.id === "requests" && pendingRequests.length > 0 && (
+                <span className="bg-primary absolute -top-1 -right-1 size-2.5 rounded-full" />
+              )}
+            </span>
             <span className="font-label-sm text-label-sm">
               {t.nav[item.id]}
             </span>
