@@ -258,10 +258,10 @@ export function SearchClient({
 
       {/* Bottom login button (Mobile Only, visitors) */}
       {!isSignedIn && (
-        <div className="glass-panel pb-safe px-container-margin fixed bottom-0 z-50 w-full py-4 md:hidden">
+        <div className="glass-panel pb-safe px-container-margin fixed bottom-2 z-50 w-full py-4 md:hidden">
           <Link
             href="/connexion"
-            className="font-label-md text-label-md bg-primary pulse-gold fade-in-up btn-active block w-full rounded-lg py-3.5 text-center font-bold text-[#121212] transition-opacity hover:opacity-90"
+            className="font-label-md text-label-md bg-primary pulse-gold btn-active block w-full rounded-lg py-3.5 text-center font-bold text-[#121212] transition-opacity hover:opacity-90"
           >
             {t.connexion}
           </Link>
