@@ -27,7 +27,7 @@ const updateAppointmentSchema = z.object({
   status: z.nativeEnum(AppointmentStatus).optional(),
 });
 
-export const WEEKLY_CONFIRMED_LIMIT = 3;
+const WEEKLY_CONFIRMED_LIMIT = 3;
 
 // Monday 00:00 → next Monday 00:00 of the week containing `date`.
 function weekRange(date: Date) {

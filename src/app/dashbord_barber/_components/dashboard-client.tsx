@@ -37,15 +37,24 @@ const BARBER_AVATAR =
 const BARBER_PROFILE_PORTRAIT =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCJ1PSYFJcFErbgTa0UBXq-bgLu_ZCGgqoc9PWO0dlc367UVNuHC4oFdM5MGt2VIhxXkE2c2rKE2flwFbtaGvQ00mBC9r0OZlYDTSzUnqWyVwehQmYqXQU9jPB6U6s6vmb8owjEzXRbqAv24l_gGulYJ2fxGIsTwtCD7rBPV3U6G4t6u-6nCVTS6jPCGLKE3-90yC7uWOQ24AtjsgkIrPwJ3NbHz3qvycKSWKrszDxSQnaurTy3lQDUUT3VH2iW7BZ4aKNcjP_RaO1v";
 
-type ViewId = "dashboard" | "bookings" | "profile";
+type ViewId = "dashboard" | "requests" | "agenda" | "profile";
 
 const navItems: { id: ViewId; icon: typeof LayoutDashboard }[] = [
   { id: "dashboard", icon: LayoutDashboard },
-  { id: "bookings", icon: Calendar },
+  { id: "requests", icon: Bell },
+  { id: "agenda", icon: Calendar },
   { id: "profile", icon: User },
 ];
 
 type AppointmentWithClient = Appointment & { client: DbUser };
+
+function formatDay(date: Date) {
+  return new Date(date).toLocaleDateString("fr-FR", {
+    weekday: "short",
+    day: "numeric",
+    month: "short",
+  });
+}
 
 function formatTime(date: Date) {
   return new Date(date).toLocaleTimeString("fr-FR", {
@@ -84,7 +93,7 @@ export function DashboardClient({
   const router = useRouter();
   const { signOut } = useClerk();
   const [view, setView] = useState<ViewId>("dashboard");
-  const { lang, toggleLang } = useLang();
+  const { lang, toggleLang } = useLang("fr");
   const t = dashboardContent[lang];
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
@@ -127,6 +136,21 @@ export function DashboardClient({
         : t.closed,
     },
     (state, patch: { weekdaysHours: string; sundayHours: string }) => patch,
+  );
+
+  const pendingRequests = useMemo(
+    () => optimisticAppointments.filter((a) => a.status === "PENDING"),
+    [optimisticAppointments],
+  );
+  const agendaAppointments = useMemo(
+    () =>
+      optimisticAppointments
+        .filter((a) => a.status !== "PENDING")
+        .sort(
+          (a, b) =>
+            new Date(a.startAt).getTime() - new Date(b.startAt).getTime(),
+        ),
+    [optimisticAppointments],
   );
 
   const todayCount = useMemo(() => {
@@ -274,7 +298,7 @@ export function DashboardClient({
               <Button
                 variant="ghost"
                 className="text-primary font-label-md h-auto p-0"
-                onClick={() => setView("bookings")}
+                onClick={() => setView("agenda")}
               >
                 {t.seeAll}
               </Button>
@@ -308,93 +332,120 @@ export function DashboardClient({
           </section>
         )}
 
-        {/* View: Bookings */}
-        {view === "bookings" && (
+        {/* View: Requests (pending bookings to accept/decline) */}
+        {view === "requests" && (
           <section>
             <h1 className="font-headline-lg-mobile text-headline-lg-mobile mb-stack-lg">
-              {t.bookingsTitle}
+              {t.requestsTitle}
             </h1>
             {limitError && (
               <p className="text-destructive font-body-md mb-stack-md">
                 {t.weeklyLimitReached}
               </p>
             )}
+            {pendingRequests.length === 0 && (
+              <p className="text-on-surface-variant font-body-md">
+                {t.noRequests}
+              </p>
+            )}
             <div className="gap-stack-lg space-y-stack-lg md:grid md:grid-cols-2 md:space-y-0 lg:grid-cols-3">
-              {optimisticAppointments.map((booking) => (
+              {pendingRequests.map((booking) => (
+                <Card
+                  key={booking.id}
+                  className="bg-surface-container-high border-primary/30 p-gutter gap-stack-md rounded-xl border"
+                >
+                  <div className="mb-stack-md flex items-start justify-between">
+                    <div>
+                      <Badge className="bg-primary/20 text-primary mb-2 inline-block rounded-sm uppercase">
+                        {t.pending}
+                      </Badge>
+                      <p className="font-headline-md text-headline-md">
+                        {booking.client.name}
+                      </p>
+                      <p className="text-on-surface-variant font-body-md">
+                        {(booking.totalPriceMillimes / 1000).toFixed(3)} DT
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-headline-md text-primary">
+                        {formatTime(booking.startAt)}
+                      </p>
+                      <p className="text-on-surface-variant font-label-sm capitalize">
+                        {formatDay(booking.startAt)}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="gap-gutter flex">
+                    <Button
+                      disabled={isPending && pendingId === booking.id}
+                      onClick={() => setStatus(booking.id, "CONFIRMED")}
+                      className="bg-primary text-on-primary h-auto flex-1 rounded-lg py-3 font-bold"
+                    >
+                      {t.accept}
+                    </Button>
+                    <Button
+                      disabled={isPending && pendingId === booking.id}
+                      onClick={() => setStatus(booking.id, "CANCELLED")}
+                      variant="outline"
+                      className="border-outline text-on-surface h-auto flex-1 rounded-lg py-3 font-bold"
+                    >
+                      {t.decline}
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* View: Agenda (confirmed/past bookings by date) */}
+        {view === "agenda" && (
+          <section>
+            <h1 className="font-headline-lg-mobile text-headline-lg-mobile mb-stack-lg">
+              {t.agendaTitle}
+            </h1>
+            {agendaAppointments.length === 0 && (
+              <p className="text-on-surface-variant font-body-md">
+                {t.emptyAgenda}
+              </p>
+            )}
+            <div className="gap-stack-lg space-y-stack-lg md:grid md:grid-cols-2 md:space-y-0 lg:grid-cols-3">
+              {agendaAppointments.map((booking) => (
                 <Card
                   key={booking.id}
                   className={
-                    booking.status === "PENDING"
-                      ? "bg-surface-container-high border-primary/30 p-gutter gap-stack-md rounded-xl border"
-                      : booking.status === "COMPLETED" ||
-                          booking.status === "CANCELLED" ||
-                          booking.status === "NO_SHOW"
-                        ? "bg-surface-container p-gutter gap-0 rounded-xl opacity-60"
-                        : "bg-surface-container p-gutter gap-0 rounded-xl"
+                    booking.status === "CONFIRMED"
+                      ? "bg-surface-container p-gutter gap-0 rounded-xl"
+                      : "bg-surface-container p-gutter gap-0 rounded-xl opacity-60"
                   }
                 >
-                  {booking.status === "PENDING" ? (
-                    <>
-                      <div className="mb-stack-md flex items-start justify-between">
-                        <div>
-                          <Badge className="bg-primary/20 text-primary mb-2 inline-block rounded-sm uppercase">
-                            {t.pending}
-                          </Badge>
-                          <p className="font-headline-md text-headline-md">
-                            {booking.client.name}
-                          </p>
-                          <p className="text-on-surface-variant font-body-md">
-                            {(booking.totalPriceMillimes / 1000).toFixed(3)} DT
-                          </p>
-                        </div>
-                        <p className="font-headline-md text-primary">
-                          {formatTime(booking.startAt)}
-                        </p>
-                      </div>
-                      <div className="gap-gutter flex">
-                        <Button
-                          disabled={isPending && pendingId === booking.id}
-                          onClick={() => setStatus(booking.id, "CONFIRMED")}
-                          className="bg-primary text-on-primary h-auto flex-1 rounded-lg py-3 font-bold"
-                        >
-                          {t.accept}
-                        </Button>
-                        <Button
-                          disabled={isPending && pendingId === booking.id}
-                          onClick={() => setStatus(booking.id, "CANCELLED")}
-                          variant="outline"
-                          className="border-outline text-on-surface h-auto flex-1 rounded-lg py-3 font-bold"
-                        >
-                          {t.decline}
-                        </Button>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p
-                          className={`font-headline-md text-headline-md ${booking.status !== "CONFIRMED" ? "text-on-surface-variant" : ""}`}
-                        >
-                          {booking.client.name}
-                        </p>
-                        <p className="text-on-surface-variant font-body-md">
-                          {(booking.totalPriceMillimes / 1000).toFixed(3)} DT
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p
-                          className={`font-headline-md ${booking.status !== "CONFIRMED" ? "text-on-surface-variant" : "text-primary"}`}
-                        >
-                          {formatTime(booking.startAt)}
-                        </p>
-                        <span
-                          className={`text-label-sm ${booking.status !== "CONFIRMED" ? "" : "text-secondary"}`}
-                        >
-                          {booking.status === "CONFIRMED" ? t.confirmed : t.done}
-                        </span>
-                      </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p
+                        className={`font-headline-md text-headline-md ${booking.status !== "CONFIRMED" ? "text-on-surface-variant" : ""}`}
+                      >
+                        {booking.client.name}
+                      </p>
+                      <p className="text-on-surface-variant font-body-md">
+                        {(booking.totalPriceMillimes / 1000).toFixed(3)} DT
+                      </p>
                     </div>
-                  )}
+                    <div className="text-right">
+                      <p
+                        className={`font-headline-md ${booking.status !== "CONFIRMED" ? "text-on-surface-variant" : "text-primary"}`}
+                      >
+                        {formatTime(booking.startAt)}
+                      </p>
+                      <p className="text-on-surface-variant font-label-sm capitalize">
+                        {formatDay(booking.startAt)}
+                      </p>
+                      <span
+                        className={`text-label-sm ${booking.status !== "CONFIRMED" ? "" : "text-secondary"}`}
+                      >
+                        {booking.status === "CONFIRMED" ? t.confirmed : t.done}
+                      </span>
+                    </div>
+                  </div>
                 </Card>
               ))}
             </div>
