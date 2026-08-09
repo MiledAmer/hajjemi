@@ -151,7 +151,7 @@ export function DashboardClient({
         .filter((a) => a.status !== "PENDING")
         .sort(
           (a, b) =>
-            new Date(a.startAt).getTime() - new Date(b.startAt).getTime(),
+            new Date(b.startAt).getTime() - new Date(a.startAt).getTime(),
         ),
     [optimisticAppointments],
   );
@@ -488,7 +488,12 @@ export function DashboardClient({
                                     : "bg-surface-variant text-on-surface-variant rounded-sm"
                                 }
                               >
-                                {confirmed ? t.confirmed : t.done}
+                                {confirmed
+                                  ? t.confirmed
+                                  : booking.status === "CANCELLED" ||
+                                      booking.status === "NO_SHOW"
+                                    ? t.cancelled
+                                    : t.done}
                               </Badge>
                             </Card>
                           </div>
