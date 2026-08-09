@@ -68,7 +68,7 @@ export const home = {
     ctaProSub: "Lel professionnels",
     trustCount: "+2000 client",
     trustSub: "rzerviw  Hajjem",
-    guest: "Chouf men 8ir ma tsajjel",
+    guest: "Estekchef",
     ratingSub: "+2000 avis mta3 clients",
     howTitle: "Rzervi hjjemtek 3ad sahla",
     howSub: "Thlatha khatawet lel hjjama lijeya mte3ek, win ma tkoun fi Tounes.",
