@@ -268,6 +268,10 @@ export const barberProfile = {
     bookingError: "Échec de la réservation. Réessayez.",
     bookingInProgress: "Réservation...",
     bookNow: "Réserver maintenant",
+    loginPromptTitle: "Réservez votre créneau avant qu'il ne parte !",
+    loginPromptText:
+      "Connectez-vous pour réserver à l'heure qui vous convient, en quelques secondes.",
+    loginPromptCta: "Se connecter pour réserver",
     confirmTitle: "Confirmer la réservation",
     confirmDescription:
       "Vérifiez les détails avant d'envoyer la demande au barbier.",
@@ -299,6 +303,9 @@ export const barberProfile = {
     bookingError: "Rzervation ma najja7tech. 3awed.",
     bookingInProgress: "Rzervation...",
     bookNow: "Rzervi tawa",
+    loginPromptTitle: "Rzervi wa9tek 9bal ma yetsakker !",
+    loginPromptText: "Connecti bech trzervi fel wa9t elli yjik, fi thawani.",
+    loginPromptCta: "Connecti w rzervi",
     confirmTitle: "Confirmi rzervation",
     confirmDescription: "Chouf details 9bal ma tabaath talab lel hajjem.",
     confirmDateTime: "Date w wa9t",

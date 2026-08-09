@@ -502,6 +502,27 @@ export function BarberProfileClient({
 
         {/* Booking Section (Right Column on Desktop) */}
         <section className="fade-in-up mt-stack-lg px-container-margin pb-28 delay-100 md:col-span-7 md:mt-0 md:px-0 md:pb-0">
+          {!isSignedIn && (
+            <div className="glass-card border-primary/30 mb-stack-md rounded-lg border p-4">
+              <p className="font-headline-md text-primary text-[16px] leading-snug">
+                {t.loginPromptTitle}
+              </p>
+              <p className="font-body-md text-on-surface-variant mt-1 text-sm">
+                {t.loginPromptText}
+              </p>
+              <Button
+                type="button"
+                onClick={() =>
+                  router.push(
+                    `/connexion?redirect_url=${encodeURIComponent(window.location.href)}`,
+                  )
+                }
+                className="bg-primary text-background font-label-md mt-3 h-auto w-full rounded-lg py-3 hover:opacity-90"
+              >
+                {t.loginPromptCta}
+              </Button>
+            </div>
+          )}
           <div className="flex flex-col gap-2">
             <span className="font-label-md text-label-md text-on-surface-variant">
               {t.dateTimeLabel}
@@ -602,7 +623,7 @@ export function BarberProfileClient({
       </main>
 
       {/* Floating Action Button Area (Mobile Book Now) */}
-      <div className="glass-panel pb-safe px-container-margin py-stack-md fixed bottom-0 left-0 z-40 w-full shadow-[0_-8px_16px_rgba(0,0,0,0.4)] md:hidden">
+      <div className="glass-panel pb-safe px-container-margin py-stack-md fixed bottom-2 left-0 z-40 w-full shadow-[0_-8px_16px_rgba(0,0,0,0.4)] md:hidden">
         <Button
           disabled={
             isPending || selectedDayOff || !daySlots.includes(selectedMinutes)
