@@ -108,6 +108,8 @@ export const dashboard = {
     emptyAgenda: "Aucun rendez-vous à venir.",
     today: "Aujourd'hui",
     dayCount: (n: number) => `${n} RDV`,
+    remainingThisWeek: (n: number) =>
+      `${n} RDV restant${n > 1 ? "s" : ""} cette semaine`,
     greetingPrefix: "Bonjour",
     todayCount: "RDV Aujourd'hui",
     upcomingTitle: "Prochains Rendez-vous",
@@ -149,6 +151,7 @@ export const dashboard = {
     emptyAgenda: "Ma fama 7ata rendez-vous jey.",
     today: "Lyoum",
     dayCount: (n: number) => `${n} RDV`,
+    remainingThisWeek: (n: number) => `${n} RDV ba9i hal jom3a`,
     greetingPrefix: "Ahla",
     todayCount: "RDV Lyoum",
     upcomingTitle: "Rendez-vous Jeyin",

@@ -92,11 +92,26 @@ async function completePastAppointments() {
 
 export async function listAppointmentsByBarber(barberId: string) {
   await completePastAppointments();
-  return db.appointment.findMany({
+  const appointments = await db.appointment.findMany({
     where: { barberId },
     include: { client: true },
     orderBy: { startAt: "asc" },
   });
+  // Annotate pending requests with how many confirmed slots the client
+  // still has in that week, so the barber sees it before accepting.
+  return Promise.all(
+    appointments.map(async (a) => ({
+      ...a,
+      remainingThisWeek:
+        a.status === "PENDING"
+          ? Math.max(
+              WEEKLY_CONFIRMED_LIMIT -
+                (await confirmedCountInWeek(a.clientId, a.startAt)),
+              0,
+            )
+          : null,
+    })),
+  );
 }
 
 export async function listAppointmentsByClient(clientId: string) {

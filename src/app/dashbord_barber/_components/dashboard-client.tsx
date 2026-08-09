@@ -46,7 +46,10 @@ const navItems: { id: ViewId; icon: typeof LayoutDashboard }[] = [
   { id: "profile", icon: User },
 ];
 
-type AppointmentWithClient = Appointment & { client: DbUser };
+type AppointmentWithClient = Appointment & {
+  client: DbUser;
+  remainingThisWeek?: number | null;
+};
 
 function formatDay(date: Date) {
   return new Date(date).toLocaleDateString("fr-FR", {
@@ -377,6 +380,11 @@ export function DashboardClient({
                       <p className="font-headline-md text-headline-md">
                         {booking.client.name}
                       </p>
+                      {booking.remainingThisWeek != null && (
+                        <p className="text-on-surface-variant font-label-sm mt-1">
+                          {t.remainingThisWeek(booking.remainingThisWeek)}
+                        </p>
+                      )}
                     </div>
                     <div className="text-right">
                       <p className="font-headline-md text-primary">
