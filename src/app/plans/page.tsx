@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   ArrowRight,
   BadgeCheck,
@@ -17,7 +18,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { startSubscription } from "./actions";
 
-const navLinks = ["Avantages", "Tarifs"];
+const navLinks = [
+  { label: "Avantages", href: "#avantages" },
+  { label: "Tarifs", href: "#tarifs" },
+];
 
 const trustAvatars = [
   {
@@ -95,22 +99,25 @@ export default function PlansPage() {
           <div className="gap-stack-lg hidden items-center md:flex">
             {navLinks.map((link) => (
               <a
-                key={link}
-                href="#"
+                key={link.label}
+                href={link.href}
                 className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
               >
-                {link}
+                {link.label}
               </a>
             ))}
-            <a
-              href="#"
+            <Link
+              href="/connexion"
               className="font-label-md text-label-md text-on-surface hover:text-primary font-semibold transition-colors"
             >
               Se connecter
-            </a>
-            <Button className="font-label-md text-label-md bg-primary text-on-primary hover:bg-primary-fixed-dim h-auto rounded-lg px-6 py-2 font-bold shadow-[0_4px_12px_rgba(212,175,55,0.2)]">
+            </Link>
+            <Link
+              href="/inscription-barbier"
+              className="font-label-md text-label-md bg-primary text-on-primary hover:bg-primary-fixed-dim inline-flex items-center justify-center rounded-lg px-6 py-2 font-bold shadow-[0_4px_12px_rgba(212,175,55,0.2)] transition-colors"
+            >
               Rejoindre
-            </Button>
+            </Link>
           </div>
           <Button
             variant="ghost"
@@ -124,7 +131,10 @@ export default function PlansPage() {
 
       <main className="pt-16 pb-32">
         {/* Hero Section */}
-        <section className="relative flex min-h-198.75 items-center justify-center overflow-hidden">
+        <section
+          id="avantages"
+          className="relative flex min-h-198.75 items-center justify-center overflow-hidden"
+        >
           {/* Background Image */}
           <div className="absolute inset-0 z-0">
             <div className="from-background via-background/90 to-background/40 absolute inset-0 z-10 bg-linear-to-r" />
@@ -159,20 +169,23 @@ export default function PlansPage() {
                 autorité avec la plateforme numéro un pour les barbiers premium.
               </p>
               <div className="gap-stack-md pt-stack-sm mt-4 flex flex-col sm:flex-row">
-                <Button className="bg-primary text-on-primary hover:bg-primary-fixed-dim h-auto w-full gap-2 rounded-lg px-8 py-4 text-center font-bold shadow-[0_4px_12px_rgba(212,175,55,0.3)] sm:w-auto">
+                <Link
+                  href="/inscription-barbier"
+                  className="bg-primary text-on-primary hover:bg-primary-fixed-dim inline-flex w-full items-center justify-center gap-2 rounded-lg px-8 py-4 text-center font-bold shadow-[0_4px_12px_rgba(212,175,55,0.3)] transition-colors sm:w-auto"
+                >
                   <span className="font-label-md text-label-md">
                     Créer mon compte professionnel
                   </span>
                   <ArrowRight className="size-5" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="border-outline-variant bg-surface-container text-on-surface hover:border-primary/50 hover:bg-surface-container-high h-auto w-full rounded-lg px-8 py-4 text-center font-bold sm:w-auto"
+                </Link>
+                <Link
+                  href="/connexion"
+                  className="border-outline-variant bg-surface-container text-on-surface hover:border-primary/50 hover:bg-surface-container-high inline-flex w-full items-center justify-center rounded-lg border px-8 py-4 text-center font-bold transition-colors sm:w-auto"
                 >
                   <span className="font-label-md text-label-md">
                     Se connecter
                   </span>
-                </Button>
+                </Link>
               </div>
               <div className="border-surface-container-highest/50 mt-8 flex items-center gap-4 border-t pt-6">
                 <div className="flex -space-x-3">
@@ -389,12 +402,12 @@ export default function PlansPage() {
                     ))}
                   </ul>
                 </div>
-                <Button
-                  variant="outline"
-                  className="font-label-md text-label-md border-outline-variant bg-surface-container text-on-surface hover:bg-surface-container-high h-auto w-full rounded-lg px-6 py-4 font-bold"
+                <Link
+                  href="/inscription-barbier"
+                  className="font-label-md text-label-md border-outline-variant bg-surface-container text-on-surface hover:bg-surface-container-high inline-flex w-full items-center justify-center rounded-lg border px-6 py-4 font-bold transition-colors"
                 >
                   S&apos;inscrire gratuitement
-                </Button>
+                </Link>
               </Card>
 
               {/* Pro Plan */}
