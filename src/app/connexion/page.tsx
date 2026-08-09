@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useAuth, useClerk, useSignIn } from "@clerk/nextjs";
-import { Eye, EyeOff, Lock, Mail, MessageSquare, Phone } from "lucide-react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,14 +31,6 @@ export default function ConnexionPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  // Set when Clerk asks to verify a new device; switches the form to the code step.
-  const [needsEmailCode, setNeedsEmailCode] = useState(false);
-  const [code, setCode] = useState("");
-  // SMS OTP mode: enter phone → receive code → verify.
-  const [method, setMethod] = useState<"password" | "sms">("password");
-  const [phone, setPhone] = useState("");
-  const [smsSent, setSmsSent] = useState(false);
-
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -46,59 +38,16 @@ export default function ConnexionPage() {
     setPending(true);
     signingIn.current = true;
     try {
-      if (method === "sms") {
-        if (!smsSent) {
-          await signIn.reset();
-          // 8-digit local numbers get the Tunisian prefix; full E.164
-          // (e.g. Clerk test numbers like +15555550100) passes through.
-          const e164 = phone.startsWith("+")
-            ? phone.replace(/\s/g, "")
-            : `+216${phone.replace(/\s/g, "")}`;
-          const { error } = await signIn.phoneCode.sendCode({
-            phoneNumber: e164,
-          });
-          if (error) {
-            console.error("phoneCode.sendCode error:", error);
-            setError(error.message ?? "Échec de l'envoi du SMS. Réessayez.");
-            return;
-          }
-          setSmsSent(true);
-          return;
-        }
-        const { error } = await signIn.phoneCode.verifyCode({ code });
-        if (error) {
-          setError("Code invalide ou expiré.");
-          return;
-        }
-      } else if (!needsEmailCode) {
-        // Clear any sign-in attempt left over from a previous failed submit.
-        await signIn.reset();
-        const { error } = await signIn.password({
-          emailAddress: email,
-          password,
-        });
-        if (error) {
-          console.error("signIn.password error:", error);
-          setError(error.message ?? "Email ou mot de passe incorrect.");
-          return;
-        }
-        if (signIn.status === "needs_client_trust") {
-          // New device: Clerk wants an email code before opening the session.
-          const { error: sendError } = await signIn.mfa.sendEmailCode();
-          if (sendError) {
-            console.error("sendEmailCode error:", sendError);
-            setError("Échec de l'envoi du code. Réessayez.");
-            return;
-          }
-          setNeedsEmailCode(true);
-          return;
-        }
-      } else {
-        const { error } = await signIn.mfa.verifyEmailCode({ code });
-        if (error) {
-          setError("Code invalide ou expiré.");
-          return;
-        }
+      // Clear any sign-in attempt left over from a previous failed submit.
+      await signIn.reset();
+      const { error } = await signIn.password({
+        emailAddress: email,
+        password,
+      });
+      if (error) {
+        console.error("signIn.password error:", error);
+        setError(error.message ?? "Email ou mot de passe incorrect.");
+        return;
       }
       if (signIn.status !== "complete") {
         console.error("Unhandled sign-in status:", signIn.status);
@@ -117,9 +66,6 @@ export default function ConnexionPage() {
       if (actualRole !== role) {
         await signOut(() => {
           setError("Ce compte ne correspond pas au profil sélectionné.");
-          setNeedsEmailCode(false);
-          setSmsSent(false);
-          setCode("");
         });
         return;
       }
@@ -194,131 +140,65 @@ export default function ConnexionPage() {
             </div>
 
             <form className="space-y-gutter" onSubmit={handleSubmit}>
-              {needsEmailCode || smsSent ? (
-                /* Verification code step (new-device email code or SMS OTP) */
-                <div className="space-y-stack-sm">
-                  <Label htmlFor="code">Code de vérification</Label>
-                  <p className="font-body-md text-on-surface-variant text-sm">
-                    {smsSent
-                      ? `Un code a été envoyé par SMS au ${phone}.`
-                      : `Un code a été envoyé par e-mail à ${email}.`}
-                  </p>
-                  <div className="gold-glow relative">
-                    <MessageSquare className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                    <Input
-                      id="code"
-                      placeholder="••••••"
-                      type="text"
-                      inputMode="numeric"
-                      autoComplete="one-time-code"
-                      className="h-auto rounded-lg py-3 pl-10 text-center text-2xl tracking-[0.5em]"
-                      value={code}
-                      onChange={(e) => {
-                        // Keep digits only (ignores spaces from a pasted code).
-                        const digits = e.target.value
-                          .replace(/\D/g, "")
-                          .slice(0, 6);
-                        setCode(digits);
-                        // Auto-submit once all 6 digits are in.
-                        if (digits.length === 6 && !pending)
-                          e.target.form?.requestSubmit();
-                      }}
-                      required
-                    />
-                  </div>
-                  <button
-                    className="font-label-sm text-label-sm text-primary hover:opacity-80"
-                    type="button"
-                    onClick={() => {
-                      setNeedsEmailCode(false);
-                      setSmsSent(false);
-                      setCode("");
-                    }}
+              {/* Email Field */}
+              <div className="space-y-stack-sm">
+                <Label htmlFor="email">Adresse e-mail</Label>
+                <div className="gold-glow relative">
+                  <Mail className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                  <Input
+                    id="email"
+                    placeholder="vous@exemple.com"
+                    type="email"
+                    autoComplete="email"
+                    className="h-auto rounded-lg py-3 pl-10"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              {/* Password Field */}
+              <div className="space-y-stack-sm">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Mot de passe</Label>
+                  <a
+                    className="font-label-sm text-label-sm text-primary transition-opacity hover:opacity-80"
+                    href="#"
                   >
-                    Retour
+                    Mot de passe oublié ?
+                  </a>
+                </div>
+                <div className="gold-glow relative">
+                  <Lock className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                  <Input
+                    id="password"
+                    placeholder="••••••••"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    className="h-auto rounded-lg py-3 pr-10 pl-10"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    className="text-outline hover:text-primary absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
+                    type="button"
+                    aria-label={
+                      showPassword
+                        ? "Masquer le mot de passe"
+                        : "Afficher le mot de passe"
+                    }
+                    onClick={() => setShowPassword((v) => !v)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="size-4" />
+                    ) : (
+                      <Eye className="size-4" />
+                    )}
                   </button>
                 </div>
-              ) : method === "sms" ? (
-                /* Phone field for SMS OTP */
-                <div className="space-y-stack-sm">
-                  <Label htmlFor="phone">Numéro de téléphone</Label>
-                  <div className="gold-glow relative">
-                    <Phone className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                    <Input
-                      id="phone"
-                      placeholder="22 123 456"
-                      type="tel"
-                      autoComplete="tel"
-                      className="h-auto rounded-lg py-3 pl-10"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {/* Email Field */}
-                  <div className="space-y-stack-sm">
-                    <Label htmlFor="email">Adresse e-mail</Label>
-                    <div className="gold-glow relative">
-                      <Mail className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                      <Input
-                        id="email"
-                        placeholder="vous@exemple.com"
-                        type="email"
-                        autoComplete="email"
-                        className="h-auto rounded-lg py-3 pl-10"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {/* Password Field */}
-                  <div className="space-y-stack-sm">
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="password">Mot de passe</Label>
-                      <a
-                        className="font-label-sm text-label-sm text-primary transition-opacity hover:opacity-80"
-                        href="#"
-                      >
-                        Mot de passe oublié ?
-                      </a>
-                    </div>
-                    <div className="gold-glow relative">
-                      <Lock className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-                      <Input
-                        id="password"
-                        placeholder="••••••••"
-                        type={showPassword ? "text" : "password"}
-                        autoComplete="current-password"
-                        className="h-auto rounded-lg py-3 pr-10 pl-10"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        required
-                      />
-                      <button
-                        className="text-outline hover:text-primary absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
-                        type="button"
-                        aria-label={
-                          showPassword
-                            ? "Masquer le mot de passe"
-                            : "Afficher le mot de passe"
-                        }
-                        onClick={() => setShowPassword((v) => !v)}
-                      >
-                        {showPassword ? (
-                          <EyeOff className="size-4" />
-                        ) : (
-                          <Eye className="size-4" />
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
+              </div>
 
               {error && (
                 <p className="font-body-md text-sm text-red-400" role="alert">
@@ -332,29 +212,8 @@ export default function ConnexionPage() {
                 type="submit"
                 disabled={pending}
               >
-                {pending
-                  ? "Veuillez patienter..."
-                  : needsEmailCode || smsSent
-                    ? "Vérifier le code"
-                    : method === "sms"
-                      ? "Recevoir le code"
-                      : "Se connecter"}
+                {pending ? "Veuillez patienter..." : "Se connecter"}
               </Button>
-
-              {!needsEmailCode && !smsSent && (
-                <button
-                  className="font-label-sm text-label-sm text-primary block w-full text-center hover:opacity-80"
-                  type="button"
-                  onClick={() => {
-                    setMethod((m) => (m === "sms" ? "password" : "sms"));
-                    setError(null);
-                  }}
-                >
-                  {method === "sms"
-                    ? "Se connecter avec un mot de passe"
-                    : "Se connecter par SMS"}
-                </button>
-              )}
             </form>
           </CardContent>
         </Card>
