@@ -99,6 +99,15 @@ export function AppointmentsClient({
     for (const appointment of appointments) {
       byStatus.get(appointment.status)?.push(appointment);
     }
+    // Upcoming groups: next appointment first. Past groups (completed,
+    // cancelled, no-show): most recent first, oldest at the bottom.
+    for (const [status, list] of byStatus) {
+      if (status === "PENDING" || status === "CONFIRMED") {
+        list.sort((a, b) => a.startAt.getTime() - b.startAt.getTime());
+      } else {
+        list.sort((a, b) => b.startAt.getTime() - a.startAt.getTime());
+      }
+    }
     return byStatus;
   }, [appointments]);
 
