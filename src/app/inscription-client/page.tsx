@@ -1,24 +1,63 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Phone, User } from "lucide-react";
+import { useSignUp } from "@clerk/nextjs";
+import { Lock, Mail, Phone, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { completeSignup } from "@/server/users";
 
 export default function InscriptionClientPage() {
+  const router = useRouter();
+  const { signUp } = useSignUp();
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
     setSubmitting(true);
-    setTimeout(() => {
-      alert("Compte créé avec succès ! Bienvenue chez Hajjem.");
+    const form = new FormData(e.target as HTMLFormElement);
+    const field = (name: string) => (form.get(name) as string) ?? "";
+    try {
+      await signUp.reset();
+      const { error } = await signUp.password({
+        emailAddress: field("email"),
+        password: field("password"),
+      });
+      if (error) {
+        console.error("signUp.password error:", error);
+        setError(error.message ?? "Échec de la création du compte.");
+        return;
+      }
+      if (signUp.status !== "complete") {
+        console.error("Unhandled sign-up status:", signUp.status);
+        setError(`Inscription incomplète (${signUp.status}). Réessayez.`);
+        return;
+      }
+      const { error: finalizeError } = await signUp.finalize();
+      if (finalizeError) {
+        setError(finalizeError.message ?? "Inscription incomplète. Réessayez.");
+        return;
+      }
+      const { error: dbError } = await completeSignup({
+        role: "client",
+        name: field("fullname"),
+        phone: field("phone"),
+      });
+      if (dbError) {
+        setError(dbError);
+        return;
+      }
+      router.push("/search");
+    } finally {
       setSubmitting(false);
-    }, 1500);
+    }
   }
 
   return (
@@ -94,6 +133,47 @@ export default function InscriptionClientPage() {
                   />
                 </div>
               </div>
+
+              {/* Email */}
+              <div className="space-y-stack-sm">
+                <Label htmlFor="email">Adresse e-mail</Label>
+                <div className="gold-glow relative">
+                  <Mail className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                  <Input
+                    id="email"
+                    name="email"
+                    placeholder="vous@exemple.com"
+                    required
+                    type="email"
+                    autoComplete="email"
+                    className="h-auto rounded-lg py-3 pl-10"
+                  />
+                </div>
+              </div>
+
+              {/* Password */}
+              <div className="space-y-stack-sm">
+                <Label htmlFor="password">Mot de passe</Label>
+                <div className="gold-glow relative">
+                  <Lock className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                  <Input
+                    id="password"
+                    name="password"
+                    placeholder="••••••••"
+                    required
+                    minLength={8}
+                    type="password"
+                    autoComplete="new-password"
+                    className="h-auto rounded-lg py-3 pl-10"
+                  />
+                </div>
+              </div>
+
+              {error && (
+                <p className="font-body-md text-sm text-red-400" role="alert">
+                  {error}
+                </p>
+              )}
 
               {/* Terms and Conditions */}
               <p className="font-label-sm text-label-sm text-on-surface-variant px-4 text-center leading-relaxed">

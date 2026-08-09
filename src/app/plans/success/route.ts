@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { CURRENT_BARBER_PROFILE_ID } from "@/lib/current-barber";
 import { PAID_PLANS, verifyFlouciPayment, type PaidPlan } from "@/server/flouci";
 import { activateSubscription } from "@/server/subscriptions";
+import { getSessionBarberProfile } from "@/server/users";
 
 // Flouci redirects here after checkout with ?payment_id=... ; we appended the
 // plan ourselves. Verify the payment really succeeded AND that its amount
@@ -19,6 +19,9 @@ export async function GET(req: NextRequest) {
     return failed;
   }
 
-  await activateSubscription(CURRENT_BARBER_PROFILE_ID, plan);
+  const profile = await getSessionBarberProfile();
+  if (!profile) return failed;
+
+  await activateSubscription(profile.id, plan);
   return NextResponse.redirect(new URL("/dashbord_barber?subscribed=1", req.url));
 }

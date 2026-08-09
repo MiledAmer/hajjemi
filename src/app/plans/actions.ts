@@ -3,8 +3,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { CURRENT_BARBER_PROFILE_ID } from "@/lib/current-barber";
 import { createFlouciPayment, PAID_PLANS } from "@/server/flouci";
+import { getSessionBarberProfile } from "@/server/users";
 
 const planSchema = z.enum(["PRO", "SALON"]);
 
@@ -13,6 +13,8 @@ const planSchema = z.enum(["PRO", "SALON"]);
 /// is re-validated against the paid amount on return (see success/route.ts).
 export async function startSubscription(formData: FormData) {
   const plan = planSchema.parse(formData.get("plan"));
+  const profile = await getSessionBarberProfile();
+  if (!profile) redirect("/connexion");
 
   const h = await headers();
   const host = h.get("host");
@@ -23,7 +25,7 @@ export async function startSubscription(formData: FormData) {
     amountMillimes: PAID_PLANS[plan].amountMillimes,
     successLink: `${base}/plans/success?plan=${plan}`,
     failLink: `${base}/plans?payment=failed`,
-    trackingId: `${CURRENT_BARBER_PROFILE_ID}:${plan}:${Date.now()}`,
+    trackingId: `${profile.id}:${plan}:${Date.now()}`,
   });
 
   redirect(link);

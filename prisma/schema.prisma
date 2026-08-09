@@ -97,15 +97,18 @@ enum SubscriptionStatus {
 // Identity
 // ---------------------------------------------------------------------------
 
-/// Account shared by both roles. Auth strategy (NextAuth, custom JWT, etc.)
-/// is intentionally not modeled here — this repo has no auth wired up yet
-/// (see CLAUDE.md); bolt the provider-specific tables on separately once
-/// that's decided instead of guessing now.
+/// Account shared by both roles. Authentication is handled by Clerk
+/// (email + password); each row is linked to its Clerk user via clerkId.
 model User {
-  id           String   @id @default(cuid())
-  phone        String?  @unique
-  passwordHash String
-  name         String
+  id String @id @default(cuid())
+
+  /// Clerk user id — auth (email, password, sessions) lives in Clerk;
+  /// this row only carries app data and links back via this column.
+  /// Nullable only because pre-Clerk seed rows exist without one.
+  clerkId String? @unique
+  email   String? @unique
+  phone   String? @unique
+  name    String
   avatarUrl    String?
   role         Role     @default(CLIENT)
   createdAt    DateTime @default(now())

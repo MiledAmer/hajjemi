@@ -2,11 +2,11 @@
 
 import { z } from "zod";
 import { db } from "@/server/db";
+import { getSessionUser } from "@/server/users";
 import { AppointmentStatus } from "../../generated/prisma";
 
 const createAppointmentSchema = z
   .object({
-    clientId: z.string().min(1),
     barberId: z.string().min(1),
     startAt: z.coerce.date(),
     endAt: z.coerce.date(),
@@ -55,6 +55,7 @@ async function confirmedCountInWeek(
   });
 }
 
+// clientId is always the signed-in user — never taken from the caller.
 export async function createAppointment(
   input: z.infer<typeof createAppointmentSchema>,
 ): Promise<
@@ -63,18 +64,21 @@ export async function createAppointment(
   | { limitReached?: undefined; duplicate?: undefined; id: string }
 > {
   const data = createAppointmentSchema.parse(input);
+  const user = await getSessionUser();
+  if (!user) throw new Error("Not signed in");
+  const clientId = user.id;
   const duplicate = await db.appointment.findFirst({
     where: {
-      clientId: data.clientId,
+      clientId,
       barberId: data.barberId,
       startAt: data.startAt,
       status: { in: ["PENDING", "CONFIRMED"] },
     },
   });
   if (duplicate) return { duplicate: true };
-  const confirmed = await confirmedCountInWeek(data.clientId, data.startAt);
+  const confirmed = await confirmedCountInWeek(clientId, data.startAt);
   if (confirmed >= WEEKLY_CONFIRMED_LIMIT) return { limitReached: true };
-  return db.appointment.create({ data });
+  return db.appointment.create({ data: { ...data, clientId } });
 }
 
 export async function getAppointment(id: string) {
@@ -127,9 +131,12 @@ export async function countUnseenAppointmentsForClient(clientId: string) {
   return db.appointment.count({ where: { clientId, clientSeenAt: null } });
 }
 
-export async function markAppointmentsSeenByClient(clientId: string) {
-  return db.appointment.updateMany({
-    where: { clientId, clientSeenAt: null },
+// Called from the client — derives the user from the session.
+export async function markAppointmentsSeenByClient() {
+  const user = await getSessionUser();
+  if (!user) return;
+  await db.appointment.updateMany({
+    where: { clientId: user.id, clientSeenAt: null },
     data: { clientSeenAt: new Date() },
   });
 }

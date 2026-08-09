@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useSignUp } from "@clerk/nextjs";
 import {
   Check,
-  CheckCircle2,
   Lock,
+  Mail,
   MapPin,
   Phone,
   RefreshCw,
@@ -25,18 +27,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { completeSignup } from "@/server/users";
+import type { Governorate } from "../../../generated/prisma";
 
-type SubmitStage = "idle" | "loading" | "verifying";
-
+// value doubles as the Governorate enum value in the DB.
 const cities = [
-  { value: "tunis", label: "Tunis" },
-  { value: "ariana", label: "Ariana" },
-  { value: "sousse", label: "Sousse" },
-  { value: "sfax", label: "Sfax" },
-  { value: "monastir", label: "Monastir" },
-  { value: "bizerte", label: "Bizerte" },
-  { value: "nabeul", label: "Nabeul" },
-];
+  { value: "TUNIS", label: "Tunis" },
+  { value: "ARIANA", label: "Ariana" },
+  { value: "SOUSSE", label: "Sousse" },
+  { value: "SFAX", label: "Sfax" },
+  { value: "MONASTIR", label: "Monastir" },
+  { value: "BIZERTE", label: "Bizerte" },
+  { value: "NABEUL", label: "Nabeul" },
+] as const;
 
 const specialities = [
   { value: "barbe", label: "Barbe", icon: User },
@@ -45,7 +48,10 @@ const specialities = [
 ];
 
 export default function InscriptionBarbierPage() {
-  const [stage, setStage] = useState<SubmitStage>("idle");
+  const router = useRouter();
+  const { signUp } = useSignUp();
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [selectedSpecialities, setSelectedSpecialities] = useState<string[]>(
     [],
   );
@@ -58,18 +64,48 @@ export default function InscriptionBarbierPage() {
     );
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setStage("loading");
-    setTimeout(() => {
-      setStage("verifying");
-      setTimeout(() => {
-        alert(
-          "Informations enregistrées. Passons à la configuration de vos services.",
-        );
-        setStage("idle");
-      }, 1000);
-    }, 800);
+    setError(null);
+    setSubmitting(true);
+    const form = new FormData(e.target as HTMLFormElement);
+    const field = (name: string) => (form.get(name) as string) ?? "";
+    try {
+      await signUp.reset();
+      const { error } = await signUp.password({
+        emailAddress: field("email"),
+        password: field("password"),
+      });
+      if (error) {
+        console.error("signUp.password error:", error);
+        setError(error.message ?? "Échec de la création du compte.");
+        return;
+      }
+      if (signUp.status !== "complete") {
+        console.error("Unhandled sign-up status:", signUp.status);
+        setError(`Inscription incomplète (${signUp.status}). Réessayez.`);
+        return;
+      }
+      const { error: finalizeError } = await signUp.finalize();
+      if (finalizeError) {
+        setError(finalizeError.message ?? "Inscription incomplète. Réessayez.");
+        return;
+      }
+      const { error: dbError } = await completeSignup({
+        role: "barbier",
+        name: field("manager_name"),
+        phone: field("phone"),
+        businessName: field("salon_name"),
+        governorate: field("city") as Governorate,
+      });
+      if (dbError) {
+        setError(dbError);
+        return;
+      }
+      router.push("/dashbord_barber");
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -173,6 +209,17 @@ export default function InscriptionBarbierPage() {
                   className="h-auto rounded-lg py-3 pl-11"
                 />
               </div>
+              <div className="gold-glow relative">
+                <Mail className="text-on-surface-variant pointer-events-none absolute top-1/2 left-3 size-[20px] -translate-y-1/2" />
+                <Input
+                  name="email"
+                  placeholder="Adresse e-mail"
+                  required
+                  type="email"
+                  autoComplete="email"
+                  className="h-auto rounded-lg py-3 pl-11"
+                />
+              </div>
             </div>
 
             {/* Specialities Selection */}
@@ -211,41 +258,36 @@ export default function InscriptionBarbierPage() {
                   name="password"
                   placeholder="Mot de passe"
                   required
+                  minLength={8}
                   type="password"
+                  autoComplete="new-password"
                   className="h-auto rounded-lg py-3 pl-11"
                 />
               </div>
             </div>
+
+            {error && (
+              <p className="font-body-md text-sm text-red-400" role="alert">
+                {error}
+              </p>
+            )}
 
             {/* Action Button */}
             <div className="pt-stack-lg">
               <Button
                 className="h-auto w-full gap-2 rounded-lg py-4 font-bold shadow-[0_4px_12px_rgba(242,202,80,0.3)]"
                 type="submit"
-                disabled={stage !== "idle"}
+                disabled={submitting}
               >
-                {stage === "idle" && (
-                  <>
-                    <span className="font-label-md text-label-md tracking-widest uppercase">
-                      Suivant
-                    </span>
-                    <span aria-hidden>›</span>
-                  </>
-                )}
-                {stage === "loading" && (
+                {submitting ? (
                   <RefreshCw className="size-4 animate-spin" />
-                )}
-                {stage === "verifying" && (
-                  <>
-                    <CheckCircle2 className="size-4" />
-                    <span>Vérification...</span>
-                  </>
+                ) : (
+                  <span className="font-label-md text-label-md tracking-widest uppercase">
+                    Créer mon compte
+                  </span>
                 )}
               </Button>
             </div>
-            <p className="font-label-sm text-label-sm text-on-surface-variant/60 mt-stack-md text-center">
-              Étape 1 sur 3 — Informations de base
-            </p>
           </form>
         </div>
       </main>

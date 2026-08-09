@@ -26,7 +26,6 @@ import { GOVERNORATE_LABELS } from "@/lib/governorate";
 import { clientAppointments as content, useLang } from "@/lib/tounsi";
 import { cn } from "@/lib/utils";
 import { markAppointmentsSeenByClient } from "@/server/appointments";
-import { CURRENT_CLIENT_USER_ID } from "@/lib/current-client";
 import type {
   Appointment,
   AppointmentStatus,
@@ -87,7 +86,7 @@ export function AppointmentsClient({
     setNotifOpen(open);
     if (!open && notifications.length > 0) {
       startTransition(async () => {
-        await markAppointmentsSeenByClient(CURRENT_CLIENT_USER_ID);
+        await markAppointmentsSeenByClient();
         router.refresh();
       });
     }

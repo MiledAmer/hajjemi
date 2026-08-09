@@ -29,7 +29,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CURRENT_CLIENT_USER_ID } from "@/lib/current-client";
 import { GOVERNORATE_LABELS } from "@/lib/governorate";
 import {
   barberProfile as content,
@@ -324,7 +323,6 @@ export function BarberProfileClient({
     startTransition(async () => {
       try {
         const result = await createAppointment({
-          clientId: CURRENT_CLIENT_USER_ID,
           barberId: profile.id,
           startAt,
           endAt,
