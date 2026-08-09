@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { useClerk, useSignIn } from "@clerk/nextjs";
+import { useEffect, useRef, useState } from "react";
+import { useAuth, useClerk, useSignIn } from "@clerk/nextjs";
 import { Eye, EyeOff, Lock, Mail, MessageSquare, Phone } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,15 @@ export default function ConnexionPage() {
   const router = useRouter();
   const { signIn } = useSignIn();
   const { signOut } = useClerk();
+  const { isSignedIn } = useAuth();
+
+  // Already signed in when landing here — no reason to see the login form.
+  // The ref keeps this from clobbering the redirect_url/role redirect that
+  // handleSubmit performs right after a login made on this page.
+  const signingIn = useRef(false);
+  useEffect(() => {
+    if (isSignedIn && !signingIn.current) router.replace("/search");
+  }, [isSignedIn, router]);
   const [role, setRole] = useState<"client" | "barbier">("client");
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
@@ -35,6 +44,7 @@ export default function ConnexionPage() {
     e.preventDefault();
     setError(null);
     setPending(true);
+    signingIn.current = true;
     try {
       if (method === "sms") {
         if (!smsSent) {
