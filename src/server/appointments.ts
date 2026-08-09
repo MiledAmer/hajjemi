@@ -27,10 +27,40 @@ const updateAppointmentSchema = z.object({
   status: z.nativeEnum(AppointmentStatus).optional(),
 });
 
+export const WEEKLY_CONFIRMED_LIMIT = 3;
+
+// Monday 00:00 → next Monday 00:00 of the week containing `date`.
+function weekRange(date: Date) {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  start.setDate(start.getDate() - ((start.getDay() + 6) % 7));
+  const end = new Date(start);
+  end.setDate(end.getDate() + 7);
+  return { start, end };
+}
+
+async function confirmedCountInWeek(
+  clientId: string,
+  date: Date,
+  excludeId?: string,
+) {
+  const { start, end } = weekRange(date);
+  return db.appointment.count({
+    where: {
+      clientId,
+      status: "CONFIRMED",
+      startAt: { gte: start, lt: end },
+      ...(excludeId ? { id: { not: excludeId } } : {}),
+    },
+  });
+}
+
 export async function createAppointment(
   input: z.infer<typeof createAppointmentSchema>,
-) {
+): Promise<{ limitReached: true } | { limitReached?: undefined; id: string }> {
   const data = createAppointmentSchema.parse(input);
+  const confirmed = await confirmedCountInWeek(data.clientId, data.startAt);
+  if (confirmed >= WEEKLY_CONFIRMED_LIMIT) return { limitReached: true };
   return db.appointment.create({ data });
 }
 
@@ -70,6 +100,15 @@ export async function updateAppointment(
   input: z.infer<typeof updateAppointmentSchema>,
 ) {
   const data = updateAppointmentSchema.parse(input);
+  if (data.status === "CONFIRMED") {
+    const appt = await db.appointment.findUniqueOrThrow({ where: { id } });
+    const confirmed = await confirmedCountInWeek(
+      appt.clientId,
+      data.startAt ?? appt.startAt,
+      id,
+    );
+    if (confirmed >= WEEKLY_CONFIRMED_LIMIT) return { limitReached: true };
+  }
   return db.appointment.update({
     where: { id },
     data: {

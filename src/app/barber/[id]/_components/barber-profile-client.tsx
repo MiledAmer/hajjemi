@@ -272,7 +272,10 @@ export function BarberProfileClient({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [bookingResult, setBookingResult] = useState<
-    { status: "success"; startAt: string } | { status: "error" } | null
+    | { status: "success"; startAt: string }
+    | { status: "error" }
+    | { status: "limit" }
+    | null
   >(null);
 
   const selectedDayOff =
@@ -312,7 +315,7 @@ export function BarberProfileClient({
     );
     startTransition(async () => {
       try {
-        await createAppointment({
+        const result = await createAppointment({
           clientId: CURRENT_CLIENT_USER_ID,
           barberId: profile.id,
           startAt,
@@ -320,6 +323,10 @@ export function BarberProfileClient({
           totalPriceMillimes: 0,
           status: "PENDING",
         });
+        if (result.limitReached) {
+          setBookingResult({ status: "limit" });
+          return;
+        }
         setBookingResult({ status: "success", startAt: startAtInput });
       } catch {
         setBookingResult({ status: "error" });
@@ -616,6 +623,11 @@ export function BarberProfileClient({
           {bookingResult?.status === "error" && (
             <p className="text-destructive font-body-md mt-stack-md">
               {t.bookingError}
+            </p>
+          )}
+          {bookingResult?.status === "limit" && (
+            <p className="text-destructive font-body-md mt-stack-md">
+              {t.weeklyLimitError}
             </p>
           )}
 

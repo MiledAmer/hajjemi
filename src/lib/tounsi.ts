@@ -126,6 +126,8 @@ export const dashboard = {
     sunday: "Dimanche",
     closed: "Fermé",
     logout: "Déconnexion",
+    weeklyLimitReached:
+      "Impossible de confirmer : ce client a déjà 3 rendez-vous confirmés cette semaine.",
   },
   tn: {
     switchTo: "FR",
@@ -159,6 +161,8 @@ export const dashboard = {
     sunday: "El Ahad",
     closed: "Ma8lou9",
     logout: "Khrouj",
+    weeklyLimitReached:
+      "Manajmch nconfirmé : el client 3andou déjà 3 rendez-vous confirmés hal jom3a.",
   },
 } as const satisfies Record<Lang, unknown>;
 
@@ -266,6 +270,8 @@ export const barberProfile = {
     timeLabel: "Heure",
     confirmPick: "Valider",
     bookingError: "Échec de la réservation. Réessayez.",
+    weeklyLimitError:
+      "Limite atteinte : vous avez déjà 3 rendez-vous confirmés cette semaine.",
     bookingInProgress: "Réservation...",
     bookNow: "Réserver maintenant",
     loginPromptTitle: "Réservez votre créneau avant qu'il ne parte !",
@@ -301,6 +307,8 @@ export const barberProfile = {
     timeLabel: "Wa9t",
     confirmPick: "Valider",
     bookingError: "Rzervation ma najja7tech. 3awed.",
+    weeklyLimitError:
+      "Wsolt lel limite : 3andek déjà 3 rendez-vous confirmés hal jom3a.",
     bookingInProgress: "Rzervation...",
     bookNow: "Rzervi tawa",
     loginPromptTitle: "Rzervi wa9tek 9bal ma yetsakker !",

@@ -88,6 +88,7 @@ export function DashboardClient({
   const t = dashboardContent[lang];
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [limitError, setLimitError] = useState(false);
 
   const [optimisticAppointments, applyStatus] = useOptimistic(
     appointments,
@@ -148,9 +149,12 @@ export function DashboardClient({
 
   function setStatus(id: string, status: "CONFIRMED" | "CANCELLED") {
     setPendingId(id);
+    setLimitError(false);
     startTransition(async () => {
       applyStatus({ id, status });
-      await updateAppointment(id, { status });
+      const result = await updateAppointment(id, { status });
+      // router.refresh() below reverts the optimistic flip if it was refused.
+      if ("limitReached" in result && result.limitReached) setLimitError(true);
       router.refresh();
       setPendingId(null);
     });
@@ -310,6 +314,11 @@ export function DashboardClient({
             <h1 className="font-headline-lg-mobile text-headline-lg-mobile mb-stack-lg">
               {t.bookingsTitle}
             </h1>
+            {limitError && (
+              <p className="text-destructive font-body-md mb-stack-md">
+                {t.weeklyLimitReached}
+              </p>
+            )}
             <div className="gap-stack-lg space-y-stack-lg md:grid md:grid-cols-2 md:space-y-0 lg:grid-cols-3">
               {optimisticAppointments.map((booking) => (
                 <Card
