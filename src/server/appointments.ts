@@ -68,7 +68,17 @@ export async function getAppointment(id: string) {
   return db.appointment.findUnique({ where: { id } });
 }
 
+// Confirmed appointments whose time has passed become COMPLETED lazily,
+// whenever a list is read — no cron needed.
+async function completePastAppointments() {
+  await db.appointment.updateMany({
+    where: { status: "CONFIRMED", endAt: { lt: new Date() } },
+    data: { status: "COMPLETED" },
+  });
+}
+
 export async function listAppointmentsByBarber(barberId: string) {
+  await completePastAppointments();
   return db.appointment.findMany({
     where: { barberId },
     include: { client: true },
@@ -77,6 +87,7 @@ export async function listAppointmentsByBarber(barberId: string) {
 }
 
 export async function listAppointmentsByClient(clientId: string) {
+  await completePastAppointments();
   return db.appointment.findMany({
     where: { clientId },
     include: { barber: true },
