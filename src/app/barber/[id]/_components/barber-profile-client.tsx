@@ -282,6 +282,7 @@ export function BarberProfileClient({
     | { status: "success"; startAt: string }
     | { status: "error" }
     | { status: "limit" }
+    | { status: "duplicate" }
     | null
   >(null);
 
@@ -330,6 +331,10 @@ export function BarberProfileClient({
           totalPriceMillimes: 0,
           status: "PENDING",
         });
+        if (result.duplicate) {
+          setBookingResult({ status: "duplicate" });
+          return;
+        }
         if (result.limitReached) {
           setBookingResult({ status: "limit" });
           return;
@@ -637,6 +642,11 @@ export function BarberProfileClient({
           {bookingResult?.status === "limit" && (
             <p className="text-destructive font-body-md mt-stack-md">
               {t.weeklyLimitError}
+            </p>
+          )}
+          {bookingResult?.status === "duplicate" && (
+            <p className="text-destructive font-body-md mt-stack-md">
+              {t.duplicateError}
             </p>
           )}
 

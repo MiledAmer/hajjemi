@@ -284,6 +284,8 @@ export const barberProfile = {
     bookingError: "Échec de la réservation. Réessayez.",
     weeklyLimitError:
       "Limite atteinte : vous avez déjà 3 rendez-vous confirmés cette semaine.",
+    duplicateError:
+      "Vous avez déjà un rendez-vous avec ce barbier à cette date et heure.",
     bookingInProgress: "Réservation...",
     bookNow: "Réserver maintenant",
     loginPromptTitle: "Réservez votre créneau avant qu'il ne parte !",
@@ -321,6 +323,8 @@ export const barberProfile = {
     bookingError: "Rzervation ma najja7tech. 3awed.",
     weeklyLimitError:
       "Wsolt lel limite : 3andek déjà 3 rendez-vous confirmés hal jom3a.",
+    duplicateError:
+      "3andek déjà rendez-vous m3a hal barbier fi nafs el date w el wa9t.",
     bookingInProgress: "Rzervation...",
     bookNow: "Rzervi tawa",
     loginPromptTitle: "Rzervi wa9tek 9bal ma yetsakker !",
@@ -374,11 +378,11 @@ export const clientAppointments = {
     backAria: "Erj3a",
     pending: "Fil intidhar",
     confirmed: "Mou2akdin",
-    cancelled: "Mba5lin",
+    cancelled: "Refusés",
     completed: "Kamlin",
     statusPending: "Fil intidhar",
     statusConfirmed: "Mou2akad",
-    statusCancelled: "Mba5el",
+    statusCancelled: "Refusé",
     statusCompleted: "Kamel",
     statusNoShow: "Ma jesh",
     noAppointments: "Ma3andekech rendez-vous tawa.",

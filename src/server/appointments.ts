@@ -57,8 +57,21 @@ async function confirmedCountInWeek(
 
 export async function createAppointment(
   input: z.infer<typeof createAppointmentSchema>,
-): Promise<{ limitReached: true } | { limitReached?: undefined; id: string }> {
+): Promise<
+  | { limitReached: true; duplicate?: undefined }
+  | { duplicate: true; limitReached?: undefined }
+  | { limitReached?: undefined; duplicate?: undefined; id: string }
+> {
   const data = createAppointmentSchema.parse(input);
+  const duplicate = await db.appointment.findFirst({
+    where: {
+      clientId: data.clientId,
+      barberId: data.barberId,
+      startAt: data.startAt,
+      status: { in: ["PENDING", "CONFIRMED"] },
+    },
+  });
+  if (duplicate) return { duplicate: true };
   const confirmed = await confirmedCountInWeek(data.clientId, data.startAt);
   if (confirmed >= WEEKLY_CONFIRMED_LIMIT) return { limitReached: true };
   return db.appointment.create({ data });
