@@ -153,6 +153,19 @@ export function DashboardClient({
     [optimisticAppointments],
   );
 
+  const agendaDays = useMemo(() => {
+    const byDay = new Map<string, AppointmentWithClient[]>();
+    for (const a of agendaAppointments) {
+      const key = new Date(a.startAt).toDateString();
+      (byDay.get(key) ?? byDay.set(key, []).get(key)!).push(a);
+    }
+    return [...byDay.entries()].map(([key, items]) => ({
+      key,
+      date: new Date(key),
+      items,
+    }));
+  }, [agendaAppointments]);
+
   const todayCount = useMemo(() => {
     const today = new Date();
     return optimisticAppointments.filter((a) =>
@@ -404,50 +417,86 @@ export function DashboardClient({
             <h1 className="font-headline-lg-mobile text-headline-lg-mobile mb-stack-lg">
               {t.agendaTitle}
             </h1>
-            {agendaAppointments.length === 0 && (
+            {agendaDays.length === 0 && (
               <p className="text-on-surface-variant font-body-md">
                 {t.emptyAgenda}
               </p>
             )}
-            <div className="gap-stack-lg space-y-stack-lg md:grid md:grid-cols-2 md:space-y-0 lg:grid-cols-3">
-              {agendaAppointments.map((booking) => (
-                <Card
-                  key={booking.id}
-                  className={
-                    booking.status === "CONFIRMED"
-                      ? "bg-surface-container p-gutter gap-0 rounded-xl"
-                      : "bg-surface-container p-gutter gap-0 rounded-xl opacity-60"
-                  }
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p
-                        className={`font-headline-md text-headline-md ${booking.status !== "CONFIRMED" ? "text-on-surface-variant" : ""}`}
-                      >
-                        {booking.client.name}
-                      </p>
-                      <p className="text-on-surface-variant font-body-md">
-                        {(booking.totalPriceMillimes / 1000).toFixed(3)} DT
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p
-                        className={`font-headline-md ${booking.status !== "CONFIRMED" ? "text-on-surface-variant" : "text-primary"}`}
-                      >
-                        {formatTime(booking.startAt)}
-                      </p>
-                      <p className="text-on-surface-variant font-label-sm capitalize">
-                        {formatDay(booking.startAt)}
-                      </p>
+            <div className="space-y-section-gap md:mx-auto md:max-w-2xl">
+              {agendaDays.map(({ key, date, items }) => {
+                const isToday = isSameDay(date, new Date());
+                return (
+                  <div key={key}>
+                    {/* Day header */}
+                    <div className="mb-stack-md flex items-baseline gap-3">
                       <span
-                        className={`text-label-sm ${booking.status !== "CONFIRMED" ? "" : "text-secondary"}`}
+                        className={`font-headline-md text-headline-md capitalize ${isToday ? "text-primary" : ""}`}
                       >
-                        {booking.status === "CONFIRMED" ? t.confirmed : t.done}
+                        {isToday ? t.today : formatDay(date)}
                       </span>
+                      <span className="font-label-sm text-label-sm text-on-surface-variant">
+                        {t.dayCount(items.length)}
+                      </span>
+                      <span className="border-outline-variant/40 flex-1 border-t" />
+                    </div>
+                    {/* Timeline */}
+                    <div className="border-outline-variant/40 ml-2 space-y-3 border-l pl-5">
+                      {items.map((booking) => {
+                        const confirmed = booking.status === "CONFIRMED";
+                        return (
+                          <div key={booking.id} className="relative">
+                            <span
+                              className={`absolute top-4 -left-[26.5px] size-3 rounded-full border-2 ${
+                                confirmed
+                                  ? "bg-primary border-primary shadow-[0_0_8px_rgba(212,175,55,0.6)]"
+                                  : "bg-surface border-outline-variant"
+                              }`}
+                            />
+                            <Card
+                              className={`p-gutter flex-row items-center gap-4 rounded-xl ${
+                                confirmed
+                                  ? "bg-surface-container border-primary/20 border"
+                                  : "bg-surface-container gap-4 opacity-50"
+                              }`}
+                            >
+                              <div className="min-w-14 text-center">
+                                <p
+                                  className={`font-headline-md leading-tight ${confirmed ? "text-primary" : "text-on-surface-variant"}`}
+                                >
+                                  {formatTime(booking.startAt)}
+                                </p>
+                              </div>
+                              <div className="border-outline-variant/40 self-stretch border-l" />
+                              <div className="min-w-0 flex-1">
+                                <p
+                                  className={`font-headline-md text-headline-md truncate ${confirmed ? "" : "text-on-surface-variant"}`}
+                                >
+                                  {booking.client.name}
+                                </p>
+                                <p className="text-on-surface-variant font-body-md text-sm">
+                                  {(booking.totalPriceMillimes / 1000).toFixed(
+                                    3,
+                                  )}{" "}
+                                  DT
+                                </p>
+                              </div>
+                              <Badge
+                                className={
+                                  confirmed
+                                    ? "bg-primary/15 text-primary rounded-sm"
+                                    : "bg-surface-variant text-on-surface-variant rounded-sm"
+                                }
+                              >
+                                {confirmed ? t.confirmed : t.done}
+                              </Badge>
+                            </Card>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
-                </Card>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
