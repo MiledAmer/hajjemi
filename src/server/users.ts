@@ -49,9 +49,12 @@ export async function signupUser(input: z.infer<typeof signupSchema>) {
   const client = await clerkClient();
   let clerkUserId: string;
   try {
+    const [firstName, ...rest] = data.name.split(/\s+/);
     const clerkUser = await client.users.createUser({
       emailAddress: [data.email],
       password: data.password,
+      firstName,
+      lastName: rest.join(" ") || undefined,
       publicMetadata: { role: data.role },
     });
     clerkUserId = clerkUser.id;
