@@ -27,7 +27,11 @@ const updateAppointmentSchema = z.object({
   status: z.nativeEnum(AppointmentStatus).optional(),
 });
 
+// Max confirmed rdv per client per week — also the cap once any rdv is
+// confirmed (confirmed + pending can't exceed this).
 const WEEKLY_CONFIRMED_LIMIT = 3;
+// A client may pile up more requests while none are confirmed yet.
+const WEEKLY_PENDING_LIMIT = 4;
 
 // Monday 00:00 → next Monday 00:00 of the week containing `date`.
 function weekRange(date: Date) {
@@ -39,21 +43,25 @@ function weekRange(date: Date) {
   return { start, end };
 }
 
-async function confirmedCountInWeek(
+async function countInWeek(
   clientId: string,
   date: Date,
+  statuses: ("PENDING" | "CONFIRMED")[],
   excludeId?: string,
 ) {
   const { start, end } = weekRange(date);
   return db.appointment.count({
     where: {
       clientId,
-      status: "CONFIRMED",
+      status: { in: statuses },
       startAt: { gte: start, lt: end },
       ...(excludeId ? { id: { not: excludeId } } : {}),
     },
   });
 }
+
+const confirmedCountInWeek = (clientId: string, date: Date, excludeId?: string) =>
+  countInWeek(clientId, date, ["CONFIRMED"], excludeId);
 
 // clientId is always the signed-in user — never taken from the caller.
 export async function createAppointment(
@@ -76,8 +84,15 @@ export async function createAppointment(
     },
   });
   if (duplicate) return { duplicate: true };
+  // Up to 4 requests while nothing is confirmed; once a rdv is confirmed the
+  // combined pending + confirmed count is capped at 3.
   const confirmed = await confirmedCountInWeek(clientId, data.startAt);
-  if (confirmed >= WEEKLY_CONFIRMED_LIMIT) return { limitReached: true };
+  const active = await countInWeek(clientId, data.startAt, [
+    "PENDING",
+    "CONFIRMED",
+  ]);
+  const limit = confirmed > 0 ? WEEKLY_CONFIRMED_LIMIT : WEEKLY_PENDING_LIMIT;
+  if (active >= limit) return { limitReached: true };
   return db.appointment.create({ data: { ...data, clientId } });
 }
 
