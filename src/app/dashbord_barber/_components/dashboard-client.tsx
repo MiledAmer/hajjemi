@@ -74,6 +74,19 @@ function isSameDay(a: Date, b: Date) {
   );
 }
 
+// Monday-00:00 of the week containing `date` — mirrors weekRange() on the
+// server so the optimistic weekly count matches what the refetch returns.
+function weekStart(date: Date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return d.getTime();
+}
+
+function sameWeek(a: Date, b: Date) {
+  return weekStart(new Date(a)) === weekStart(new Date(b));
+}
+
 function formatMinutes(minutes: number) {
   const h = Math.floor(minutes / 60)
     .toString()
@@ -104,8 +117,28 @@ export function DashboardClient({
 
   const [optimisticAppointments, applyStatus] = useOptimistic(
     appointments,
-    (state, { id, status }: { id: string; status: Appointment["status"] }) =>
-      state.map((a) => (a.id === id ? { ...a, status } : a)),
+    (state, { id, status }: { id: string; status: Appointment["status"] }) => {
+      const target = state.find((a) => a.id === id);
+      return state.map((a) => {
+        if (a.id === id) return { ...a, status };
+        // Confirming an rdv uses one of the client's weekly slots, so their
+        // other still-pending requests that week lose one remaining slot.
+        if (
+          status === "CONFIRMED" &&
+          target &&
+          a.status === "PENDING" &&
+          a.clientId === target.clientId &&
+          a.remainingThisWeek != null &&
+          sameWeek(a.startAt, target.startAt)
+        ) {
+          return {
+            ...a,
+            remainingThisWeek: Math.max(a.remainingThisWeek - 1, 0),
+          };
+        }
+        return a;
+      });
+    },
   );
   const [optimisticProfile, applyProfilePatch] = useOptimistic(
     profile,
