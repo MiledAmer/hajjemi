@@ -315,3 +315,13 @@ body {
 @theme {
   --radius-xl: 0.5rem;
 }
+
+/* Keep Chrome autofill from repainting inputs white/blue — hold the
+   themed background and text color indefinitely. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  transition: background-color 9999999s ease-in-out 0s;
+  -webkit-text-fill-color: var(--foreground);
+  caret-color: var(--foreground);
+}

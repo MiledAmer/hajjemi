@@ -5,48 +5,85 @@ import { z } from "zod";
 import { db } from "@/server/db";
 import { Governorate, Role } from "../../generated/prisma";
 
-const completeSignupSchema = z.object({
+const signupSchema = z.object({
   role: z.enum(["client", "barbier"]),
-  name: z.string().min(1),
-  phone: z.string().min(1).optional(),
+  name: z
+    .string()
+    .trim()
+    .min(1, "Le nom est requis.")
+    .regex(/^[\p{L}\s'-]+$/u, "Le nom ne doit contenir que des lettres."),
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\d{8}$/, "Le numéro doit contenir 8 chiffres."),
+  email: z.string().trim().email("Adresse e-mail invalide."),
+  password: z
+    .string()
+    .min(8, "Le mot de passe doit contenir au moins 8 caractères."),
   // Barber-only fields
-  businessName: z.string().min(1).optional(),
+  businessName: z.string().trim().min(1).optional(),
   governorate: z.nativeEnum(Governorate).optional(),
 });
 
 /**
- * Called right after a Clerk sign-up completes: stamps the role on the
- * Clerk user's publicMetadata and creates the linked row(s) in our DB.
+ * Full sign-up, entirely server-side: validates the form, creates the Clerk
+ * user via the backend API (no captcha / no client session involved), then
+ * the linked row(s) in our DB. If the DB write fails the Clerk user is
+ * deleted so the two stores never diverge. The page signs the user in
+ * afterwards with the normal sign-in flow.
  */
-export async function completeSignup(
-  input: z.infer<typeof completeSignupSchema>,
-) {
-  const data = completeSignupSchema.parse(input);
-  const clerkUser = await currentUser();
-  if (!clerkUser) return { error: "Non connecté." };
+export async function signupUser(input: z.infer<typeof signupSchema>) {
+  const parsed = signupSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
+  }
+  const data = parsed.data;
+  if (data.role === "barbier" && (!data.businessName || !data.governorate)) {
+    return { error: "Nom du salon et gouvernorat requis." };
+  }
+
+  if (await db.user.findUnique({ where: { phone: data.phone } })) {
+    return { error: "Ce numéro de téléphone est déjà utilisé." };
+  }
 
   const client = await clerkClient();
-  await client.users.updateUserMetadata(clerkUser.id, {
-    publicMetadata: { role: data.role },
-  });
+  let clerkUserId: string;
+  try {
+    const clerkUser = await client.users.createUser({
+      emailAddress: [data.email],
+      password: data.password,
+      publicMetadata: { role: data.role },
+    });
+    clerkUserId = clerkUser.id;
+  } catch (e) {
+    console.error("signupUser clerk error:", e);
+    const clerkMessage = (
+      e as { errors?: { message?: string; code?: string }[] }
+    ).errors?.[0];
+    if (clerkMessage?.code === "form_identifier_exists") {
+      return { error: "Cette adresse e-mail est déjà utilisée." };
+    }
+    if (clerkMessage?.code === "form_password_pwned") {
+      return {
+        error: "Ce mot de passe est trop courant, choisissez-en un autre.",
+      };
+    }
+    return { error: clerkMessage?.message ?? "Échec de la création du compte." };
+  }
 
   try {
-    const user = await db.user.upsert({
-      where: { clerkId: clerkUser.id },
-      update: { name: data.name, phone: data.phone },
-      create: {
-        clerkId: clerkUser.id,
-        email: clerkUser.emailAddresses[0]?.emailAddress,
+    const user = await db.user.create({
+      data: {
+        clerkId: clerkUserId,
+        email: data.email,
         name: data.name,
         phone: data.phone,
         role: data.role === "barbier" ? Role.BARBER : Role.CLIENT,
       },
     });
     if (data.role === "barbier" && data.businessName && data.governorate) {
-      await db.barberProfile.upsert({
-        where: { userId: user.id },
-        update: {},
-        create: {
+      await db.barberProfile.create({
+        data: {
           userId: user.id,
           businessName: data.businessName,
           governorate: data.governorate,
@@ -54,8 +91,10 @@ export async function completeSignup(
       });
     }
   } catch (e) {
-    console.error("completeSignup db error:", e);
-    return { error: "Ce numéro de téléphone est déjà utilisé." };
+    console.error("signupUser db error:", e);
+    // Roll back the Clerk user so email isn't stuck "already used" with no DB row.
+    await client.users.deleteUser(clerkUserId).catch(() => undefined);
+    return { error: "Erreur lors de l'enregistrement. Réessayez." };
   }
   return { error: null };
 }

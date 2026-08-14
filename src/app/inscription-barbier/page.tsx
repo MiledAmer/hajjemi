@@ -3,9 +3,11 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useSignUp } from "@clerk/nextjs";
+import { useSignIn } from "@clerk/nextjs";
 import {
   Check,
+  Eye,
+  EyeOff,
   Lock,
   Mail,
   MapPin,
@@ -27,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { completeSignup } from "@/server/users";
+import { signupUser } from "@/server/users";
 import type { Governorate } from "../../../generated/prisma";
 
 // value doubles as the Governorate enum value in the DB.
@@ -47,11 +49,37 @@ const specialities = [
   { value: "soins", label: "Soins", icon: Sparkles },
 ];
 
+// Client-side mirror of the server zod schema — validated per field on blur.
+const validators: Record<string, (v: string) => string | null> = {
+  salon_name: (v) => (v.trim() ? null : "Le nom du salon est requis."),
+  manager_name: (v) =>
+    /^[\p{L}\s'-]+$/u.test(v.trim())
+      ? null
+      : "Le nom ne doit contenir que des lettres.",
+  city: (v) => (v ? null : "Choisissez votre ville."),
+  phone: (v) =>
+    /^\d{8}$/.test(v.trim()) ? null : "Le numéro doit contenir 8 chiffres.",
+  email: (v) =>
+    /^\S+@\S+\.\S+$/.test(v.trim()) ? null : "Adresse e-mail invalide.",
+  password: (v) =>
+    v.length >= 8
+      ? null
+      : "Le mot de passe doit contenir au moins 8 caractères.",
+};
+
 export default function InscriptionBarbierPage() {
   const router = useRouter();
-  const { signUp } = useSignUp();
+  const { signIn } = useSignIn();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<
+    Record<string, string | null>
+  >({});
+
+  function validateField(name: string, value: string) {
+    setFieldErrors((cur) => ({ ...cur, [name]: validators[name]!(value) }));
+  }
   const [selectedSpecialities, setSelectedSpecialities] = useState<string[]>(
     [],
   );
@@ -67,39 +95,45 @@ export default function InscriptionBarbierPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setSubmitting(true);
     const form = new FormData(e.target as HTMLFormElement);
     const field = (name: string) => (form.get(name) as string) ?? "";
+    const errors = Object.fromEntries(
+      Object.entries(validators).map(([name, check]) => [
+        name,
+        check(field(name)),
+      ]),
+    );
+    setFieldErrors(errors);
+    if (Object.values(errors).some(Boolean)) return;
+    setSubmitting(true);
     try {
-      await signUp.reset();
-      const { error } = await signUp.password({
-        emailAddress: field("email"),
-        password: field("password"),
-      });
-      if (error) {
-        console.error("signUp.password error:", error);
-        setError(error.message ?? "Échec de la création du compte.");
-        return;
-      }
-      if (signUp.status !== "complete") {
-        console.error("Unhandled sign-up status:", signUp.status);
-        setError(`Inscription incomplète (${signUp.status}). Réessayez.`);
-        return;
-      }
-      const { error: finalizeError } = await signUp.finalize();
-      if (finalizeError) {
-        setError(finalizeError.message ?? "Inscription incomplète. Réessayez.");
-        return;
-      }
-      const { error: dbError } = await completeSignup({
+      // Account creation happens fully server-side (Clerk + DB together).
+      const { error: signupError } = await signupUser({
         role: "barbier",
         name: field("manager_name"),
         phone: field("phone"),
+        email: field("email"),
+        password: field("password"),
         businessName: field("salon_name"),
         governorate: field("city") as Governorate,
       });
-      if (dbError) {
-        setError(dbError);
+      if (signupError) {
+        setError(signupError);
+        return;
+      }
+      // Then a normal sign-in to open the session.
+      await signIn.reset();
+      const { error } = await signIn.password({
+        emailAddress: field("email"),
+        password: field("password"),
+      });
+      if (error || signIn.status !== "complete") {
+        setError("Compte créé — connectez-vous depuis la page de connexion.");
+        return;
+      }
+      const { error: finalizeError } = await signIn.finalize();
+      if (finalizeError) {
+        setError("Compte créé — connectez-vous depuis la page de connexion.");
         return;
       }
       router.push("/dashbord_barber");
@@ -155,7 +189,7 @@ export default function InscriptionBarbierPage() {
 
         {/* Registration Form Card */}
         <div className="glass-card p-stack-lg focus-within:border-primary/40 rounded-xl shadow-lg transition-colors">
-          <form className="space-y-gutter" onSubmit={handleSubmit}>
+          <form className="space-y-gutter" onSubmit={handleSubmit} noValidate>
             {/* Salon Identity Group */}
             <div className="space-y-stack-md">
               <Label className="mb-1 block">Identité du Salon</Label>
@@ -166,9 +200,16 @@ export default function InscriptionBarbierPage() {
                   placeholder="Nom du salon"
                   required
                   type="text"
+                  aria-invalid={!!fieldErrors.salon_name}
+                  onBlur={(e) => validateField("salon_name", e.target.value)}
                   className="h-auto rounded-lg py-3 pl-11"
                 />
               </div>
+              {fieldErrors.salon_name && (
+                <p className="font-label-sm text-sm text-red-400" role="alert">
+                  {fieldErrors.salon_name}
+                </p>
+              )}
               <div className="gold-glow relative">
                 <User className="text-on-surface-variant pointer-events-none absolute top-1/2 left-3 size-[20px] -translate-y-1/2" />
                 <Input
@@ -176,9 +217,16 @@ export default function InscriptionBarbierPage() {
                   placeholder="Nom du responsable"
                   required
                   type="text"
+                  aria-invalid={!!fieldErrors.manager_name}
+                  onBlur={(e) => validateField("manager_name", e.target.value)}
                   className="h-auto rounded-lg py-3 pl-11"
                 />
               </div>
+              {fieldErrors.manager_name && (
+                <p className="font-label-sm text-sm text-red-400" role="alert">
+                  {fieldErrors.manager_name}
+                </p>
+              )}
             </div>
 
             {/* Contact & Location Group */}
@@ -186,7 +234,11 @@ export default function InscriptionBarbierPage() {
               <Label className="mb-1 block">Localisation &amp; Contact</Label>
               <div className="gold-glow relative">
                 <MapPin className="text-on-surface-variant pointer-events-none absolute top-1/2 left-3 z-10 size-[20px] -translate-y-1/2" />
-                <Select name="city" required>
+                <Select
+                  name="city"
+                  required
+                  onValueChange={(v) => validateField("city", String(v))}
+                >
                   <SelectTrigger className="h-auto w-full rounded-lg py-3 pl-11">
                     <SelectValue placeholder="Ville (Tunisie)" />
                   </SelectTrigger>
@@ -199,6 +251,11 @@ export default function InscriptionBarbierPage() {
                   </SelectContent>
                 </Select>
               </div>
+              {fieldErrors.city && (
+                <p className="font-label-sm text-sm text-red-400" role="alert">
+                  {fieldErrors.city}
+                </p>
+              )}
               <div className="gold-glow relative">
                 <Phone className="text-on-surface-variant pointer-events-none absolute top-1/2 left-3 size-[20px] -translate-y-1/2" />
                 <Input
@@ -206,9 +263,16 @@ export default function InscriptionBarbierPage() {
                   placeholder="Numéro de téléphone"
                   required
                   type="tel"
+                  aria-invalid={!!fieldErrors.phone}
+                  onBlur={(e) => validateField("phone", e.target.value)}
                   className="h-auto rounded-lg py-3 pl-11"
                 />
               </div>
+              {fieldErrors.phone && (
+                <p className="font-label-sm text-sm text-red-400" role="alert">
+                  {fieldErrors.phone}
+                </p>
+              )}
               <div className="gold-glow relative">
                 <Mail className="text-on-surface-variant pointer-events-none absolute top-1/2 left-3 size-[20px] -translate-y-1/2" />
                 <Input
@@ -217,9 +281,16 @@ export default function InscriptionBarbierPage() {
                   required
                   type="email"
                   autoComplete="email"
+                  aria-invalid={!!fieldErrors.email}
+                  onBlur={(e) => validateField("email", e.target.value)}
                   className="h-auto rounded-lg py-3 pl-11"
                 />
               </div>
+              {fieldErrors.email && (
+                <p className="font-label-sm text-sm text-red-400" role="alert">
+                  {fieldErrors.email}
+                </p>
+              )}
             </div>
 
             {/* Specialities Selection */}
@@ -258,12 +329,34 @@ export default function InscriptionBarbierPage() {
                   name="password"
                   placeholder="Mot de passe"
                   required
-                  minLength={8}
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
-                  className="h-auto rounded-lg py-3 pl-11"
+                  aria-invalid={!!fieldErrors.password}
+                  onBlur={(e) => validateField("password", e.target.value)}
+                  className="h-auto rounded-lg py-3 pr-10 pl-11"
                 />
+                <button
+                  className="text-on-surface-variant hover:text-primary absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
+                  type="button"
+                  aria-label={
+                    showPassword
+                      ? "Masquer le mot de passe"
+                      : "Afficher le mot de passe"
+                  }
+                  onClick={() => setShowPassword((v) => !v)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="size-4" />
+                  ) : (
+                    <Eye className="size-4" />
+                  )}
+                </button>
               </div>
+              {fieldErrors.password && (
+                <p className="font-label-sm text-sm text-red-400" role="alert">
+                  {fieldErrors.password}
+                </p>
+              )}
             </div>
 
             {error && (

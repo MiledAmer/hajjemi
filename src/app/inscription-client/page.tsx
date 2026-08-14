@@ -3,55 +3,82 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useSignUp } from "@clerk/nextjs";
-import { Lock, Mail, Phone, User } from "lucide-react";
+import { useSignIn } from "@clerk/nextjs";
+import { Eye, EyeOff, Lock, Mail, Phone, User } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { completeSignup } from "@/server/users";
+import { signupUser } from "@/server/users";
+
+// Client-side mirror of the server zod schema — validated per field on blur.
+const validators: Record<string, (v: string) => string | null> = {
+  fullname: (v) =>
+    /^[\p{L}\s'-]+$/u.test(v.trim())
+      ? null
+      : "Le nom ne doit contenir que des lettres.",
+  phone: (v) =>
+    /^\d{8}$/.test(v.trim()) ? null : "Le numéro doit contenir 8 chiffres.",
+  email: (v) =>
+    /^\S+@\S+\.\S+$/.test(v.trim()) ? null : "Adresse e-mail invalide.",
+  password: (v) =>
+    v.length >= 8
+      ? null
+      : "Le mot de passe doit contenir au moins 8 caractères.",
+};
 
 export default function InscriptionClientPage() {
   const router = useRouter();
-  const { signUp } = useSignUp();
+  const { signIn } = useSignIn();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<
+    Record<string, string | null>
+  >({});
+
+  function validateField(name: string, value: string) {
+    setFieldErrors((cur) => ({ ...cur, [name]: validators[name]!(value) }));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    setSubmitting(true);
     const form = new FormData(e.target as HTMLFormElement);
     const field = (name: string) => (form.get(name) as string) ?? "";
+    const errors = Object.fromEntries(
+      Object.entries(validators).map(([name, check]) => [name, check(field(name))]),
+    );
+    setFieldErrors(errors);
+    if (Object.values(errors).some(Boolean)) return;
+    setSubmitting(true);
     try {
-      await signUp.reset();
-      const { error } = await signUp.password({
-        emailAddress: field("email"),
-        password: field("password"),
-      });
-      if (error) {
-        console.error("signUp.password error:", error);
-        setError(error.message ?? "Échec de la création du compte.");
-        return;
-      }
-      if (signUp.status !== "complete") {
-        console.error("Unhandled sign-up status:", signUp.status);
-        setError(`Inscription incomplète (${signUp.status}). Réessayez.`);
-        return;
-      }
-      const { error: finalizeError } = await signUp.finalize();
-      if (finalizeError) {
-        setError(finalizeError.message ?? "Inscription incomplète. Réessayez.");
-        return;
-      }
-      const { error: dbError } = await completeSignup({
+      // Account creation happens fully server-side (Clerk + DB together).
+      const { error: signupError } = await signupUser({
         role: "client",
         name: field("fullname"),
         phone: field("phone"),
+        email: field("email"),
+        password: field("password"),
       });
-      if (dbError) {
-        setError(dbError);
+      if (signupError) {
+        setError(signupError);
+        return;
+      }
+      // Then a normal sign-in to open the session.
+      await signIn.reset();
+      const { error } = await signIn.password({
+        emailAddress: field("email"),
+        password: field("password"),
+      });
+      if (error || signIn.status !== "complete") {
+        setError("Compte créé — connectez-vous depuis la page de connexion.");
+        return;
+      }
+      const { error: finalizeError } = await signIn.finalize();
+      if (finalizeError) {
+        setError("Compte créé — connectez-vous depuis la page de connexion.");
         return;
       }
       router.push("/search");
@@ -100,7 +127,7 @@ export default function InscriptionClientPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="px-0">
-            <form className="space-y-gutter" onSubmit={handleSubmit}>
+            <form className="space-y-gutter" onSubmit={handleSubmit} noValidate>
               {/* Full Name */}
               <div className="space-y-stack-sm">
                 <Label htmlFor="fullname">Nom complet</Label>
@@ -112,9 +139,16 @@ export default function InscriptionClientPage() {
                     placeholder="Ahmed Ben Salem"
                     required
                     type="text"
+                    aria-invalid={!!fieldErrors.fullname}
+                    onBlur={(e) => validateField("fullname", e.target.value)}
                     className="h-auto rounded-lg py-3 pl-10"
                   />
                 </div>
+                {fieldErrors.fullname && (
+                  <p className="font-label-sm text-sm text-red-400" role="alert">
+                    {fieldErrors.fullname}
+                  </p>
+                )}
               </div>
 
               {/* Phone Number (Tunisia Context) */}
@@ -125,13 +159,19 @@ export default function InscriptionClientPage() {
                   <Input
                     id="phone"
                     name="phone"
-                    pattern="[0-9]{8}"
                     placeholder="22 123 456"
                     required
                     type="tel"
+                    aria-invalid={!!fieldErrors.phone}
+                    onBlur={(e) => validateField("phone", e.target.value)}
                     className="h-auto rounded-lg py-3 pl-10"
                   />
                 </div>
+                {fieldErrors.phone && (
+                  <p className="font-label-sm text-sm text-red-400" role="alert">
+                    {fieldErrors.phone}
+                  </p>
+                )}
               </div>
 
               {/* Email */}
@@ -146,9 +186,16 @@ export default function InscriptionClientPage() {
                     required
                     type="email"
                     autoComplete="email"
+                    aria-invalid={!!fieldErrors.email}
+                    onBlur={(e) => validateField("email", e.target.value)}
                     className="h-auto rounded-lg py-3 pl-10"
                   />
                 </div>
+                {fieldErrors.email && (
+                  <p className="font-label-sm text-sm text-red-400" role="alert">
+                    {fieldErrors.email}
+                  </p>
+                )}
               </div>
 
               {/* Password */}
@@ -161,12 +208,34 @@ export default function InscriptionClientPage() {
                     name="password"
                     placeholder="••••••••"
                     required
-                    minLength={8}
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
-                    className="h-auto rounded-lg py-3 pl-10"
+                    aria-invalid={!!fieldErrors.password}
+                    onBlur={(e) => validateField("password", e.target.value)}
+                    className="h-auto rounded-lg py-3 pr-10 pl-10"
                   />
+                  <button
+                    className="text-outline hover:text-primary absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
+                    type="button"
+                    aria-label={
+                      showPassword
+                        ? "Masquer le mot de passe"
+                        : "Afficher le mot de passe"
+                    }
+                    onClick={() => setShowPassword((v) => !v)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="size-4" />
+                    ) : (
+                      <Eye className="size-4" />
+                    )}
+                  </button>
                 </div>
+                {fieldErrors.password && (
+                  <p className="font-label-sm text-sm text-red-400" role="alert">
+                    {fieldErrors.password}
+                  </p>
+                )}
               </div>
 
               {error && (
@@ -174,25 +243,6 @@ export default function InscriptionClientPage() {
                   {error}
                 </p>
               )}
-
-              {/* Terms and Conditions */}
-              <p className="font-label-sm text-label-sm text-on-surface-variant px-4 text-center leading-relaxed">
-                En créant un compte, vous acceptez nos{" "}
-                <a
-                  className="text-primary transition-all hover:underline"
-                  href="#"
-                >
-                  Conditions d&apos;utilisation
-                </a>{" "}
-                et notre{" "}
-                <a
-                  className="text-primary transition-all hover:underline"
-                  href="#"
-                >
-                  Politique de confidentialité
-                </a>
-                .
-              </p>
 
               {/* Action Button */}
               <Button
