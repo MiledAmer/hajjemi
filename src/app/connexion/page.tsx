@@ -12,6 +12,24 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getSessionRole } from "@/server/users";
 
+// Clerk errors come back in English; map the ones a login can hit to French.
+function frClerkError(error: unknown): string {
+  const code = (error as { code?: string } | null)?.code;
+  switch (code) {
+    case "form_identifier_not_found":
+      return "Aucun compte ne correspond à cet e-mail.";
+    case "form_password_incorrect":
+    case "form_param_format_invalid":
+      return "E-mail ou mot de passe incorrect.";
+    case "form_identifier_exists":
+      return "Cette adresse e-mail est déjà utilisée.";
+    case "too_many_requests":
+      return "Trop de tentatives. Réessayez dans un instant.";
+    default:
+      return "E-mail ou mot de passe incorrect.";
+  }
+}
+
 export default function ConnexionPage() {
   const router = useRouter();
   const { signIn } = useSignIn();
@@ -31,9 +49,103 @@ export default function ConnexionPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [emailError, setEmailError] = useState<string | null>(null);
+
+  // Same email check as the signup pages: validated on blur.
+  function validateEmail(value: string) {
+    setEmailError(
+      /^\S+@\S+\.\S+$/.test(value.trim()) ? null : "Adresse e-mail invalide.",
+    );
+  }
+
+  // Password-reset flow (Clerk resetPasswordEmailCode): null = login form,
+  // "email" = ask for the address, "code" = enter code + new password.
+  const [resetStep, setResetStep] = useState<null | "email" | "code">(null);
+  const [resetCode, setResetCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [resetNotice, setResetNotice] = useState<string | null>(null);
+
+  async function sendResetCode(e: React.FormEvent) {
+    e.preventDefault();
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setEmailError("Adresse e-mail invalide.");
+      return;
+    }
+    setError(null);
+    setResetNotice(null);
+    setPending(true);
+    try {
+      await signIn.reset();
+      const { error: createError } = await signIn.create({ identifier: email });
+      if (createError) {
+        setError(frClerkError(createError));
+        return;
+      }
+      const { error: sendError } = await signIn.resetPasswordEmailCode.sendCode();
+      if (sendError) {
+        setError(frClerkError(sendError));
+        return;
+      }
+      setResetStep("code");
+      setResetNotice("Un code a été envoyé à votre adresse e-mail.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  async function submitNewPassword(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setResetNotice(null);
+    setPending(true);
+    signingIn.current = true;
+    try {
+      const { error: verifyError } =
+        await signIn.resetPasswordEmailCode.verifyCode({ code: resetCode });
+      if (verifyError) {
+        setError(frClerkError(verifyError));
+        return;
+      }
+      const { error: submitError } =
+        await signIn.resetPasswordEmailCode.submitPassword({
+          password: newPassword,
+        });
+      if (submitError) {
+        setError(frClerkError(submitError));
+        return;
+      }
+      const { error: finalizeError } = await signIn.finalize();
+      if (finalizeError) {
+        setError(frClerkError(finalizeError));
+        return;
+      }
+      const actualRole = await getSessionRole();
+      router.push(actualRole === "barbier" ? "/dashbord_barber" : "/search");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  function openReset() {
+    setError(null);
+    setResetNotice(null);
+    setResetCode("");
+    setNewPassword("");
+    setResetStep("email");
+  }
+
+  function backToLogin() {
+    setError(null);
+    setResetNotice(null);
+    setResetStep(null);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+      setEmailError("Adresse e-mail invalide.");
+      return;
+    }
     setError(null);
     setPending(true);
     signingIn.current = true;
@@ -46,7 +158,7 @@ export default function ConnexionPage() {
       });
       if (error) {
         console.error("signIn.password error:", error);
-        setError(error.message ?? "Email ou mot de passe incorrect.");
+        setError(frClerkError(error));
         return;
       }
       if (signIn.status !== "complete") {
@@ -57,7 +169,7 @@ export default function ConnexionPage() {
       const { error: finalizeError } = await signIn.finalize();
       if (finalizeError) {
         console.error("signIn.finalize error:", finalizeError);
-        setError(finalizeError.message ?? "Connexion incomplète. Réessayez.");
+        setError(frClerkError(finalizeError));
         return;
       }
       // Real role comes from Clerk publicMetadata (server-side). If it
@@ -118,10 +230,14 @@ export default function ConnexionPage() {
         <Card className="p-stack-lg shadow-lg">
           <CardHeader className="px-0">
             <CardTitle className="font-headline-md text-headline-md text-on-surface">
-              Connexion
+              {resetStep === null
+                ? "Connexion"
+                : "Réinitialiser le mot de passe"}
             </CardTitle>
           </CardHeader>
           <CardContent className="px-0">
+            {resetStep === null ? (
+              <>
             <div className="bg-muted mb-stack-lg grid w-full grid-cols-2 rounded-lg p-[3px]">
               {(["client", "barbier"] as const).map((r) => (
                 <button
@@ -139,7 +255,7 @@ export default function ConnexionPage() {
               ))}
             </div>
 
-            <form className="space-y-gutter" onSubmit={handleSubmit}>
+            <form className="space-y-gutter" onSubmit={handleSubmit} noValidate>
               {/* Email Field */}
               <div className="space-y-stack-sm">
                 <Label htmlFor="email">Adresse e-mail</Label>
@@ -150,24 +266,32 @@ export default function ConnexionPage() {
                     placeholder="vous@exemple.com"
                     type="email"
                     autoComplete="email"
+                    aria-invalid={!!emailError}
                     className="h-auto rounded-lg py-3 pl-10"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
+                    onBlur={(e) => validateEmail(e.target.value)}
                     required
                   />
                 </div>
+                {emailError && (
+                  <p className="font-label-sm text-sm text-red-400" role="alert">
+                    {emailError}
+                  </p>
+                )}
               </div>
 
               {/* Password Field */}
               <div className="space-y-stack-sm">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Mot de passe</Label>
-                  <a
+                  <button
+                    type="button"
+                    onClick={openReset}
                     className="font-label-sm text-label-sm text-primary transition-opacity hover:opacity-80"
-                    href="#"
                   >
                     Mot de passe oublié ?
-                  </a>
+                  </button>
                 </div>
                 <div className="gold-glow relative">
                   <Lock className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
@@ -215,6 +339,131 @@ export default function ConnexionPage() {
                 {pending ? "Veuillez patienter..." : "Se connecter"}
               </Button>
             </form>
+              </>
+            ) : (
+              <form
+                className="space-y-gutter"
+                onSubmit={resetStep === "email" ? sendResetCode : submitNewPassword}
+                noValidate
+              >
+                {/* Email (step 1) */}
+                <div className="space-y-stack-sm">
+                  <Label htmlFor="reset-email">Adresse e-mail</Label>
+                  <div className="gold-glow relative">
+                    <Mail className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                    <Input
+                      id="reset-email"
+                      placeholder="vous@exemple.com"
+                      type="email"
+                      autoComplete="email"
+                      aria-invalid={!!emailError}
+                      className="h-auto rounded-lg py-3 pl-10"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onBlur={(e) => validateEmail(e.target.value)}
+                      disabled={resetStep === "code"}
+                      required
+                    />
+                  </div>
+                  {emailError && resetStep === "email" && (
+                    <p
+                      className="font-label-sm text-sm text-red-400"
+                      role="alert"
+                    >
+                      {emailError}
+                    </p>
+                  )}
+                </div>
+
+                {resetStep === "code" && (
+                  <>
+                    {/* Verification code */}
+                    <div className="space-y-stack-sm">
+                      <Label htmlFor="reset-code">Code de vérification</Label>
+                      <div className="gold-glow relative">
+                        <Input
+                          id="reset-code"
+                          placeholder="123456"
+                          inputMode="numeric"
+                          className="h-auto rounded-lg py-3"
+                          value={resetCode}
+                          onChange={(e) => setResetCode(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {/* New password */}
+                    <div className="space-y-stack-sm">
+                      <Label htmlFor="new-password">Nouveau mot de passe</Label>
+                      <div className="gold-glow relative">
+                        <Lock className="text-outline pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                        <Input
+                          id="new-password"
+                          placeholder="••••••••"
+                          type={showPassword ? "text" : "password"}
+                          autoComplete="new-password"
+                          className="h-auto rounded-lg py-3 pr-10 pl-10"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          minLength={8}
+                          required
+                        />
+                        <button
+                          className="text-outline hover:text-primary absolute top-1/2 right-3 -translate-y-1/2 transition-colors"
+                          type="button"
+                          aria-label={
+                            showPassword
+                              ? "Masquer le mot de passe"
+                              : "Afficher le mot de passe"
+                          }
+                          onClick={() => setShowPassword((v) => !v)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="size-4" />
+                          ) : (
+                            <Eye className="size-4" />
+                          )}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {resetNotice && (
+                  <p
+                    className="font-body-md text-sm text-green-400"
+                    role="status"
+                  >
+                    {resetNotice}
+                  </p>
+                )}
+                {error && (
+                  <p className="font-body-md text-sm text-red-400" role="alert">
+                    {error}
+                  </p>
+                )}
+
+                <Button
+                  className="mt-base font-headline-md text-headline-md h-auto w-full rounded-lg py-4"
+                  type="submit"
+                  disabled={pending}
+                >
+                  {pending
+                    ? "Veuillez patienter..."
+                    : resetStep === "email"
+                      ? "Envoyer le code"
+                      : "Réinitialiser"}
+                </Button>
+                <button
+                  type="button"
+                  onClick={backToLogin}
+                  className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary w-full text-center transition-colors"
+                >
+                  Retour à la connexion
+                </button>
+              </form>
+            )}
           </CardContent>
         </Card>
 
