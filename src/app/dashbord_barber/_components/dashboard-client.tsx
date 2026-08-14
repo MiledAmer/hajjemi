@@ -9,8 +9,8 @@ import {
   Clock,
   LayoutDashboard,
   LogOut,
+  Mail,
   Phone,
-  Share2,
   User,
 } from "lucide-react";
 
@@ -20,16 +20,22 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { dashboard as dashboardContent, useLang } from "@/lib/tounsi";
 import { updateAppointment } from "@/server/appointments";
-import { setWeeklyHours } from "@/server/barber-availability";
+import { setDailyHours } from "@/server/barber-availability";
 import { updateBarberProfile } from "@/server/barber-profiles";
 import { uploadImage } from "@/server/uploads";
+import { updateBarberContact } from "@/server/users";
 import type {
   Appointment,
   BarberAvailability,
   BarberProfile,
   User as DbUser,
 } from "../../../../generated/prisma";
-import { EditProfileDialog } from "./edit-profile-dialog";
+import {
+  DAY_KEYS,
+  type DayHours,
+  type DayKey,
+  EditProfileDialog,
+} from "./edit-profile-dialog";
 
 const BARBER_AVATAR =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuAdrTXJGg8DazrU0p10zIpPYOPEaelASF8XNHGnzqCJrMws5gmTWuP4crJC3MJbz6CQ6y7rwO2LUzW4-l-X8Wkjr9kQ9lzIxNBpUx_iBgvBcGKv1cr4HPz2KXQ7cAau5NA5OV95ius9ruL7Pmo_GL-N54LY5NYrh7nDtkATP2XfiTF3vIyU3Dg-8K6p6lxFOQ8kP6P7TgsfWlklVaXKoXpHDfIWaWAVyTlWkszYSN-koPLGJ40ZVIfWdPMCaPeJ3c3cqqCCoUfVV04D";
@@ -95,7 +101,30 @@ function formatMinutes(minutes: number) {
   return `${h}:${m}`;
 }
 
-const WEEKDAYS_RANGE_RE = /^\d{2}:\d{2} - \d{2}:\d{2}$/;
+function hhmmToMinutes(s: string) {
+  const [h, m] = s.split(":").map(Number);
+  return (h ?? 0) * 60 + (m ?? 0);
+}
+
+// Availability rows (one per open day) → the 7-day map the editor and hours
+// card render from; days with no row are closed (day off).
+function buildDays(availability: BarberAvailability[]): Record<DayKey, DayHours> {
+  return Object.fromEntries(
+    DAY_KEYS.map((k) => {
+      const row = availability.find((a) => a.dayOfWeek === k);
+      return [
+        k,
+        row
+          ? {
+              open: true,
+              start: formatMinutes(row.startMinute),
+              end: formatMinutes(row.endMinute),
+            }
+          : { open: false, start: "09:00", end: "17:00" },
+      ];
+    }),
+  ) as Record<DayKey, DayHours>;
+}
 
 export function DashboardClient({
   profile,
@@ -160,18 +189,13 @@ export function DashboardClient({
     return url;
   }
 
-  const mondayRow = availability.find((a) => a.dayOfWeek === "MONDAY");
-  const sundayRow = availability.find((a) => a.dayOfWeek === "SUNDAY");
-  const [optimisticHours, applyHoursPatch] = useOptimistic(
-    {
-      weekdaysHours: mondayRow
-        ? `${formatMinutes(mondayRow.startMinute)} - ${formatMinutes(mondayRow.endMinute)}`
-        : "09:00 - 19:00",
-      sundayHours: sundayRow
-        ? `${formatMinutes(sundayRow.startMinute)} - ${formatMinutes(sundayRow.endMinute)}`
-        : t.closed,
-    },
-    (state, patch: { weekdaysHours: string; sundayHours: string }) => patch,
+  const [optimisticContact, applyContact] = useOptimistic(
+    { phone: profile.user.phone ?? "", email: profile.user.email ?? "" },
+    (_state, patch: { phone: string; email: string }) => patch,
+  );
+  const [optimisticDays, applyDays] = useOptimistic(
+    buildDays(availability),
+    (_state, patch: Record<DayKey, DayHours>) => patch,
   );
 
   const pendingRequests = useMemo(
@@ -236,9 +260,10 @@ export function DashboardClient({
   function saveProfile(updated: {
     name: string;
     bio: string;
-    weekdaysHours: string;
-    sundayHours: string;
     avatarUrl: string;
+    phone: string;
+    email: string;
+    days: Record<DayKey, DayHours>;
   }) {
     startTransition(async () => {
       applyProfilePatch({
@@ -246,25 +271,26 @@ export function DashboardClient({
         bio: updated.bio,
         avatarUrl: updated.avatarUrl,
       });
-      applyHoursPatch({
-        weekdaysHours: updated.weekdaysHours,
-        sundayHours: updated.sundayHours,
-      });
+      applyContact({ phone: updated.phone, email: updated.email });
+      applyDays(updated.days);
       await updateBarberProfile(profile.id, {
         businessName: updated.name,
         bio: updated.bio,
         avatarUrl: updated.avatarUrl,
       });
-      // ponytail: a "Fermé"/free-text Sunday value is treated as closed
-      // rather than validated — only an exact "HH:MM - HH:MM" range persists.
-      if (WEEKDAYS_RANGE_RE.test(updated.weekdaysHours)) {
-        await setWeeklyHours(profile.id, {
-          weekdaysRange: updated.weekdaysHours,
-          sundayRange: WEEKDAYS_RANGE_RE.test(updated.sundayHours)
-            ? updated.sundayHours
-            : null,
-        });
-      }
+      await updateBarberContact({
+        phone: updated.phone,
+        email: updated.email,
+      });
+      await setDailyHours(
+        profile.id,
+        DAY_KEYS.map((k) => ({
+          day: k,
+          open: updated.days[k].open,
+          startMinute: hhmmToMinutes(updated.days[k].start),
+          endMinute: hhmmToMinutes(updated.days[k].end),
+        })),
+      );
       router.refresh();
     });
   }
@@ -570,31 +596,16 @@ export function DashboardClient({
                   {optimisticProfile.bio ?? t.bio}
                 </p>
                 <div className="gap-gutter mt-stack-lg flex justify-center">
-                  <Button
-                    aria-label={t.callAria}
-                    variant="secondary"
-                    size="icon"
-                    className="bg-surface-variant text-primary size-11 rounded-full"
-                  >
-                    <Phone className="size-5" />
-                  </Button>
-                  <Button
-                    aria-label={t.shareAria}
-                    variant="secondary"
-                    size="icon"
-                    className="bg-surface-variant text-primary size-11 rounded-full"
-                  >
-                    <Share2 className="size-5" />
-                  </Button>
                   <EditProfileDialog
                     lang={lang}
                     profile={{
                       name: optimisticProfile.businessName,
                       bio: optimisticProfile.bio ?? t.bio,
-                      weekdaysHours: optimisticHours.weekdaysHours,
-                      sundayHours: optimisticHours.sundayHours,
                       avatarUrl:
                         optimisticProfile.avatarUrl ?? BARBER_PROFILE_PORTRAIT,
+                      phone: optimisticContact.phone,
+                      email: optimisticContact.email,
+                      days: optimisticDays,
                     }}
                     onSave={saveProfile}
                     onUploadAvatar={uploadAvatarFile}
@@ -605,24 +616,57 @@ export function DashboardClient({
 
             <Card className="bg-surface-container p-gutter mb-gutter gap-stack-md rounded-xl">
               <h3 className="font-headline-md text-headline-md flex items-center gap-2">
+                <User className="text-primary size-5" />
+                {t.contact}
+              </h3>
+              <div className="space-y-2">
+                <div className="text-body-md flex items-center justify-between gap-2">
+                  <span className="text-on-surface-variant flex items-center gap-2">
+                    <Phone className="size-4" />
+                    {t.phoneLabel}
+                  </span>
+                  <span className="font-bold">
+                    {optimisticContact.phone || "—"}
+                  </span>
+                </div>
+                <div className="text-body-md flex items-center justify-between gap-2">
+                  <span className="text-on-surface-variant flex items-center gap-2">
+                    <Mail className="size-4" />
+                    {t.emailLabel}
+                  </span>
+                  <span className="truncate font-bold">
+                    {optimisticContact.email || "—"}
+                  </span>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="bg-surface-container p-gutter mb-gutter gap-stack-md rounded-xl">
+              <h3 className="font-headline-md text-headline-md flex items-center gap-2">
                 <Clock className="text-primary size-5" />
                 {t.hours}
               </h3>
               <div className="space-y-2">
-                <div className="text-body-md flex justify-between">
-                  <span className="text-on-surface-variant">
-                    {t.weekdays}
-                  </span>
-                  <span className="font-bold">
-                    {optimisticHours.weekdaysHours}
-                  </span>
-                </div>
-                <div className="text-body-md flex justify-between">
-                  <span className="text-on-surface-variant">{t.sunday}</span>
-                  <span className="text-destructive">
-                    {optimisticHours.sundayHours}
-                  </span>
-                </div>
+                {DAY_KEYS.map((k, i) => {
+                  const d = optimisticDays[k];
+                  return (
+                    <div
+                      key={k}
+                      className="text-body-md flex justify-between"
+                    >
+                      <span className="text-on-surface-variant">
+                        {t.days[i]}
+                      </span>
+                      {d.open ? (
+                        <span className="font-bold">
+                          {d.start} - {d.end}
+                        </span>
+                      ) : (
+                        <span className="text-destructive">{t.closed}</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </Card>
 

@@ -126,6 +126,64 @@ export async function getSessionBarberProfile() {
   });
 }
 
+const contactSchema = z.object({
+  phone: z
+    .string()
+    .trim()
+    .regex(/^\d{8}$/, "Le numéro doit contenir 8 chiffres."),
+  email: z.string().trim().email("Adresse e-mail invalide."),
+});
+
+/**
+ * Updates the signed-in user's phone + email. The email is the Clerk login
+ * identifier, so a change is mirrored to Clerk (new address added as verified
+ * primary, old ones removed) to keep auth working.
+ */
+export async function updateBarberContact(
+  input: z.infer<typeof contactSchema>,
+) {
+  const parsed = contactSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
+  }
+  const { phone, email } = parsed.data;
+  const user = await getSessionUser();
+  if (!user?.clerkId) return { error: "Non connecté." };
+
+  const phoneTaken = await db.user.findFirst({
+    where: { phone, id: { not: user.id } },
+  });
+  if (phoneTaken) return { error: "Ce numéro de téléphone est déjà utilisé." };
+
+  if (email !== user.email) {
+    const client = await clerkClient();
+    try {
+      await client.emailAddresses.createEmailAddress({
+        userId: user.clerkId,
+        emailAddress: email,
+        verified: true,
+        primary: true,
+      });
+      const clerkUser = await client.users.getUser(user.clerkId);
+      await Promise.all(
+        clerkUser.emailAddresses
+          .filter((e) => e.emailAddress !== email)
+          .map((e) => client.emailAddresses.deleteEmailAddress(e.id)),
+      );
+    } catch (e) {
+      console.error("updateBarberContact clerk error:", e);
+      const code = (e as { errors?: { code?: string }[] }).errors?.[0]?.code;
+      if (code === "form_identifier_exists") {
+        return { error: "Cette adresse e-mail est déjà utilisée." };
+      }
+      return { error: "Échec de la mise à jour de l'e-mail." };
+    }
+  }
+
+  await db.user.update({ where: { id: user.id }, data: { phone, email } });
+  return { error: null };
+}
+
 export async function getUser(id: string) {
   return db.user.findUnique({ where: { id } });
 }

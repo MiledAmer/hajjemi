@@ -19,12 +19,26 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { type Lang, editProfileDialog as strings } from "@/lib/tounsi";
 
+// Monday-first so the editor reads like a calendar week.
+export const DAY_KEYS = [
+  "MONDAY",
+  "TUESDAY",
+  "WEDNESDAY",
+  "THURSDAY",
+  "FRIDAY",
+  "SATURDAY",
+  "SUNDAY",
+] as const;
+export type DayKey = (typeof DAY_KEYS)[number];
+export type DayHours = { open: boolean; start: string; end: string };
+
 export type EditableProfile = {
   name: string;
   bio: string;
-  weekdaysHours: string;
-  sundayHours: string;
   avatarUrl: string;
+  phone: string;
+  email: string;
+  days: Record<DayKey, DayHours>;
 };
 
 export function EditProfileDialog({
@@ -42,22 +56,34 @@ export function EditProfileDialog({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(profile.name);
   const [bio, setBio] = useState(profile.bio);
-  const [weekdaysHours, setWeekdaysHours] = useState(profile.weekdaysHours);
-  const [sundayHours, setSundayHours] = useState(profile.sundayHours);
+  const [phone, setPhone] = useState(profile.phone);
+  const [email, setEmail] = useState(profile.email);
+  const [days, setDays] = useState<Record<DayKey, DayHours>>(profile.days);
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
     if (next) {
       setName(profile.name);
       setBio(profile.bio);
-      setWeekdaysHours(profile.weekdaysHours);
-      setSundayHours(profile.sundayHours);
+      setPhone(profile.phone);
+      setEmail(profile.email);
+      setDays(profile.days);
       setAvatarUrl(profile.avatarUrl);
+      setPhoneError(null);
+      setEmailError(null);
     }
   };
+
+  const setDay = (key: DayKey, patch: Partial<DayHours>) =>
+    setDays((cur) => ({ ...cur, [key]: { ...cur[key], ...patch } }));
+
+  const validPhone = (v: string) => /^\d{8}$/.test(v.trim());
+  const validEmail = (v: string) => /^\S+@\S+\.\S+$/.test(v.trim());
 
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -75,9 +101,18 @@ export function EditProfileDialog({
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
-    if (!name || !bio || !weekdaysHours || !sundayHours || isUploadingAvatar)
-      return;
-    onSave({ name, bio, weekdaysHours, sundayHours, avatarUrl });
+    const phoneBad = !validPhone(phone);
+    const emailBad = !validEmail(email);
+    setPhoneError(phoneBad ? "Le numéro doit contenir 8 chiffres." : null);
+    setEmailError(emailBad ? "Adresse e-mail invalide." : null);
+    if (!name || !bio || phoneBad || emailBad || isUploadingAvatar) return;
+    // An open day with end <= start is invalid — skip save so the server
+    // doesn't reject it silently.
+    const badRange = DAY_KEYS.some(
+      (k) => days[k].open && days[k].end <= days[k].start,
+    );
+    if (badRange) return;
+    onSave({ name, bio, avatarUrl, phone, email, days });
     setOpen(false);
   };
 
@@ -95,7 +130,7 @@ export function EditProfileDialog({
           </Button>
         }
       />
-      <DialogContent className="bg-surface-container border-none">
+      <DialogContent className="bg-surface-container max-h-[90vh] overflow-y-auto border-none">
         <form onSubmit={handleSubmit} className="gap-stack-md flex flex-col">
           <DialogHeader>
             <DialogTitle className="font-headline-md text-headline-md">
@@ -148,23 +183,90 @@ export function EditProfileDialog({
             />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="edit-profile-weekdays">{s.weekdays}</Label>
+            <Label htmlFor="edit-profile-phone">{s.phone}</Label>
             <Input
-              id="edit-profile-weekdays"
-              value={weekdaysHours}
-              onChange={(event) => setWeekdaysHours(event.target.value)}
-              placeholder="09:00 - 19:00"
+              id="edit-profile-phone"
+              type="tel"
+              value={phone}
+              aria-invalid={!!phoneError}
+              onChange={(event) => setPhone(event.target.value)}
+              onBlur={(e) =>
+                setPhoneError(
+                  validPhone(e.target.value)
+                    ? null
+                    : "Le numéro doit contenir 8 chiffres.",
+                )
+              }
+              placeholder="22 123 456"
               required
             />
+            {phoneError && (
+              <p className="text-destructive font-label-sm">{phoneError}</p>
+            )}
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="edit-profile-sunday">{s.sunday}</Label>
+            <Label htmlFor="edit-profile-email">{s.email}</Label>
             <Input
-              id="edit-profile-sunday"
-              value={sundayHours}
-              onChange={(event) => setSundayHours(event.target.value)}
+              id="edit-profile-email"
+              type="email"
+              autoComplete="email"
+              value={email}
+              aria-invalid={!!emailError}
+              onChange={(event) => setEmail(event.target.value)}
+              onBlur={(e) =>
+                setEmailError(
+                  validEmail(e.target.value) ? null : "Adresse e-mail invalide.",
+                )
+              }
+              placeholder="vous@exemple.com"
               required
             />
+            {emailError && (
+              <p className="text-destructive font-label-sm">{emailError}</p>
+            )}
+          </div>
+
+          {/* Per-day hours: any day can be a day off, any times. */}
+          <div className="flex flex-col gap-2">
+            <Label>{s.hoursTitle}</Label>
+            <div className="flex flex-col gap-2">
+              {DAY_KEYS.map((key, i) => {
+                const d = days[key];
+                return (
+                  <div key={key} className="flex items-center gap-2">
+                    <span className="w-20 shrink-0 text-sm">{s.days[i]}</span>
+                    <input
+                      type="checkbox"
+                      aria-label={s.open}
+                      checked={d.open}
+                      onChange={(e) => setDay(key, { open: e.target.checked })}
+                      className="accent-primary size-4"
+                    />
+                    {d.open ? (
+                      <div className="flex flex-1 items-center gap-1">
+                        <Input
+                          type="time"
+                          value={d.start}
+                          onChange={(e) => setDay(key, { start: e.target.value })}
+                          className="flex-1"
+                        />
+                        <span className="text-on-surface-variant">-</span>
+                        <Input
+                          type="time"
+                          value={d.end}
+                          onChange={(e) => setDay(key, { end: e.target.value })}
+                          className="flex-1"
+                        />
+                      </div>
+                    ) : (
+                      <span className="text-on-surface-variant flex-1 text-sm">
+                        {s.closed}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <DialogFooter>
