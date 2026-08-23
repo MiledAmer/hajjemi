@@ -1,7 +1,9 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 const isPublicRoute = createRouteMatcher([
   "/",
+  "/plans(.*)",
   "/search(.*)",
   "/barber(.*)",
   "/connexion(.*)",
@@ -15,7 +17,7 @@ export default clerkMiddleware(async (auth, req) => {
     if (!userId) {
       const url = new URL("/connexion", req.url);
       url.searchParams.set("redirect_url", req.url);
-      return Response.redirect(url);
+      return NextResponse.redirect(url);
     }
   }
 });
