@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { db } from "@/server/db";
 import { deleteObject, keyFromUrl } from "@/server/r2";
+import { GOVERNORATE_LABELS } from "@/lib/governorate";
 import { Governorate, PlanType } from "../../generated/prisma";
 
 const createBarberProfileSchema = z.object({
@@ -39,11 +40,25 @@ export async function listBarberProfiles() {
   return db.barberProfile.findMany({ orderBy: { createdAt: "desc" } });
 }
 
+// Accent- and case-insensitive so "beja"/"BÉJA" both match "Béja".
+const normalize = (s: string) =>
+  s
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLowerCase();
+
 export async function searchBarberProfiles(input: {
   query?: string;
   governorate?: Governorate;
 }) {
   const query = input.query?.trim();
+  // Governorates whose label matches the typed text — lets clients search by
+  // city name even though it's stored as an enum, not free text.
+  const matchedGovs = query
+    ? (Object.entries(GOVERNORATE_LABELS) as [Governorate, string][])
+        .filter(([, label]) => normalize(label).includes(normalize(query)))
+        .map(([g]) => g)
+    : [];
   return db.barberProfile.findMany({
     where: {
       governorate: input.governorate,
@@ -52,6 +67,9 @@ export async function searchBarberProfiles(input: {
             OR: [
               { businessName: { contains: query, mode: "insensitive" } },
               { address: { contains: query, mode: "insensitive" } },
+              ...(matchedGovs.length
+                ? [{ governorate: { in: matchedGovs } }]
+                : []),
             ],
           }
         : {}),
