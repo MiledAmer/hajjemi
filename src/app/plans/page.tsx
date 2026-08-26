@@ -233,7 +233,7 @@ export default function PlansPage() {
                       </p>
                     </div>
                     <div className="bg-surface-container-high flex h-8 w-8 items-center justify-center rounded-full">
-                      <Calendar className="text-primary size-[18px]" />
+                      <Calendar className="text-primary size-4.5" />
                     </div>
                   </div>
                   {/* Mock UI Content */}
@@ -470,7 +470,7 @@ export default function PlansPage() {
 
               {/* Salon Plan — "diamond" tier */}
               <Card className="relative gap-0 overflow-hidden rounded-2xl border-2 border-cyan-300/40 bg-[#10151a] p-8 shadow-[0_8px_32px_rgba(103,232,249,0.12)] transition-all hover:border-cyan-300/70 hover:shadow-[0_8px_40px_rgba(103,232,249,0.25)]">
-                <div className="font-label-sm text-label-sm absolute top-0 right-0 rounded-bl-lg bg-gradient-to-r from-cyan-200 to-cyan-400 px-6 py-1.5 font-bold tracking-wider text-[#0b1014] uppercase">
+                <div className="font-label-sm text-label-sm absolute top-0 right-0 rounded-bl-lg bg-linear-to-r from-cyan-200 to-cyan-400 px-6 py-1.5 font-bold tracking-wider text-[#0b1014] uppercase">
                   Diamond
                 </div>
                 <div className="pointer-events-none absolute top-0 left-0 h-40 w-40 rounded-full bg-cyan-300/15 blur-3xl" />
@@ -482,11 +482,11 @@ export default function PlansPage() {
                     <Gem className="size-3.5" />
                     Équipe
                   </Badge>
-                  <h3 className="font-headline-md text-headline-md mb-2 bg-gradient-to-r from-cyan-100 via-white to-cyan-300 bg-clip-text font-bold text-transparent">
+                  <h3 className="font-headline-md text-headline-md mb-2 bg-linear-to-r from-cyan-100 via-white to-cyan-300 bg-clip-text font-bold text-transparent">
                     Salon
                   </h3>
                   <div className="flex items-baseline gap-1">
-                    <span className="font-display-lg text-display-lg bg-gradient-to-r from-cyan-200 to-cyan-400 bg-clip-text font-bold text-transparent">
+                    <span className="font-display-lg text-display-lg bg-linear-to-r from-cyan-200 to-cyan-400 bg-clip-text font-bold text-transparent">
                       55
                     </span>
                     <span className="font-label-md text-label-md text-on-surface-variant">
@@ -519,7 +519,7 @@ export default function PlansPage() {
                   <input type="hidden" name="plan" value="SALON" />
                   <Button
                     type="submit"
-                    className="font-label-md text-label-md h-auto w-full gap-2 rounded-lg bg-gradient-to-r from-cyan-200 to-cyan-400 px-6 py-4 font-bold text-[#0b1014] shadow-[0_4px_16px_rgba(103,232,249,0.3)] hover:opacity-90"
+                    className="font-label-md text-label-md h-auto w-full gap-2 rounded-lg bg-linear-to-r from-cyan-200 to-cyan-400 px-6 py-4 font-bold text-[#0b1014] shadow-[0_4px_16px_rgba(103,232,249,0.3)] hover:opacity-90"
                   >
                     Choisir Salon
                     <Gem className="size-5" />
