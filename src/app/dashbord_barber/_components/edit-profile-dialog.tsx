@@ -67,6 +67,7 @@ export function EditProfileDialog({
   const [nameError, setNameError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [hoursError, setHoursError] = useState<string | null>(null);
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
@@ -80,11 +81,14 @@ export function EditProfileDialog({
       setNameError(null);
       setPhoneError(null);
       setEmailError(null);
+      setHoursError(null);
     }
   };
 
-  const setDay = (key: DayKey, patch: Partial<DayHours>) =>
+  const setDay = (key: DayKey, patch: Partial<DayHours>) => {
+    setHoursError(null);
     setDays((cur) => ({ ...cur, [key]: { ...cur[key], ...patch } }));
+  };
 
   const validPhone = (v: string) => /^\d{8}$/.test(v.trim());
   const validEmail = isValidEmail;
@@ -112,10 +116,15 @@ export function EditProfileDialog({
     setPhoneError(phoneBad ? "Le numéro doit contenir 8 chiffres." : null);
     setEmailError(emailBad ? "Adresse e-mail invalide." : null);
     if (nameBad || !bio || phoneBad || emailBad || isUploadingAvatar) return;
-    // An open day with end <= start is invalid — skip save so the server
-    // doesn't reject it silently.
+    // An open day with end <= start is invalid — flag it so the barber sees why
+    // the save was blocked instead of it failing silently.
     const badRange = DAY_KEYS.some(
       (k) => days[k].open && days[k].end <= days[k].start,
+    );
+    setHoursError(
+      badRange
+        ? "L'heure de fin doit être postérieure à l'heure de début."
+        : null,
     );
     if (badRange) return;
     onSave({ name, bio, avatarUrl, phone, email, days });
@@ -278,6 +287,9 @@ export function EditProfileDialog({
                 );
               })}
             </div>
+            {hoursError && (
+              <p className="text-destructive font-label-sm">{hoursError}</p>
+            )}
           </div>
 
           <DialogFooter>
