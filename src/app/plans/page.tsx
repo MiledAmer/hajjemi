@@ -6,7 +6,6 @@ import {
   CheckCircle2,
   Gem,
   LayoutDashboard,
-  Menu,
   User,
   Users,
   X,
@@ -119,13 +118,6 @@ export default function PlansPage() {
               Rejoindre
             </Link>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-primary md:hidden"
-          >
-            <Menu className="size-5" />
-          </Button>
         </div>
       </header>
 
