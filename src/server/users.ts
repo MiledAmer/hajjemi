@@ -3,25 +3,23 @@
 import { clerkClient, currentUser } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { db } from "@/server/db";
+import { emailSchema } from "@/lib/email";
+import { personNameSchema, salonNameSchema } from "@/lib/name";
 import { Governorate, Role } from "../../generated/prisma";
 
 const signupSchema = z.object({
   role: z.enum(["client", "barbier"]),
-  name: z
-    .string()
-    .trim()
-    .min(1, "Le nom est requis.")
-    .regex(/^[\p{L}\s'-]+$/u, "Le nom ne doit contenir que des lettres."),
+  name: personNameSchema,
   phone: z
     .string()
     .trim()
     .regex(/^\d{8}$/, "Le numéro doit contenir 8 chiffres."),
-  email: z.string().trim().email("Adresse e-mail invalide."),
+  email: emailSchema,
   password: z
     .string()
     .min(8, "Le mot de passe doit contenir au moins 8 caractères."),
   // Barber-only fields
-  businessName: z.string().trim().min(1).optional(),
+  businessName: salonNameSchema.optional(),
   governorate: z.nativeEnum(Governorate).optional(),
 });
 
@@ -131,7 +129,7 @@ const contactSchema = z.object({
     .string()
     .trim()
     .regex(/^\d{8}$/, "Le numéro doit contenir 8 chiffres."),
-  email: z.string().trim().email("Adresse e-mail invalide."),
+  email: emailSchema,
 });
 
 /**

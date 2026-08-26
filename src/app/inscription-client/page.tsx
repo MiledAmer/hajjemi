@@ -11,17 +11,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { signupUser } from "@/server/users";
+import { isValidEmail } from "@/lib/email";
+import { personNameError } from "@/lib/name";
 
 // Client-side mirror of the server zod schema — validated per field on blur.
 const validators: Record<string, (v: string) => string | null> = {
-  fullname: (v) =>
-    /^[\p{L}\s'-]+$/u.test(v.trim())
-      ? null
-      : "Le nom ne doit contenir que des lettres.",
+  fullname: personNameError,
   phone: (v) =>
     /^\d{8}$/.test(v.trim()) ? null : "Le numéro doit contenir 8 chiffres.",
-  email: (v) =>
-    /^\S+@\S+\.\S+$/.test(v.trim()) ? null : "Adresse e-mail invalide.",
+  email: (v) => (isValidEmail(v) ? null : "Adresse e-mail invalide."),
   password: (v) =>
     v.length >= 8
       ? null
@@ -159,7 +157,7 @@ export default function InscriptionClientPage() {
                   <Input
                     id="phone"
                     name="phone"
-                    placeholder="22 123 456"
+                    placeholder="22123456"
                     required
                     type="tel"
                     aria-invalid={!!fieldErrors.phone}

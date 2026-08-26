@@ -18,6 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { type Lang, editProfileDialog as strings } from "@/lib/tounsi";
+import { isValidEmail } from "@/lib/email";
+import { personNameError } from "@/lib/name";
 
 // Monday-first so the editor reads like a calendar week.
 export const DAY_KEYS = [
@@ -62,6 +64,7 @@ export function EditProfileDialog({
   const [avatarUrl, setAvatarUrl] = useState(profile.avatarUrl);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [avatarError, setAvatarError] = useState<string | null>(null);
+  const [nameError, setNameError] = useState<string | null>(null);
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
 
@@ -74,6 +77,7 @@ export function EditProfileDialog({
       setEmail(profile.email);
       setDays(profile.days);
       setAvatarUrl(profile.avatarUrl);
+      setNameError(null);
       setPhoneError(null);
       setEmailError(null);
     }
@@ -83,7 +87,7 @@ export function EditProfileDialog({
     setDays((cur) => ({ ...cur, [key]: { ...cur[key], ...patch } }));
 
   const validPhone = (v: string) => /^\d{8}$/.test(v.trim());
-  const validEmail = (v: string) => /^\S+@\S+\.\S+$/.test(v.trim());
+  const validEmail = isValidEmail;
 
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -101,11 +105,13 @@ export function EditProfileDialog({
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+    const nameBad = personNameError(name);
     const phoneBad = !validPhone(phone);
     const emailBad = !validEmail(email);
+    setNameError(nameBad);
     setPhoneError(phoneBad ? "Le numéro doit contenir 8 chiffres." : null);
     setEmailError(emailBad ? "Adresse e-mail invalide." : null);
-    if (!name || !bio || phoneBad || emailBad || isUploadingAvatar) return;
+    if (nameBad || !bio || phoneBad || emailBad || isUploadingAvatar) return;
     // An open day with end <= start is invalid — skip save so the server
     // doesn't reject it silently.
     const badRange = DAY_KEYS.some(
@@ -169,9 +175,14 @@ export function EditProfileDialog({
             <Input
               id="edit-profile-name"
               value={name}
+              aria-invalid={!!nameError}
               onChange={(event) => setName(event.target.value)}
+              onBlur={(e) => setNameError(personNameError(e.target.value))}
               required
             />
+            {nameError && (
+              <p className="text-destructive font-label-sm">{nameError}</p>
+            )}
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="edit-profile-bio">{s.bio}</Label>
@@ -197,7 +208,7 @@ export function EditProfileDialog({
                     : "Le numéro doit contenir 8 chiffres.",
                 )
               }
-              placeholder="22 123 456"
+              placeholder="22123456"
               required
             />
             {phoneError && (

@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getSessionRole } from "@/server/users";
+import { isValidEmail } from "@/lib/email";
 
 // Clerk errors come back in English; map the ones a login can hit to French.
 function frClerkError(error: unknown): string {
@@ -54,7 +55,7 @@ export default function ConnexionPage() {
   // Same email check as the signup pages: validated on blur.
   function validateEmail(value: string) {
     setEmailError(
-      /^\S+@\S+\.\S+$/.test(value.trim()) ? null : "Adresse e-mail invalide.",
+      isValidEmail(value) ? null : "Adresse e-mail invalide.",
     );
   }
 
@@ -67,7 +68,7 @@ export default function ConnexionPage() {
 
   async function sendResetCode(e: React.FormEvent) {
     e.preventDefault();
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+    if (!isValidEmail(email)) {
       setEmailError("Adresse e-mail invalide.");
       return;
     }
@@ -142,7 +143,7 @@ export default function ConnexionPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) {
+    if (!isValidEmail(email)) {
       setEmailError("Adresse e-mail invalide.");
       return;
     }
