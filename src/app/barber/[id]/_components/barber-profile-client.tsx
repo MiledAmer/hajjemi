@@ -746,7 +746,10 @@ export function BarberProfileClient({
               </span>
               <span className="font-label-sm text-label-sm text-on-surface">
                 {startAtInput
-                  ? new Date(startAtInput).toLocaleString("fr-FR")
+                  ? new Date(startAtInput).toLocaleString("fr-FR", {
+                      dateStyle: "full",
+                      timeStyle: "short",
+                    })
                   : ""}
               </span>
             </div>
@@ -780,7 +783,10 @@ export function BarberProfileClient({
             <DialogDescription>
               {bookingResult?.status === "success" &&
                 t.sentDescription(
-                  new Date(bookingResult.startAt).toLocaleString("fr-FR"),
+                  new Date(bookingResult.startAt).toLocaleString("fr-FR", {
+                    dateStyle: "full",
+                    timeStyle: "short",
+                  }),
                 )}
             </DialogDescription>
           </DialogHeader>
