@@ -11,10 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
-  Home,
   MapPin,
-  Search,
-  User,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,11 +27,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { GOVERNORATE_LABELS } from "@/lib/governorate";
-import {
-  barberProfile as content,
-  search as searchContent,
-  useLang,
-} from "@/lib/tounsi";
+import { barberProfile as content, useLang } from "@/lib/tounsi";
 import { cn } from "@/lib/utils";
 import { createAppointment } from "@/server/appointments";
 import type {
@@ -658,9 +651,9 @@ export function BarberProfileClient({
         </section>
       </main>
 
-      {/* Floating Action Button Area (Mobile Book Now, above the nav bar) */}
+      {/* Floating Action Button Area (Mobile Book Now) */}
       <div
-        className={`glass-panel px-container-margin py-stack-md fixed left-0 z-40 w-full shadow-[0_-8px_16px_rgba(0,0,0,0.4)] md:hidden ${isSignedIn ? "bottom-20" : "pb-safe bottom-0"}`}
+        className="glass-panel px-container-margin py-stack-md pb-safe fixed bottom-0 left-0 z-40 w-full shadow-[0_-8px_16px_rgba(0,0,0,0.4)] md:hidden"
       >
         <Button
           disabled={
@@ -673,50 +666,6 @@ export function BarberProfileClient({
           <ArrowRight className="size-5" />
         </Button>
       </div>
-
-      {/* BottomNavBar (Mobile Only, signed-in clients) */}
-      {isSignedIn && (
-        <nav className="bg-surface-container text-primary fixed bottom-0 z-50 w-full rounded-t-xl shadow-[0_-4px_12px_rgba(0,0,0,0.5)] md:hidden">
-          <div className="pb-safe flex h-20 items-center justify-around px-4">
-            <Link
-              href="/"
-              className="text-on-surface-variant hover:text-primary flex w-16 flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
-            >
-              <Home className="mb-1 size-5" />
-              <span className="font-label-sm text-label-sm">
-                {searchContent[lang].navHome}
-              </span>
-            </Link>
-            <Link
-              href="/search"
-              className="bg-primary-container text-on-primary-container hover:text-primary flex min-w-16 flex-col items-center justify-center rounded-full px-4 py-1 transition-all duration-200 active:translate-y-0.5"
-            >
-              <Search className="mb-1 size-5" />
-              <span className="font-label-sm text-label-sm">
-                {searchContent[lang].navExplore}
-              </span>
-            </Link>
-            <Link
-              href="/appointments"
-              className="text-on-surface-variant hover:text-primary flex w-16 flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
-            >
-              <CalendarIcon className="mb-1 size-5" />
-              <span className="font-label-sm text-label-sm">
-                {searchContent[lang].navBookings}
-              </span>
-            </Link>
-            <Link
-              href="/account"
-              className="text-on-surface-variant hover:text-primary flex w-16 flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
-            >
-              <User className="mb-1 size-5" />
-              <span className="font-label-sm text-label-sm">
-                {searchContent[lang].navAccount}
-              </span>
-            </Link>
-          </div>
-        </nav>
-      )}
 
       {/* Desktop Floating Action Area (Hidden on mobile) */}
       <div className="fixed right-8 bottom-8 z-50 hidden md:block">

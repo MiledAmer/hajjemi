@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Calendar, Home, LogOut, Phone, Search, User } from "lucide-react";
+import { Calendar, Home, LogOut, Phone, Search, User } from "lucide-react";
 import { useClerk } from "@clerk/nextjs";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,14 +22,6 @@ export function AccountClient({ user }: { user: DbUser }) {
       <header className="bg-surface sticky top-0 z-40 w-full shadow-sm">
         <div className="px-container-margin mx-auto flex h-16 w-full max-w-7xl items-center justify-between">
           <div className="flex items-center gap-4">
-            <button
-              type="button"
-              aria-label={t.backAria}
-              onClick={() => router.back()}
-              className="text-primary hover:bg-surface-container-high rounded-full p-2 transition-colors active:scale-95"
-            >
-              <ArrowLeft className="size-5" />
-            </button>
             <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold tracking-tighter">
               {t.title}
             </h1>
