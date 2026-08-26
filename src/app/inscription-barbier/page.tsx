@@ -35,14 +35,32 @@ import { personNameError, salonNameError } from "@/lib/name";
 import type { Governorate } from "../../../generated/prisma";
 
 // value doubles as the Governorate enum value in the DB.
+// All 24 Tunisian governorates — values match the Governorate enum in the DB.
 const cities = [
   { value: "TUNIS", label: "Tunis" },
   { value: "ARIANA", label: "Ariana" },
-  { value: "SOUSSE", label: "Sousse" },
-  { value: "SFAX", label: "Sfax" },
-  { value: "MONASTIR", label: "Monastir" },
-  { value: "BIZERTE", label: "Bizerte" },
+  { value: "BEN_AROUS", label: "Ben Arous" },
+  { value: "MANOUBA", label: "Manouba" },
   { value: "NABEUL", label: "Nabeul" },
+  { value: "ZAGHOUAN", label: "Zaghouan" },
+  { value: "BIZERTE", label: "Bizerte" },
+  { value: "BEJA", label: "Béja" },
+  { value: "JENDOUBA", label: "Jendouba" },
+  { value: "KEF", label: "Le Kef" },
+  { value: "SILIANA", label: "Siliana" },
+  { value: "SOUSSE", label: "Sousse" },
+  { value: "MONASTIR", label: "Monastir" },
+  { value: "MAHDIA", label: "Mahdia" },
+  { value: "SFAX", label: "Sfax" },
+  { value: "KAIROUAN", label: "Kairouan" },
+  { value: "KASSERINE", label: "Kasserine" },
+  { value: "SIDI_BOUZID", label: "Sidi Bouzid" },
+  { value: "GABES", label: "Gabès" },
+  { value: "MEDENINE", label: "Médenine" },
+  { value: "TATAOUINE", label: "Tataouine" },
+  { value: "GAFSA", label: "Gafsa" },
+  { value: "TOZEUR", label: "Tozeur" },
+  { value: "KEBILI", label: "Kébili" },
 ] as const;
 
 const specialities = [
@@ -240,7 +258,7 @@ export default function InscriptionBarbierPage() {
                   <SelectTrigger className="h-auto w-full rounded-lg py-3 pl-11">
                     <SelectValue placeholder="Ville (Tunisie)" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-64 overflow-y-auto">
                     {cities.map((city) => (
                       <SelectItem key={city.value} value={city.value}>
                         {city.label}
