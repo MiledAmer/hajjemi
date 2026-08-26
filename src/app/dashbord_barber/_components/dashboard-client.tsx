@@ -400,7 +400,9 @@ export function DashboardClient({
                       {formatTime(appointment.startAt)}
                     </p>
                     <p className="text-on-surface-variant font-label-sm">
-                      {t.confirmed}
+                      {appointment.status === "PENDING"
+                        ? t.toConfirm
+                        : t.confirmed}
                     </p>
                   </div>
                 </Card>
