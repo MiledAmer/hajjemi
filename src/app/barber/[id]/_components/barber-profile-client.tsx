@@ -273,6 +273,12 @@ export function BarberProfileClient({
   const open = isOpenNow(availability);
   const heroImage = profile.coverImageUrl ?? profile.avatarUrl;
 
+  // Slots the client just requested this session — folded into the availability
+  // calc so they disappear immediately (server already holds PENDING slots, but
+  // the appointments prop isn't refetched until reload).
+  const [justBooked, setJustBooked] = useState<
+    Pick<Appointment, "startAt" | "endAt" | "status">[]
+  >([]);
   const [startAtInput, setStartAtInput] = useState(nowForInput);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -290,7 +296,7 @@ export function BarberProfileClient({
   const daySlots = startAtInput
     ? getAvailableSlots(
         availability,
-        appointments,
+        [...appointments, ...justBooked],
         new Date(startAtInput),
         APPOINTMENT_DURATION_MINUTES,
       )
@@ -337,6 +343,7 @@ export function BarberProfileClient({
           setBookingResult({ status: "limit" });
           return;
         }
+        setJustBooked((cur) => [...cur, { startAt, endAt, status: "PENDING" }]);
         setBookingResult({ status: "success", startAt: startAtInput });
       } catch {
         setBookingResult({ status: "error" });
