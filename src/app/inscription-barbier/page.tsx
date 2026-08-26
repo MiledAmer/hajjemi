@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useSignIn } from "@clerk/nextjs";
 import {
-  Check,
   Eye,
   EyeOff,
   Lock,
@@ -13,8 +12,6 @@ import {
   MapPin,
   Phone,
   RefreshCw,
-  Scissors,
-  Sparkles,
   Store,
   User,
 } from "lucide-react";
@@ -63,12 +60,6 @@ const cities = [
   { value: "KEBILI", label: "Kébili" },
 ] as const;
 
-const specialities = [
-  { value: "barbe", label: "Barbe", icon: User },
-  { value: "coupe", label: "Coupe", icon: Scissors },
-  { value: "soins", label: "Soins", icon: Sparkles },
-];
-
 // Client-side mirror of the server zod schema — validated per field on blur.
 const validators: Record<string, (v: string) => string | null> = {
   salon_name: salonNameError,
@@ -96,18 +87,6 @@ export default function InscriptionBarbierPage() {
   function validateField(name: string, value: string) {
     setFieldErrors((cur) => ({ ...cur, [name]: validators[name]!(value) }));
   }
-  const [selectedSpecialities, setSelectedSpecialities] = useState<string[]>(
-    [],
-  );
-
-  function toggleSpeciality(value: string) {
-    setSelectedSpecialities((current) =>
-      current.includes(value)
-        ? current.filter((s) => s !== value)
-        : [...current, value],
-    );
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -307,33 +286,6 @@ export default function InscriptionBarbierPage() {
                   {fieldErrors.email}
                 </p>
               )}
-            </div>
-
-            {/* Specialities Selection */}
-            <div className="space-y-stack-md">
-              <Label className="mb-1 block">Spécialités</Label>
-              <div className="flex flex-wrap gap-2">
-                {specialities.map(({ value, label, icon: Icon }) => {
-                  const active = selectedSpecialities.includes(value);
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => toggleSpeciality(value)}
-                      aria-pressed={active}
-                      className={`text-label-sm font-label-sm flex items-center gap-1.5 rounded-full border px-4 py-2 transition-all ${
-                        active
-                          ? "border-primary bg-primary/20 text-primary"
-                          : "border-surface-variant bg-surface-container-low text-on-surface-variant"
-                      }`}
-                    >
-                      <Icon className="size-3.5" />
-                      {label}
-                      {active && <Check className="size-3.5" />}
-                    </button>
-                  );
-                })}
-              </div>
             </div>
 
             {/* Security Group */}
