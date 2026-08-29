@@ -189,13 +189,6 @@ export default function HomePage() {
             >
               {t.connexion}
             </Link>
-            <span className="text-surface-variant">•</span>
-            <a
-              className="font-label-sm text-label-sm text-on-surface-variant hover:text-primary transition-colors"
-              href="#"
-            >
-              {t.guest}
-            </a>
           </div>
         </div>
       </main>

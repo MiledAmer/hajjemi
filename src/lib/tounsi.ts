@@ -28,7 +28,6 @@ export const home = {
     ctaProSub: "Pour les professionnels",
     trustCount: "+2000 clients",
     trustSub: "réservent déjà via Hajjem",
-    guest: "Explorer en invité",
     ratingSub: "+2000 avis clients",
     howTitle: "Réserver n'a jamais été aussi simple",
     howSub:
@@ -68,7 +67,6 @@ export const home = {
     ctaProSub: "Lel professionnels",
     trustCount: "+2000 client",
     trustSub: "rzerviw  Hajjem",
-    guest: "Estekchef",
     ratingSub: "+2000 avis mta3 clients",
     howTitle: "Rzervi hjjemtek 3ad sahla",
     howSub: "Thlatha khatawet lel hjjama lijeya mte3ek, win ma tkoun fi Tounes.",
