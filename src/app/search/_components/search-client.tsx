@@ -274,13 +274,6 @@ export function SearchClient({
         <nav className="bg-surface-container text-primary fixed bottom-0 z-50 w-full rounded-t-xl shadow-[0_-4px_12px_rgba(0,0,0,0.5)] md:hidden">
           <div className="pb-safe flex h-20 items-center justify-around px-4">
             <Link
-              href="/"
-              className="text-on-surface-variant hover:text-primary flex w-16 flex-col items-center justify-center transition-all duration-200 active:translate-y-0.5"
-            >
-              <Home className="mb-1 size-5" />
-              <span className="font-label-sm text-label-sm">{t.navHome}</span>
-            </Link>
-            <Link
               href="/search"
               className="bg-primary-container text-on-primary-container hover:text-primary flex min-w-16 flex-col items-center justify-center rounded-full px-4 py-1 transition-all duration-200 active:translate-y-0.5"
             >
