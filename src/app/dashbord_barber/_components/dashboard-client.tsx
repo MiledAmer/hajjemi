@@ -43,6 +43,20 @@ const BARBER_AVATAR =
 const BARBER_PROFILE_PORTRAIT =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCJ1PSYFJcFErbgTa0UBXq-bgLu_ZCGgqoc9PWO0dlc367UVNuHC4oFdM5MGt2VIhxXkE2c2rKE2flwFbtaGvQ00mBC9r0OZlYDTSzUnqWyVwehQmYqXQU9jPB6U6s6vmb8owjEzXRbqAv24l_gGulYJ2fxGIsTwtCD7rBPV3U6G4t6u-6nCVTS6jPCGLKE3-90yC7uWOQ24AtjsgkIrPwJ3NbHz3qvycKSWKrszDxSQnaurTy3lQDUUT3VH2iW7BZ4aKNcjP_RaO1v";
 
+// Subscription tier shown under the barber's name, colored to match the
+// matching plan card on /plans (gold Pro, cyan Salon, neutral Free).
+const PLAN_LABEL: Record<BarberProfile["planType"], string> = {
+  BASIC: "Free",
+  PRO: "Pro",
+  SALON: "Salon",
+};
+const PLAN_BADGE: Record<BarberProfile["planType"], string> = {
+  BASIC: "text-on-surface-variant",
+  PRO: "text-primary",
+  SALON:
+    "bg-linear-to-r from-cyan-200 to-cyan-400 bg-clip-text text-transparent",
+};
+
 type ViewId = "dashboard" | "requests" | "agenda" | "profile";
 
 const navItems: { id: ViewId; icon: typeof LayoutDashboard }[] = [
@@ -588,8 +602,10 @@ export function DashboardClient({
                   <h2 className="font-headline-lg text-headline-lg">
                     {optimisticProfile.businessName}
                   </h2>
-                  <p className="text-primary font-label-md tracking-widest uppercase">
-                    {t.masterBarber}
+                  <p
+                    className={`font-label-md tracking-widest uppercase ${PLAN_BADGE[optimisticProfile.planType]}`}
+                  >
+                    {PLAN_LABEL[optimisticProfile.planType]}
                   </p>
                 </div>
               </div>
