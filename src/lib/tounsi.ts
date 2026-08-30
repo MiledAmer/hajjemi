@@ -320,7 +320,7 @@ export const barberProfile = {
     confirmPick: "Valider",
     bookingError: "Échec de la réservation. Réessayez.",
     weeklyLimitError:
-      "Limite de rendez-vous atteinte pour cette semaine.",
+      "Vous avez déjà un rendez-vous en cours. Annulez-le avant d'en réserver un autre.",
     duplicateError:
       "Vous avez déjà un rendez-vous avec ce barbier à cette date et heure.",
     bookingInProgress: "Réservation...",
@@ -358,7 +358,8 @@ export const barberProfile = {
     timeLabel: "Wa9t",
     confirmPick: "Valider",
     bookingError: "Rzervation ma najja7tech. 3awed.",
-    weeklyLimitError: "Wsolt lel limite mta3 rendez-vous hal jom3a.",
+    weeklyLimitError:
+      "3andek déjà rendez-vous mazel. Annuliih 9bal ma trzervi ekher.",
     duplicateError:
       "3andek déjà rendez-vous m3a hal barbier fi nafs el date w el wa9t.",
     bookingInProgress: "Rzervation...",
@@ -406,6 +407,15 @@ export const clientAppointments = {
     notifCancelled: (name: string, when: string) =>
       `${name} a annulé votre rendez-vous du ${when}.`,
     notifClose: "Fermer",
+    cancelBooking: "Annuler",
+    cancelConfirmTitle: "Annuler le rendez-vous ?",
+    cancelConfirmText:
+      "Cette action est définitive. Voulez-vous vraiment annuler ?",
+    cancelKeep: "Garder",
+    cancelConfirm: "Oui, annuler",
+    cancelTooLate:
+      "Annulation impossible : le jour du rendez-vous est atteint ou dépassé.",
+    cancelError: "Échec de l'annulation. Réessayez.",
   },
   tn: {
     switchTo: "FR",
@@ -434,6 +444,14 @@ export const clientAppointments = {
     notifCancelled: (name: string, when: string) =>
       `${name} refodh maw3dek mta3 ${when}.`,
     notifClose: "OK",
+    cancelBooking: "Annuli",
+    cancelConfirmTitle: "T7eb tannuli el rendez-vous ?",
+    cancelConfirmText: "Hedhi 7aja définitive. Sûr t7eb tannuli ?",
+    cancelKeep: "Khalliih",
+    cancelConfirm: "Ey, annuli",
+    cancelTooLate:
+      "Ma tnajemech tannuli : nhar el rendez-vous wsal wala fet.",
+    cancelError: "Annulation ma najja7etch. 3awed.",
   },
 } as const satisfies Record<Lang, unknown>;
 

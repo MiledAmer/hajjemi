@@ -30,8 +30,6 @@ const updateAppointmentSchema = z.object({
 // Max confirmed rdv per client per week — also the cap once any rdv is
 // confirmed (confirmed + pending can't exceed this).
 const WEEKLY_CONFIRMED_LIMIT = 3;
-// A client may pile up more requests while none are confirmed yet.
-const WEEKLY_PENDING_LIMIT = 4;
 
 // Monday 00:00 → next Monday 00:00 of the week containing `date`.
 function weekRange(date: Date) {
@@ -84,15 +82,12 @@ export async function createAppointment(
     },
   });
   if (duplicate) return { duplicate: true };
-  // Up to 4 requests while nothing is confirmed; once a rdv is confirmed the
-  // combined pending + confirmed count is capped at 3.
-  const confirmed = await confirmedCountInWeek(clientId, data.startAt);
-  const active = await countInWeek(clientId, data.startAt, [
-    "PENDING",
-    "CONFIRMED",
-  ]);
-  const limit = confirmed > 0 ? WEEKLY_CONFIRMED_LIMIT : WEEKLY_PENDING_LIMIT;
-  if (active >= limit) return { limitReached: true };
+  // A client may hold only one active (pending or confirmed) reservation at a
+  // time — no new booking while one is still open.
+  const active = await db.appointment.findFirst({
+    where: { clientId, status: { in: ["PENDING", "CONFIRMED"] } },
+  });
+  if (active) return { limitReached: true };
   return db.appointment.create({ data: { ...data, clientId } });
 }
 
@@ -186,4 +181,30 @@ export async function updateAppointment(
 
 export async function deleteAppointment(id: string) {
   return db.appointment.delete({ where: { id } });
+}
+
+// Midnight of `date` in the server's local timezone.
+function startOfDay(date: Date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+// Client-initiated cancellation. Allowed only while the cancellation day is
+// strictly before the appointment day; on or after that day it's refused.
+export async function cancelAppointment(
+  id: string,
+): Promise<{ ok: true } | { ok: false; reason: "not_found" | "too_late" }> {
+  const user = await getSessionUser();
+  if (!user) throw new Error("Not signed in");
+  const appt = await db.appointment.findUnique({ where: { id } });
+  if (appt?.clientId !== user.id) return { ok: false, reason: "not_found" };
+  if (startOfDay(new Date()) >= startOfDay(appt.startAt)) {
+    return { ok: false, reason: "too_late" };
+  }
+  await db.appointment.update({
+    where: { id },
+    data: { status: "CANCELLED", clientSeenAt: new Date() },
+  });
+  return { ok: true };
 }

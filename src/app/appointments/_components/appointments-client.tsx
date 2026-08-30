@@ -17,7 +17,10 @@ import { Button } from "@/components/ui/button";
 import { GOVERNORATE_LABELS } from "@/lib/governorate";
 import { clientAppointments as content, useLang } from "@/lib/tounsi";
 import { cn } from "@/lib/utils";
-import { markAppointmentsSeenByClient } from "@/server/appointments";
+import {
+  cancelAppointment,
+  markAppointmentsSeenByClient,
+} from "@/server/appointments";
 import type {
   Appointment,
   AppointmentStatus,
@@ -59,6 +62,38 @@ export function AppointmentsClient({
   const t = content[lang];
   const [notifOpen, setNotifOpen] = useState(false);
   const [, startTransition] = useTransition();
+  // Appointment awaiting cancel confirmation, and the last cancel error.
+  const [cancelTarget, setCancelTarget] =
+    useState<AppointmentWithBarber | null>(null);
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [cancelling, startCancel] = useTransition();
+
+  // Cancellation is only allowed while the appointment day is still ahead —
+  // mirrors the server rule so the button doesn't show when it would be refused.
+  function canCancel(appointment: AppointmentWithBarber) {
+    if (appointment.status !== "PENDING" && appointment.status !== "CONFIRMED")
+      return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const apptDay = new Date(appointment.startAt);
+    apptDay.setHours(0, 0, 0, 0);
+    return today < apptDay;
+  }
+
+  function confirmCancel() {
+    if (!cancelTarget) return;
+    const id = cancelTarget.id;
+    setCancelError(null);
+    startCancel(async () => {
+      const result = await cancelAppointment(id);
+      if (result.ok) {
+        setCancelTarget(null);
+        router.refresh();
+      } else {
+        setCancelError(result.reason === "too_late" ? t.cancelTooLate : t.cancelError);
+      }
+    });
+  }
 
   const notifications = useMemo(
     () =>
@@ -190,6 +225,37 @@ export function AppointmentsClient({
         </DialogContent>
       </Dialog>
 
+      <Dialog
+        open={cancelTarget !== null}
+        onOpenChange={(open) => !open && setCancelTarget(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{t.cancelConfirmTitle}</DialogTitle>
+          </DialogHeader>
+          <p className="text-on-surface-variant font-body-md">
+            {t.cancelConfirmText}
+          </p>
+          {cancelError && (
+            <p className="text-destructive font-body-md" role="alert">
+              {cancelError}
+            </p>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelTarget(null)}>
+              {t.cancelKeep}
+            </Button>
+            <Button
+              className="bg-destructive text-on-surface"
+              onClick={confirmCancel}
+              disabled={cancelling}
+            >
+              {t.cancelConfirm}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <main className="px-container-margin pt-stack-lg mx-auto w-full max-w-4xl">
         <p className="text-on-surface-variant font-body-md mb-section-gap">
           {t.subtitle}
@@ -242,6 +308,21 @@ export function AppointmentsClient({
                               </span>
                             </div>
                           </div>
+                          {canCancel(appointment) && (
+                            <div className="mt-stack-md flex justify-end">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="text-destructive border-destructive/50 hover:bg-destructive/10"
+                                onClick={() => {
+                                  setCancelError(null);
+                                  setCancelTarget(appointment);
+                                }}
+                              >
+                                {t.cancelBooking}
+                              </Button>
+                            </div>
+                          )}
                         </Card>
                       ))}
                     </div>
