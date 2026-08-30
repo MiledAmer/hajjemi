@@ -205,7 +205,7 @@ export function DashboardClient({
   const agendaAppointments = useMemo(
     () =>
       optimisticAppointments
-        .filter((a) => a.status !== "PENDING")
+        .filter((a) => a.status !== "PENDING" && a.status !== "CANCELLED")
         .sort(
           (a, b) =>
             new Date(b.startAt).getTime() - new Date(a.startAt).getTime(),
