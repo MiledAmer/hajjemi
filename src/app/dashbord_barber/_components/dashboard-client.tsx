@@ -11,6 +11,7 @@ import {
   LogOut,
   Mail,
   Phone,
+  QrCode,
   User,
 } from "lucide-react";
 
@@ -682,6 +683,15 @@ export function DashboardClient({
                 })}
               </div>
             </Card>
+
+            <Button
+              variant="outline"
+              onClick={() => router.push("/dashbord_barber/qr")}
+              className="border-primary text-primary mt-stack-lg h-auto w-full gap-2 rounded-xl py-4 font-bold"
+            >
+              <QrCode className="size-5" />
+              {t.shareQr}
+            </Button>
 
             <Button
               variant="ghost"

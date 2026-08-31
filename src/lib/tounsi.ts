@@ -146,6 +146,7 @@ export const dashboard = {
     phoneLabel: "Téléphone",
     emailLabel: "E-mail",
     logout: "Déconnexion",
+    shareQr: "Partager via QR Code",
     weeklyLimitReached:
       "Impossible de confirmer : ce client a déjà 3 rendez-vous confirmés cette semaine.",
   },
@@ -194,6 +195,7 @@ export const dashboard = {
     phoneLabel: "Téléphone",
     emailLabel: "E-mail",
     logout: "Khrouj",
+    shareQr: "Partager b QR Code",
     weeklyLimitReached:
       "Manajmch nconfirmé : el client 3andou déjà 3 rendez-vous confirmés hal jom3a.",
   },
