@@ -1,5 +1,6 @@
 "use server";
 
+import { clerkClient } from "@clerk/nextjs/server";
 import { z } from "zod";
 import { db } from "@/server/db";
 import { PlanType, SubscriptionStatus } from "../../generated/prisma";
@@ -66,4 +67,17 @@ export async function activateSubscription(barberId: string, plan: PlanType) {
       data: { planType: plan },
     }),
   ]);
+
+  // Mirror onto the barber's Clerk publicMetadata so plan is readable from
+  // the session token (like role). DB stays source of truth; best-effort.
+  const profile = await db.barberProfile.findUnique({
+    where: { id: barberId },
+    select: { user: { select: { clerkId: true } } },
+  });
+  if (profile?.user.clerkId) {
+    const clerk = await clerkClient();
+    await clerk.users
+      .updateUserMetadata(profile.user.clerkId, { publicMetadata: { plan } })
+      .catch((e) => console.error("activateSubscription clerk mirror:", e));
+  }
 }

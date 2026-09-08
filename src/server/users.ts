@@ -5,7 +5,7 @@ import { z } from "zod";
 import { db } from "@/server/db";
 import { emailSchema } from "@/lib/email";
 import { personNameSchema, salonNameSchema } from "@/lib/name";
-import { Governorate, Role } from "../../generated/prisma";
+import { Governorate, Role, type PlanType } from "../../generated/prisma";
 
 const signupSchema = z.object({
   role: z.enum(["client", "barbier"]),
@@ -53,7 +53,12 @@ export async function signupUser(input: z.infer<typeof signupSchema>) {
       password: data.password,
       firstName,
       lastName: rest.join(" ") || undefined,
-      publicMetadata: { role: data.role },
+      // Barbers start on BASIC; mirrored here so plan is readable from the
+      // session token like role. DB (Subscription) stays source of truth.
+      publicMetadata: {
+        role: data.role,
+        ...(data.role === "barbier" ? { plan: "BASIC" } : {}),
+      },
     });
     clerkUserId = clerkUser.id;
   } catch (e) {
@@ -105,6 +110,14 @@ export async function getSessionRole() {
   const user = await currentUser();
   if (!user) return null;
   return user.publicMetadata.role === "barbier" ? "barbier" : "client";
+}
+
+// Plan of the signed-in barber, from publicMetadata ({ "plan": "PRO" }).
+// Read straight off the session token (no DB call); returns null for clients.
+export async function getSessionPlan() {
+  const user = await currentUser();
+  const plan = user?.publicMetadata.plan;
+  return typeof plan === "string" ? (plan as PlanType) : null;
 }
 
 // DB row of the signed-in Clerk user.
