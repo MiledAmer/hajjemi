@@ -37,6 +37,7 @@ export type DayHours = { open: boolean; start: string; end: string };
 export type EditableProfile = {
   name: string;
   bio: string;
+  address: string;
   avatarUrl: string;
   phone: string;
   email: string;
@@ -58,6 +59,7 @@ export function EditProfileDialog({
   const [open, setOpen] = useState(false);
   const [name, setName] = useState(profile.name);
   const [bio, setBio] = useState(profile.bio);
+  const [address, setAddress] = useState(profile.address);
   const [phone, setPhone] = useState(profile.phone);
   const [email, setEmail] = useState(profile.email);
   const [days, setDays] = useState<Record<DayKey, DayHours>>(profile.days);
@@ -74,6 +76,7 @@ export function EditProfileDialog({
     if (next) {
       setName(profile.name);
       setBio(profile.bio);
+      setAddress(profile.address);
       setPhone(profile.phone);
       setEmail(profile.email);
       setDays(profile.days);
@@ -127,7 +130,7 @@ export function EditProfileDialog({
         : null,
     );
     if (badRange) return;
-    onSave({ name, bio, avatarUrl, phone, email, days });
+    onSave({ name, bio, address: address.trim(), avatarUrl, phone, email, days });
     setOpen(false);
   };
 
@@ -200,6 +203,17 @@ export function EditProfileDialog({
               value={bio}
               onChange={(event) => setBio(event.target.value)}
               required
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="edit-profile-address">{s.address}</Label>
+            <Input
+              id="edit-profile-address"
+              value={address}
+              maxLength={200}
+              autoComplete="street-address"
+              onChange={(event) => setAddress(event.target.value)}
+              placeholder={s.addressPlaceholder}
             />
           </div>
           <div className="flex flex-col gap-2">

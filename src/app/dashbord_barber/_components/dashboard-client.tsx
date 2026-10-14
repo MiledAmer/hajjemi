@@ -7,6 +7,7 @@ import {
   Bell,
   Calendar,
   Clock,
+  Home,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -135,7 +136,7 @@ function buildDays(availability: BarberAvailability[]): Record<DayKey, DayHours>
               start: formatMinutes(row.startMinute),
               end: formatMinutes(row.endMinute),
             }
-          : { open: false, start: "09:00", end: "17:00" },
+          : { open: false, start: "09:00", end: "20:00" },
       ];
     }),
   ) as Record<DayKey, DayHours>;
@@ -188,7 +189,9 @@ export function DashboardClient({
     profile,
     (
       state,
-      patch: Partial<Pick<BarberProfile, "businessName" | "bio" | "avatarUrl">>,
+      patch: Partial<
+        Pick<BarberProfile, "businessName" | "bio" | "address" | "avatarUrl">
+      >,
     ) => ({
       ...state,
       ...patch,
@@ -205,8 +208,8 @@ export function DashboardClient({
   }
 
   const [optimisticContact, applyContact] = useOptimistic(
-    { phone: profile.user.phone ?? "", email: profile.user.email ?? "" },
-    (_state, patch: { phone: string; email: string }) => patch,
+    { phone: profile.user.phone ?? "", email: profile.user.email ?? "",address: profile.address ?? "" },
+    (_state, patch: { phone: string; email: string; address: string }) => patch,
   );
   const [optimisticDays, applyDays] = useOptimistic(
     buildDays(availability),
@@ -275,6 +278,7 @@ export function DashboardClient({
   function saveProfile(updated: {
     name: string;
     bio: string;
+    address: string;
     avatarUrl: string;
     phone: string;
     email: string;
@@ -284,13 +288,15 @@ export function DashboardClient({
       applyProfilePatch({
         businessName: updated.name,
         bio: updated.bio,
+        address: updated.address || null,
         avatarUrl: updated.avatarUrl,
       });
-      applyContact({ phone: updated.phone, email: updated.email });
+      applyContact({ phone: updated.phone, email: updated.email,address: updated.address });
       applyDays(updated.days);
       await updateBarberProfile(profile.id, {
         businessName: updated.name,
         bio: updated.bio,
+        address: updated.address,
         avatarUrl: updated.avatarUrl,
       });
       await updateBarberContact({
@@ -524,7 +530,7 @@ export function DashboardClient({
                         return (
                           <div key={booking.id} className="relative">
                             <span
-                              className={`absolute top-4 -left-[26.5px] size-3 rounded-full border-2 ${
+                              className={`absolute top-4 left-[-26.5px] size-3 rounded-full border-2 ${
                                 confirmed
                                   ? "bg-primary border-primary shadow-[0_0_8px_rgba(212,175,55,0.6)]"
                                   : "bg-surface border-outline-variant"
@@ -615,6 +621,7 @@ export function DashboardClient({
                     profile={{
                       name: optimisticProfile.businessName,
                       bio: optimisticProfile.bio ?? t.bio,
+                      address: optimisticProfile.address ?? "",
                       avatarUrl:
                         optimisticProfile.avatarUrl ?? BARBER_PROFILE_PORTRAIT,
                       phone: optimisticContact.phone,
@@ -650,6 +657,15 @@ export function DashboardClient({
                   </span>
                   <span className="truncate font-bold">
                     {optimisticContact.email || "—"}
+                  </span>
+                </div>
+                 <div className="text-body-md flex items-center justify-between gap-2">
+                  <span className="text-on-surface-variant flex items-center gap-2">
+                    <Home className="size-4" />
+                    {t.addressLabel}
+                  </span>
+                  <span className="truncate font-bold">
+                    {optimisticContact.address || "—"}
                   </span>
                 </div>
               </div>

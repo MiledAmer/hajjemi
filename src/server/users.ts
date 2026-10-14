@@ -5,7 +5,12 @@ import { z } from "zod";
 import { db } from "@/server/db";
 import { emailSchema } from "@/lib/email";
 import { personNameSchema, salonNameSchema } from "@/lib/name";
-import { Governorate, Role, type PlanType } from "../../generated/prisma";
+import {
+  DayOfWeek,
+  Governorate,
+  Role,
+  type PlanType,
+} from "../../generated/prisma";
 
 const signupSchema = z.object({
   role: z.enum(["client", "barbier"]),
@@ -21,6 +26,7 @@ const signupSchema = z.object({
   // Barber-only fields
   businessName: salonNameSchema.optional(),
   governorate: z.nativeEnum(Governorate).optional(),
+  address: z.string().trim().max(200).optional(),
 });
 
 /**
@@ -93,6 +99,17 @@ export async function signupUser(input: z.infer<typeof signupSchema>) {
           userId: user.id,
           businessName: data.businessName,
           governorate: data.governorate,
+          address: data.address,
+          // Default hours: Monday closed (no row), every other day 09:00–20:00.
+          availability: {
+            create: Object.values(DayOfWeek)
+              .filter((d) => d !== DayOfWeek.MONDAY)
+              .map((dayOfWeek) => ({
+                dayOfWeek,
+                startMinute: 9 * 60,
+                endMinute: 20 * 60,
+              })),
+          },
         },
       });
     }

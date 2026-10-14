@@ -145,6 +145,7 @@ export const dashboard = {
     contact: "Contact",
     phoneLabel: "Téléphone",
     emailLabel: "E-mail",
+    addressLabel: "Adresse",
     logout: "Déconnexion",
     shareQr: "Partager via QR Code",
     weeklyLimitReached:
@@ -194,6 +195,7 @@ export const dashboard = {
     contact: "Contact",
     phoneLabel: "Téléphone",
     emailLabel: "E-mail",
+    addressLabel: "Adresse",
     logout: "Khrouj",
     shareQr: "Partager b QR Code",
     weeklyLimitReached:
@@ -227,6 +229,8 @@ export const editProfileDialog = {
     changePhotoAria: "Changer la photo de profil",
     name: "Nom",
     bio: "Description",
+    address: "Adresse exacte",
+    addressPlaceholder: "Rue, quartier...",
     phone: "Téléphone",
     email: "E-mail",
     hoursTitle: "Horaires par jour",
@@ -250,6 +254,8 @@ export const editProfileDialog = {
     changePhotoAria: "Badel soura mte3 profil",
     name: "Esm",
     bio: "Description",
+    address: "L'3onwen el da9i9",
+    addressPlaceholder: "Nahj, 7ay...",
     phone: "Téléphone",
     email: "E-mail",
     hoursTitle: "Wa9t el khedma b nhar",

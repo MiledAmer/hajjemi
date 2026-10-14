@@ -80,6 +80,7 @@ export default function InscriptionBarbierPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [cityChosen, setCityChosen] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<
     Record<string, string | null>
   >({});
@@ -111,6 +112,7 @@ export default function InscriptionBarbierPage() {
         password: field("password"),
         businessName: field("salon_name"),
         governorate: field("city") as Governorate,
+        address: field("address").trim() || undefined,
       });
       if (signupError) {
         setError(signupError);
@@ -232,7 +234,10 @@ export default function InscriptionBarbierPage() {
                 <Select
                   name="city"
                   required
-                  onValueChange={(v) => validateField("city", String(v))}
+                  onValueChange={(v) => {
+                    setCityChosen(true);
+                    validateField("city", String(v));
+                  }}
                 >
                   <SelectTrigger className="h-auto w-full rounded-lg py-3 pl-11">
                     <SelectValue placeholder="Ville (Tunisie)" />
@@ -250,6 +255,18 @@ export default function InscriptionBarbierPage() {
                 <p className="font-label-sm text-sm text-red-400" role="alert">
                   {fieldErrors.city}
                 </p>
+              )}
+              {cityChosen && (
+                <div className="gold-glow relative">
+                  <MapPin className="text-on-surface-variant pointer-events-none absolute top-1/2 left-3 size-[20px] -translate-y-1/2" />
+                  <Input
+                    name="address"
+                    placeholder="Adresse exacte (rue, quartier...)"
+                    type="text"
+                    autoComplete="street-address"
+                    className="h-auto rounded-lg py-3 pl-11"
+                  />
+                </div>
               )}
               <div className="gold-glow relative">
                 <Phone className="text-on-surface-variant pointer-events-none absolute top-1/2 left-3 size-[20px] -translate-y-1/2" />
