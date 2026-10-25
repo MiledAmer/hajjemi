@@ -11,30 +11,26 @@ const BRASS = "#d4af37";
 const ON_SURFACE = "#e2e2e4";
 const ON_SURFACE_VARIANT = "#d0c5af";
 
-// Lucide "scissors" glyph on its 24x24 grid, drawn with the canvas so the
-// poster needs no image asset (the app's logo is this icon + the wordmark).
-function drawScissors(
+async function loadLogo() {
+  const img = new Image();
+  img.src = "/logo.svg";
+  await img.decode();
+  return img;
+}
+
+// The brand logo (public/logo.svg) clipped to a rounded square.
+function drawLogo(
   ctx: CanvasRenderingContext2D,
+  logo: HTMLImageElement,
   cx: number,
   cy: number,
   size: number,
-  color: string,
 ) {
   ctx.save();
-  ctx.translate(cx - size / 2, cy - size / 2);
-  ctx.scale(size / 24, size / 24);
-  ctx.strokeStyle = color;
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
-  ctx.lineJoin = "round";
-  for (const d of ["M8.12 8.12 12 12", "M20 4 8.12 15.88", "M14.8 14.8 20 20"]) {
-    ctx.stroke(new Path2D(d));
-  }
-  for (const y of [6, 18]) {
-    ctx.beginPath();
-    ctx.arc(6, y, 3, 0, Math.PI * 2);
-    ctx.stroke();
-  }
+  ctx.beginPath();
+  ctx.roundRect(cx - size / 2, cy - size / 2, size, size, size * 0.2);
+  ctx.clip();
+  ctx.drawImage(logo, cx - size / 2, cy - size / 2, size, size);
   ctx.restore();
 }
 
@@ -80,6 +76,7 @@ export async function renderQrPoster(opts: {
     [400, 700, 800].map((w) => document.fonts.load(`${w} 100px ${family}`)),
   ).catch(() => undefined);
 
+  const logo = await loadLogo();
   const canvas = document.createElement("canvas");
   canvas.width = W;
   canvas.height = H;
@@ -105,13 +102,8 @@ export async function renderQrPoster(opts: {
   roundRect(ctx, 130, 130, W - 260, H - 260, 24);
   ctx.stroke();
 
-  // Brand lockup: scissors badge + wordmark.
-  ctx.strokeStyle = GOLD;
-  ctx.lineWidth = 8;
-  ctx.beginPath();
-  ctx.arc(W / 2, 360, 120, 0, Math.PI * 2);
-  ctx.stroke();
-  drawScissors(ctx, W / 2, 360, 130, GOLD);
+  // Brand lockup: logo + wordmark.
+  drawLogo(ctx, logo, W / 2, 360, 240);
   ctx.fillStyle = GOLD;
   ctx.font = `800 150px ${family}`;
   ctx.letterSpacing = "30px";
@@ -159,19 +151,18 @@ export async function renderQrPoster(opts: {
   // Logo in the center of the QR (~22% of its width — within what "H" repairs).
   const cx = W / 2;
   const cy = cardY + cardSize / 2;
-  const logoR = qrSize * 0.11;
+  const logoSize = qrSize * 0.22;
   ctx.fillStyle = "#ffffff";
   ctx.beginPath();
-  ctx.arc(cx, cy, logoR + 24, 0, Math.PI * 2);
+  ctx.roundRect(
+    cx - logoSize / 2 - 22,
+    cy - logoSize / 2 - 22,
+    logoSize + 44,
+    logoSize + 44,
+    logoSize * 0.2 + 22,
+  );
   ctx.fill();
-  ctx.fillStyle = SURFACE;
-  ctx.beginPath();
-  ctx.arc(cx, cy, logoR, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.strokeStyle = GOLD;
-  ctx.lineWidth = 10;
-  ctx.stroke();
-  drawScissors(ctx, cx, cy, logoR * 1.15, GOLD);
+  drawLogo(ctx, logo, cx, cy, logoSize);
 
   // Barber name + call to action.
   ctx.fillStyle = ON_SURFACE;
