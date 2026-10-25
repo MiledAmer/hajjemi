@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { useSignIn } from "@clerk/nextjs";
 import { Eye, EyeOff, Lock, Mail, Phone, User } from "lucide-react";
 
+import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -105,16 +106,8 @@ export default function InscriptionClientPage() {
       <main className="px-container-margin py-stack-lg z-10 w-full max-w-md">
         {/* Header Branding */}
         <header className="mb-section-gap flex flex-col items-center text-center">
-          <div className="mb-gutter">
-            <span
-              className="material-symbols-outlined text-primary text-6xl"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              content_cut
-            </span>
-          </div>
-          <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-primary mb-stack-sm tracking-tighter uppercase">
-            Hajjemi
+          <h1 className="mb-gutter">
+            <Logo className="size-24" />
           </h1>
           <p className="font-body-md text-on-surface-variant opacity-80">
             Rejoignez l&apos;élite du grooming en Tunisie

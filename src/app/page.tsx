@@ -1,5 +1,6 @@
 "use client";
 
+import { LogoWithName } from "@/components/logo";
 import Link from "next/link";
 import { ArrowRight, Scissors, Star, Store } from "lucide-react";
 
@@ -33,9 +34,7 @@ export default function HomePage() {
       {/* Desktop Nav */}
       <header className="bg-surface/80 sticky top-0 z-50 hidden w-full shadow-sm backdrop-blur-md md:block">
         <div className="px-container-margin mx-auto flex h-16 w-full max-w-7xl items-center justify-between">
-          <span className="font-display-lg text-display-lg text-primary tracking-tighter uppercase">
-            HAJJEMI
-          </span>
+          <LogoWithName size="lg" />
           <div className="gap-stack-lg flex items-center">
             <Link
               className="font-label-md text-label-md text-on-surface hover:text-primary font-semibold transition-colors"
@@ -82,8 +81,8 @@ export default function HomePage() {
         {/* Top Navigation / Brand (Mobile Only Overlay) */}
         <header className="px-container-margin relative z-10 flex w-full items-center justify-between pt-8 pb-4 md:hidden">
           <span className="w-14" />
-          <h1 className="font-display-lg text-display-lg text-primary tracking-tighter uppercase">
-            HAJJEMI
+          <h1>
+            <LogoWithName size="md" />
           </h1>
           {langSwitch}
         </header>
@@ -228,9 +227,7 @@ export default function HomePage() {
       {/* Footer (desktop only) */}
       <footer className="border-surface-container-high bg-surface hidden border-t py-8 md:block">
         <div className="px-container-margin mx-auto flex max-w-7xl items-center justify-between">
-          <span className="font-headline-md text-headline-md text-on-surface font-bold tracking-tighter opacity-50">
-            HAJJEMI
-          </span>
+          <LogoWithName size="sm" className="opacity-60" />
           <p className="font-label-sm text-label-sm text-on-surface-variant">
             {t.copyright}
           </p>

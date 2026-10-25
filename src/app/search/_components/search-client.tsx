@@ -14,6 +14,7 @@ import {
   User,
 } from "lucide-react";
 
+import { Logo } from "@/components/logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -140,15 +141,12 @@ export function SearchClient({
       {/* TopAppBar */}
       <header className="bg-surface sticky top-0 z-40 w-full shadow-sm">
         <div className="px-container-margin mx-auto flex h-16 w-full max-w-7xl items-center justify-between">
-          <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold tracking-tighter md:hidden">
-            HAJJEM
+          <h1 className="md:hidden">
+            <Logo className="size-11" />
           </h1>
           <div className="gap-stack-lg hidden items-center md:flex">
-            <Link
-              href="/"
-              className="font-headline-md text-headline-md text-primary font-bold tracking-tighter"
-            >
-              HAJJEM
+            <Link href="/">
+              <Logo className="size-11" />
             </Link>
             {navLinks.map((link) => (
               <Link

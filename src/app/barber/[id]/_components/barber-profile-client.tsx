@@ -14,6 +14,7 @@ import {
   MapPin,
 } from "lucide-react";
 
+import { Logo } from "@/components/logo";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -399,9 +400,7 @@ export function BarberProfileClient({
           >
             <ArrowLeft className="size-5" />
           </Button>
-          <span className="font-headline-lg text-headline-lg text-primary font-bold tracking-tighter">
-            HAJJEMI
-          </span>
+          <Logo className="size-10" />
         </div>
         <div className="gap-stack-lg flex items-center">
           {navLinks.map((link) => (

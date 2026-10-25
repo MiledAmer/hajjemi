@@ -16,6 +16,7 @@ import {
   User,
 } from "lucide-react";
 
+import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -158,14 +159,7 @@ export default function InscriptionBarbierPage() {
       {/* Header Section */}
       <header className="bg-background/80 fixed top-0 z-50 w-full backdrop-blur-md">
         <div className="px-container-margin mx-auto flex h-16 w-full max-w-7xl items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary text-3xl">
-              content_cut
-            </span>
-            <span className="font-headline-lg text-headline-lg text-primary tracking-tighter uppercase">
-              Hajjemi
-            </span>
-          </div>
+          <Logo className="size-10" />
           <Link
             className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors"
             href="/connexion"

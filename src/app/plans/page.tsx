@@ -1,3 +1,4 @@
+import { LogoWithName } from "@/components/logo";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -93,9 +94,7 @@ export default async function PlansPage({
       <header className="bg-surface/80 fixed top-0 z-50 w-full shadow-sm backdrop-blur-md transition-all duration-300">
         <div className="px-container-margin mx-auto flex h-16 w-full max-w-7xl items-center justify-between">
           <div className="gap-base flex items-center">
-            <span className="font-headline-md text-headline-md text-primary font-bold tracking-tighter">
-              HAJJEMI
-            </span>
+            <LogoWithName size="md" />
             <span className="font-label-sm text-label-sm border-outline-variant/30 bg-surface-container text-on-surface-variant ml-2 rounded-sm border px-2 py-1 tracking-widest uppercase">
               Pro
             </span>
@@ -542,9 +541,7 @@ export default async function PlansPage({
       <footer className="border-surface-container-high bg-surface border-t py-8">
         <div className="px-container-margin mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 md:flex-row">
           <div className="flex items-center gap-2">
-            <span className="font-headline-md text-headline-md text-on-surface font-bold tracking-tighter opacity-50">
-              HAJJEMI
-            </span>
+            <LogoWithName size="sm" className="opacity-60" />
             <span className="font-label-sm text-label-sm text-on-surface-variant uppercase">
               Pro
             </span>
