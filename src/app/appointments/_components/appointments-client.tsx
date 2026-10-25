@@ -85,13 +85,21 @@ export function AppointmentsClient({
     const id = cancelTarget.id;
     setCancelError(null);
     startCancel(async () => {
-      const result = await cancelAppointment(id);
-      if (result.ok) {
-        setCancelTarget(null);
-        router.refresh();
-      } else {
-        setCancelError(result.reason === "too_late" ? t.cancelTooLate : t.cancelError);
+      try {
+        const result = await cancelAppointment(id);
+        if (result.ok) {
+          setCancelTarget(null);
+        } else {
+          setCancelError(
+            result.reason === "too_late" ? t.cancelTooLate : t.cancelError,
+          );
+        }
+      } catch (e) {
+        console.error("cancelAppointment failed:", e);
+        setCancelError(t.cancelError);
       }
+      // Refetch either way: the list may already be out of date.
+      router.refresh();
     });
   }
 
@@ -113,7 +121,10 @@ export function AppointmentsClient({
     setNotifOpen(open);
     if (!open && notifications.length > 0) {
       startTransition(async () => {
-        await markAppointmentsSeenByClient();
+        // Best-effort: the badge simply stays until the next visit.
+        await markAppointmentsSeenByClient().catch((e: unknown) =>
+          console.error("markAppointmentsSeenByClient failed:", e),
+        );
         router.refresh();
       });
     }

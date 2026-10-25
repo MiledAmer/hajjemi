@@ -150,6 +150,11 @@ export const dashboard = {
     shareQr: "Partager via QR Code",
     weeklyLimitReached:
       "Impossible de confirmer : ce client a déjà 3 rendez-vous confirmés cette semaine.",
+    requestError: "Action impossible pour le moment. Réessayez.",
+    requestGone:
+      "Cette demande n'est plus en attente (le client l'a peut-être annulée).",
+    requestPast: "Ce rendez-vous est déjà passé : il ne peut plus être accepté.",
+    sessionError: "Votre session a expiré. Reconnectez-vous.",
   },
   tn: {
     switchTo: "FR",
@@ -200,6 +205,10 @@ export const dashboard = {
     shareQr: "Partager b QR Code",
     weeklyLimitReached:
       "Manajmch nconfirmé : el client 3andou déjà 3 rendez-vous confirmés hal jom3a.",
+    requestError: "Ma najjamnech nA3mlou el 7aja tawa. 3awed.",
+    requestGone: "Talab hedha ma3adouch fil intidhar (el client yjem ykoun annulah).",
+    requestPast: "El rendez-vous fet : ma3adech yetkabel.",
+    sessionError: "Session mte3ek tkhalset. Connecti men jdid.",
   },
 } as const satisfies Record<Lang, unknown>;
 
@@ -327,6 +336,13 @@ export const barberProfile = {
     timeLabel: "Heure",
     confirmPick: "Valider",
     bookingError: "Échec de la réservation. Réessayez.",
+    sessionError: "Votre session a expiré. Reconnectez-vous pour réserver.",
+    barberCannotBook:
+      "Les comptes barbier ne peuvent pas réserver de rendez-vous.",
+    unavailableError:
+      "Ce créneau n'est pas disponible. Choisissez un autre horaire.",
+    slotTakenError:
+      "Ce créneau vient d'être réservé par quelqu'un d'autre. Choisissez-en un autre.",
     weeklyLimitError:
       "Vous avez déjà un rendez-vous en cours. Annulez-le avant d'en réserver un autre.",
     duplicateError:
@@ -366,6 +382,11 @@ export const barberProfile = {
     timeLabel: "Wa9t",
     confirmPick: "Valider",
     bookingError: "Rzervation ma najja7tech. 3awed.",
+    sessionError: "Session mte3ek tkhalset. Connecti men jdid bech trzervi.",
+    barberCannotBook: "El compte mta3 hajjem ma yrzervich rendez-vous.",
+    unavailableError: "Créneau hedha ma3adouch disponible. Ekhtar wa9t ekher.",
+    slotTakenError:
+      "Chkoun ekher rzerva el créneau hedha tawa. Ekhtar wa9t ekher.",
     weeklyLimitError:
       "3andek déjà rendez-vous mazel. Annuliih 9bal ma trzervi ekher.",
     duplicateError:

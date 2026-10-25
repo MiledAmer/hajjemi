@@ -27,7 +27,12 @@ export function QrClient({
   useEffect(() => {
     const url = `${window.location.origin}/barber/${barberId}`;
     setPublicUrl(url);
-    void QRCode.toDataURL(url, { width: 320, margin: 2 }).then(setDataUrl);
+    QRCode.toDataURL(url, { width: 320, margin: 2 })
+      .then(setDataUrl)
+      .catch((e: unknown) => {
+        console.error("QR generation failed:", e);
+        setScanError("Impossible de générer le QR code.");
+      });
   }, [barberId]);
 
   function download() {

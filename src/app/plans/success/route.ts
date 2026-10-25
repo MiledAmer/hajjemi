@@ -1,27 +1,33 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { PAID_PLANS, verifyFlouciPayment, type PaidPlan } from "@/server/flouci";
+import { PAID_PLANS, verifyFlouciPayment } from "@/server/flouci";
+import { getSessionBarberProfile } from "@/server/session";
 import { activateSubscription } from "@/server/subscriptions";
-import { getSessionBarberProfile } from "@/server/users";
 
 // Flouci redirects here after checkout with ?payment_id=... ; we appended the
 // plan ourselves. Verify the payment really succeeded AND that its amount
 // matches the claimed plan before granting it, then bounce to the dashboard.
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
-  const plan = searchParams.get("plan") as PaidPlan | null;
+  const plan = searchParams.get("plan");
   const paymentId = searchParams.get("payment_id");
 
   const failed = NextResponse.redirect(new URL("/plans?payment=failed", req.url));
-  if (!paymentId || !plan || !(plan in PAID_PLANS)) return failed;
+  if (!paymentId || !plan || !Object.hasOwn(PAID_PLANS, plan)) return failed;
+  const paidPlan = plan as keyof typeof PAID_PLANS;
 
-  const result = await verifyFlouciPayment(paymentId);
-  if (result?.amountMillimes !== PAID_PLANS[plan].amountMillimes) {
+  try {
+    const result = await verifyFlouciPayment(paymentId);
+    if (result?.amountMillimes !== PAID_PLANS[paidPlan].amountMillimes) {
+      return failed;
+    }
+
+    const profile = await getSessionBarberProfile();
+    if (!profile) return failed;
+
+    await activateSubscription(profile.id, paidPlan);
+  } catch (e) {
+    console.error("plans/success error:", e);
     return failed;
   }
-
-  const profile = await getSessionBarberProfile();
-  if (!profile) return failed;
-
-  await activateSubscription(profile.id, plan);
   return NextResponse.redirect(new URL("/dashbord_barber?subscribed=1", req.url));
 }

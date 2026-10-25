@@ -1,105 +1,62 @@
 "use server";
 
 import { z } from "zod";
+import { env } from "@/env";
+import { salonNameSchema } from "@/lib/name";
 import { db } from "@/server/db";
 import { deleteObject, keyFromUrl } from "@/server/r2";
-import { GOVERNORATE_LABELS } from "@/lib/governorate";
-import { Governorate, PlanType } from "../../generated/prisma";
+import { getSessionBarberProfile } from "@/server/session";
 
-const createBarberProfileSchema = z.object({
-  userId: z.string().min(1),
-  businessName: z.string().min(1),
-  bio: z.string().optional(),
-  governorate: z.nativeEnum(Governorate),
-  address: z.string().optional(),
-  avatarUrl: z.string().url().optional(),
-  coverImageUrl: z.string().url().optional(),
-  planType: z.nativeEnum(PlanType).default(PlanType.BASIC),
+const updateBarberProfileSchema = z.object({
+  businessName: salonNameSchema,
+  bio: z.string().trim().max(500, "500 caractères maximum."),
+  address: z.string().trim().max(200, "200 caractères maximum."),
+  avatarUrl: z.string().url().max(500).nullable(),
 });
 
-const updateBarberProfileSchema = createBarberProfileSchema
-  .omit({ userId: true })
-  .partial();
-
-export async function createBarberProfile(
-  input: z.infer<typeof createBarberProfileSchema>,
-) {
-  const data = createBarberProfileSchema.parse(input);
-  return db.barberProfile.create({ data });
-}
-
-export async function getBarberProfile(id: string) {
-  return db.barberProfile.findUnique({ where: { id }, include: { user: true } });
-}
-
-export async function getBarberProfileByUserId(userId: string) {
-  return db.barberProfile.findUnique({ where: { userId } });
-}
-
-export async function listBarberProfiles() {
-  return db.barberProfile.findMany({ orderBy: { createdAt: "desc" } });
-}
-
-// Accent- and case-insensitive so "beja"/"BÉJA" both match "Béja".
-const normalize = (s: string) =>
-  s
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .toLowerCase();
-
-export async function searchBarberProfiles(input: {
-  query?: string;
-  governorate?: Governorate;
-}) {
-  const query = input.query?.trim();
-  // Governorates whose label matches the typed text — lets clients search by
-  // city name even though it's stored as an enum, not free text.
-  const matchedGovs = query
-    ? (Object.entries(GOVERNORATE_LABELS) as [Governorate, string][])
-        .filter(([, label]) => normalize(label).includes(normalize(query)))
-        .map(([g]) => g)
-    : [];
-  return db.barberProfile.findMany({
-    where: {
-      governorate: input.governorate,
-      ...(query
-        ? {
-            OR: [
-              { businessName: { contains: query, mode: "insensitive" } },
-              { address: { contains: query, mode: "insensitive" } },
-              ...(matchedGovs.length
-                ? [{ governorate: { in: matchedGovs } }]
-                : []),
-            ],
-          }
-        : {}),
-    },
-    include: { user: true },
-    orderBy: { createdAt: "desc" },
-  });
-}
-
+/// Updates the signed-in barber's own profile (never someone else's, never
+/// the plan — that only changes through a verified payment).
 export async function updateBarberProfile(
-  id: string,
   input: z.infer<typeof updateBarberProfileSchema>,
-) {
-  const data = updateBarberProfileSchema.parse(input);
-  const previous = await db.barberProfile.findUnique({
-    where: { id },
-    select: { avatarUrl: true },
-  });
-  const updated = await db.barberProfile.update({ where: { id }, data });
+): Promise<{ error: string | null }> {
+  const parsed = updateBarberProfileSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Formulaire invalide." };
+  }
+  const data = parsed.data;
 
-  const oldAvatarUrl = previous?.avatarUrl;
-  if (oldAvatarUrl && data.avatarUrl && data.avatarUrl !== oldAvatarUrl) {
-    // Best-effort: the DB is already the source of truth for the current
-    // avatar, so a failed delete just leaves an orphaned R2 object.
-    await deleteObject(keyFromUrl(oldAvatarUrl)).catch(() => undefined);
+  const profile = await getSessionBarberProfile();
+  if (!profile) return { error: "Non connecté." };
+
+  // The avatar must be one of this barber's own uploads (or unchanged).
+  if (
+    data.avatarUrl &&
+    data.avatarUrl !== profile.avatarUrl &&
+    !data.avatarUrl.startsWith(`${env.R2_PUBLIC_URL}/avatars/${profile.id}/`)
+  ) {
+    return { error: "Photo invalide." };
   }
 
-  return updated;
-}
+  try {
+    await db.barberProfile.update({
+      where: { id: profile.id },
+      data: {
+        businessName: data.businessName,
+        bio: data.bio || null,
+        address: data.address || null,
+        avatarUrl: data.avatarUrl,
+      },
+    });
+  } catch (e) {
+    console.error("updateBarberProfile error:", e);
+    return { error: "Échec de l'enregistrement du profil." };
+  }
 
-export async function deleteBarberProfile(id: string) {
-  return db.barberProfile.delete({ where: { id } });
+  const old = profile.avatarUrl;
+  if (old && old !== data.avatarUrl && old.startsWith(`${env.R2_PUBLIC_URL}/`)) {
+    // Best-effort: the DB is already the source of truth for the current
+    // avatar, so a failed delete just leaves an orphaned R2 object.
+    await deleteObject(keyFromUrl(old)).catch(() => undefined);
+  }
+  return { error: null };
 }

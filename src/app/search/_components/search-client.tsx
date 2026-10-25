@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useUser } from "@clerk/nextjs";
 import {
   Calendar,
@@ -20,15 +20,12 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { GOVERNORATE_LABELS } from "@/lib/governorate";
 import { search as content, useLang } from "@/lib/tounsi";
-import type {
-  BarberProfile,
-  Governorate,
-  User as DbUser,
-} from "../../../../generated/prisma";
+import { cn } from "@/lib/utils";
+import type { BarberProfile, Governorate } from "../../../../generated/prisma";
 
 const QUICK_GOVERNORATES: Governorate[] = ["TUNIS", "SOUSSE", "SFAX"];
 
-type Barber = BarberProfile & { user: DbUser };
+type Barber = BarberProfile & { user: { name: string } };
 
 function BarberCard({
   barber,
@@ -103,6 +100,9 @@ export function SearchClient({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [queryInput, setQueryInput] = useState(q);
+  // Navigation runs in a transition so the current results stay on screen
+  // (dimmed) while the server renders the next ones.
+  const [isSearching, startSearch] = useTransition();
   const { isSignedIn, user } = useUser();
   const { lang, toggleLang } = useLang();
   const t = content[lang];
@@ -118,7 +118,7 @@ export function SearchClient({
       if (value) params.set(key, value);
       else params.delete(key);
     }
-    router.push(`${pathname}?${params.toString()}`);
+    startSearch(() => router.push(`${pathname}?${params.toString()}`));
   }
 
   // Debounced search-as-you-type, mirroring the URL so results stay
@@ -241,7 +241,13 @@ export function SearchClient({
 
         {/* Barber Cards Grid */}
         {barbers.length > 0 ? (
-          <section className="gap-gutter grid grid-cols-1 md:grid-cols-2">
+          <section
+            aria-busy={isSearching}
+            className={cn(
+              "gap-gutter grid grid-cols-1 transition-opacity md:grid-cols-2",
+              isSearching && "opacity-50",
+            )}
+          >
             {barbers.map((barber) => (
               <BarberCard
                 key={barber.id}

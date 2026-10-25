@@ -5,12 +5,8 @@ import { z } from "zod";
 import { db } from "@/server/db";
 import { emailSchema } from "@/lib/email";
 import { personNameSchema, salonNameSchema } from "@/lib/name";
-import {
-  DayOfWeek,
-  Governorate,
-  Role,
-  type PlanType,
-} from "../../generated/prisma";
+import { getSessionUser } from "@/server/session";
+import { DayOfWeek, Governorate, Role } from "../../generated/prisma";
 
 const signupSchema = z.object({
   role: z.enum(["client", "barbier"]),
@@ -46,8 +42,13 @@ export async function signupUser(input: z.infer<typeof signupSchema>) {
     return { error: "Nom du salon et gouvernorat requis." };
   }
 
-  if (await db.user.findUnique({ where: { phone: data.phone } })) {
-    return { error: "Ce numéro de téléphone est déjà utilisé." };
+  try {
+    if (await db.user.findUnique({ where: { phone: data.phone } })) {
+      return { error: "Ce numéro de téléphone est déjà utilisé." };
+    }
+  } catch (e) {
+    console.error("signupUser phone check error:", e);
+    return { error: "Erreur lors de l'enregistrement. Réessayez." };
   }
 
   const client = await clerkClient();
@@ -117,6 +118,10 @@ export async function signupUser(input: z.infer<typeof signupSchema>) {
     console.error("signupUser db error:", e);
     // Roll back the Clerk user so email isn't stuck "already used" with no DB row.
     await client.users.deleteUser(clerkUserId).catch(() => undefined);
+    // P2002 = unique violation: someone took this phone in the meantime.
+    if ((e as { code?: string }).code === "P2002") {
+      return { error: "Ce numéro de téléphone est déjà utilisé." };
+    }
     return { error: "Erreur lors de l'enregistrement. Réessayez." };
   }
   return { error: null };
@@ -127,31 +132,6 @@ export async function getSessionRole() {
   const user = await currentUser();
   if (!user) return null;
   return user.publicMetadata.role === "barbier" ? "barbier" : "client";
-}
-
-// Plan of the signed-in barber, from publicMetadata ({ "plan": "PRO" }).
-// Read straight off the session token (no DB call); returns null for clients.
-export async function getSessionPlan() {
-  const user = await currentUser();
-  const plan = user?.publicMetadata.plan;
-  return typeof plan === "string" ? (plan as PlanType) : null;
-}
-
-// DB row of the signed-in Clerk user.
-export async function getSessionUser() {
-  const clerkUser = await currentUser();
-  if (!clerkUser) return null;
-  return db.user.findUnique({ where: { clerkId: clerkUser.id } });
-}
-
-// BarberProfile of the signed-in Clerk user (null if not a barber).
-export async function getSessionBarberProfile() {
-  const clerkUser = await currentUser();
-  if (!clerkUser) return null;
-  return db.barberProfile.findFirst({
-    where: { user: { clerkId: clerkUser.id } },
-    include: { user: true },
-  });
 }
 
 const contactSchema = z.object({
@@ -208,18 +188,14 @@ export async function updateBarberContact(
     }
   }
 
-  await db.user.update({ where: { id: user.id }, data: { phone, email } });
+  try {
+    await db.user.update({ where: { id: user.id }, data: { phone, email } });
+  } catch (e) {
+    console.error("updateBarberContact db error:", e);
+    if ((e as { code?: string }).code === "P2002") {
+      return { error: "Ce numéro de téléphone est déjà utilisé." };
+    }
+    return { error: "Échec de la mise à jour des coordonnées." };
+  }
   return { error: null };
-}
-
-export async function getUser(id: string) {
-  return db.user.findUnique({ where: { id } });
-}
-
-export async function listUsers() {
-  return db.user.findMany({ orderBy: { createdAt: "desc" } });
-}
-
-export async function deleteUser(id: string) {
-  return db.user.delete({ where: { id } });
 }

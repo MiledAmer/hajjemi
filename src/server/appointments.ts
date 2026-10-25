@@ -1,37 +1,29 @@
 "use server";
 
 import { z } from "zod";
+import {
+  APPOINTMENT_DURATION_MINUTES,
+  SLOT_STEP_MINUTES,
+  tunisParts,
+} from "@/lib/booking";
 import { db } from "@/server/db";
-import { getSessionUser } from "@/server/users";
-import { AppointmentStatus } from "../../generated/prisma";
+import { getSessionBarberProfile, getSessionUser } from "@/server/session";
 
-const createAppointmentSchema = z
-  .object({
-    barberId: z.string().min(1),
-    startAt: z.coerce.date(),
-    endAt: z.coerce.date(),
-    // ponytail: no Service catalog yet, so the client can't price the
-    // visit up front — barber sets/confirms the price out of band.
-    totalPriceMillimes: z.number().int().nonnegative().default(0),
-    status: z.nativeEnum(AppointmentStatus).default(AppointmentStatus.PENDING),
-  })
-  .refine((data) => data.endAt > data.startAt, {
-    message: "endAt must be after startAt",
-    path: ["endAt"],
-  });
+// Every export here is a public endpoint callable from the browser, so each
+// one derives the caller from the session and checks ownership itself. Expected
+// failures come back as `{ ok: false, reason }` so the UI can show a message.
 
-const updateAppointmentSchema = z.object({
-  startAt: z.coerce.date().optional(),
-  endAt: z.coerce.date().optional(),
-  totalPriceMillimes: z.number().int().positive().optional(),
-  status: z.nativeEnum(AppointmentStatus).optional(),
+const createAppointmentSchema = z.object({
+  barberId: z.string().min(1),
+  startAt: z.coerce.date(),
 });
 
-// Max confirmed rdv per client per week — also the cap once any rdv is
-// confirmed (confirmed + pending can't exceed this).
+// Max confirmed rdv per client per week.
 const WEEKLY_CONFIRMED_LIMIT = 3;
 
 // Monday 00:00 → next Monday 00:00 of the week containing `date`.
+// ponytail: server-local week; a UTC host is off by an hour around Monday
+// midnight in Tunis. Move to tunisParts if that edge ever matters.
 function weekRange(date: Date) {
   const start = new Date(date);
   start.setHours(0, 0, 0, 0);
@@ -41,104 +33,169 @@ function weekRange(date: Date) {
   return { start, end };
 }
 
-async function countInWeek(
-  clientId: string,
-  date: Date,
-  statuses: ("PENDING" | "CONFIRMED")[],
-  excludeId?: string,
-) {
+function confirmedCountInWeek(clientId: string, date: Date) {
   const { start, end } = weekRange(date);
   return db.appointment.count({
     where: {
       clientId,
-      status: { in: statuses },
+      status: "CONFIRMED",
       startAt: { gte: start, lt: end },
-      ...(excludeId ? { id: { not: excludeId } } : {}),
     },
   });
 }
 
-const confirmedCountInWeek = (clientId: string, date: Date, excludeId?: string) =>
-  countInWeek(clientId, date, ["CONFIRMED"], excludeId);
+export type CreateAppointmentResult =
+  | { ok: true; id: string }
+  | {
+      ok: false;
+      reason:
+        | "unauthenticated"
+        | "forbidden"
+        | "invalid"
+        | "unavailable"
+        | "conflict"
+        | "duplicate"
+        | "limit";
+    };
 
-// clientId is always the signed-in user — never taken from the caller.
+// clientId is always the signed-in user — never taken from the caller, and
+// neither are the end time, status or price: a booking is always a PENDING,
+// fixed-length request.
 export async function createAppointment(
   input: z.infer<typeof createAppointmentSchema>,
-): Promise<
-  | { limitReached: true; duplicate?: undefined }
-  | { duplicate: true; limitReached?: undefined }
-  | { limitReached?: undefined; duplicate?: undefined; id: string }
-> {
-  const data = createAppointmentSchema.parse(input);
+): Promise<CreateAppointmentResult> {
+  const parsed = createAppointmentSchema.safeParse(input);
+  if (!parsed.success || Number.isNaN(parsed.data.startAt.getTime())) {
+    return { ok: false, reason: "invalid" };
+  }
+  const { barberId, startAt } = parsed.data;
+
   const user = await getSessionUser();
-  if (!user) throw new Error("Not signed in");
-  const clientId = user.id;
+  if (!user) return { ok: false, reason: "unauthenticated" };
+  if (user.role !== "CLIENT") return { ok: false, reason: "forbidden" };
+
+  const availability = await db.barberAvailability.findMany({
+    where: { barberId },
+  });
+  if (availability.length === 0) {
+    // Unknown barber, or one who never opened a day.
+    return { ok: false, reason: "unavailable" };
+  }
+
+  // The slot must be in the future, on the slot grid, and inside one of the
+  // barber's opening ranges for that weekday.
+  const endAt = new Date(startAt.getTime() + APPOINTMENT_DURATION_MINUTES * 60_000);
+  const { weekday, minutes } = tunisParts(startAt);
+  const inHours = availability.some(
+    (r) =>
+      r.dayOfWeek === weekday &&
+      minutes >= r.startMinute &&
+      minutes + APPOINTMENT_DURATION_MINUTES <= r.endMinute,
+  );
+  if (
+    startAt.getTime() <= Date.now() ||
+    startAt.getTime() % 60_000 !== 0 ||
+    minutes % SLOT_STEP_MINUTES !== 0 ||
+    !inHours
+  ) {
+    return { ok: false, reason: "unavailable" };
+  }
+
   const duplicate = await db.appointment.findFirst({
     where: {
-      clientId,
-      barberId: data.barberId,
-      startAt: data.startAt,
+      clientId: user.id,
+      barberId,
+      startAt,
       status: { in: ["PENDING", "CONFIRMED"] },
     },
   });
-  if (duplicate) return { duplicate: true };
-  // A client may hold only one active (pending or confirmed) reservation at a
-  // time — no new booking while one is still open.
+  if (duplicate) return { ok: false, reason: "duplicate" };
+
+  // A client may hold only one open (pending or confirmed, still upcoming)
+  // reservation at a time — no new booking while one is still open.
   const active = await db.appointment.findFirst({
-    where: { clientId, status: { in: ["PENDING", "CONFIRMED"] } },
+    where: {
+      clientId: user.id,
+      status: { in: ["PENDING", "CONFIRMED"] },
+      endAt: { gt: new Date() },
+    },
   });
-  if (active) return { limitReached: true };
-  return db.appointment.create({ data: { ...data, clientId } });
+  if (active) return { ok: false, reason: "limit" };
+
+  try {
+    // Serializable so two clients racing for the same slot can't both win.
+    return await db.$transaction(
+      async (tx) => {
+        const clash = await tx.appointment.findFirst({
+          where: {
+            barberId,
+            status: { in: ["PENDING", "CONFIRMED"] },
+            startAt: { lt: endAt },
+            endAt: { gt: startAt },
+          },
+        });
+        if (clash) return { ok: false, reason: "conflict" } as const;
+        const created = await tx.appointment.create({
+          data: { clientId: user.id, barberId, startAt, endAt, totalPriceMillimes: 0 },
+        });
+        return { ok: true, id: created.id } as const;
+      },
+      { isolationLevel: "Serializable" },
+    );
+  } catch (e) {
+    // P2034 = serialization failure: someone else took the slot first.
+    if ((e as { code?: string }).code === "P2034") {
+      return { ok: false, reason: "conflict" };
+    }
+    console.error("createAppointment error:", e);
+    throw e;
+  }
 }
 
-export async function getAppointment(id: string) {
-  return db.appointment.findUnique({ where: { id } });
-}
+export type RespondResult =
+  | { ok: true }
+  | {
+      ok: false;
+      reason:
+        | "unauthenticated"
+        | "not_found"
+        | "not_pending"
+        | "past"
+        | "limit";
+    };
 
-// Confirmed appointments whose time has passed become COMPLETED lazily,
-// whenever a list is read — no cron needed.
-async function completePastAppointments() {
-  await db.appointment.updateMany({
-    where: { status: "CONFIRMED", endAt: { lt: new Date() } },
-    data: { status: "COMPLETED" },
+// Barber accepts or declines one of their own pending requests.
+export async function respondToAppointment(
+  id: string,
+  status: "CONFIRMED" | "CANCELLED",
+): Promise<RespondResult> {
+  if (typeof id !== "string" || (status !== "CONFIRMED" && status !== "CANCELLED")) {
+    return { ok: false, reason: "not_found" };
+  }
+  const profile = await getSessionBarberProfile();
+  if (!profile) return { ok: false, reason: "unauthenticated" };
+
+  const appt = await db.appointment.findFirst({
+    where: { id, barberId: profile.id },
   });
-}
+  if (!appt) return { ok: false, reason: "not_found" };
+  if (appt.status !== "PENDING") return { ok: false, reason: "not_pending" };
 
-export async function listAppointmentsByBarber(barberId: string) {
-  await completePastAppointments();
-  const appointments = await db.appointment.findMany({
-    where: { barberId },
-    include: { client: true },
-    orderBy: { startAt: "asc" },
+  if (status === "CONFIRMED") {
+    if (appt.startAt.getTime() <= Date.now()) return { ok: false, reason: "past" };
+    if ((await confirmedCountInWeek(appt.clientId, appt.startAt)) >= WEEKLY_CONFIRMED_LIMIT) {
+      return { ok: false, reason: "limit" };
+    }
+  }
+
+  // Re-checking PENDING in the update guards against a concurrent client
+  // cancellation between the read above and this write.
+  const { count } = await db.appointment.updateMany({
+    where: { id, barberId: profile.id, status: "PENDING" },
+    // Accepting/declining is exactly what the client needs to be notified of.
+    data: { status, clientSeenAt: null },
   });
-  // Annotate pending requests with how many confirmed slots the client
-  // still has in that week, so the barber sees it before accepting.
-  return Promise.all(
-    appointments.map(async (a) => ({
-      ...a,
-      remainingThisWeek:
-        a.status === "PENDING"
-          ? Math.max(
-              WEEKLY_CONFIRMED_LIMIT -
-                (await confirmedCountInWeek(a.clientId, a.startAt)),
-              0,
-            )
-          : null,
-    })),
-  );
-}
-
-export async function listAppointmentsByClient(clientId: string) {
-  await completePastAppointments();
-  return db.appointment.findMany({
-    where: { clientId },
-    include: { barber: true },
-    orderBy: { startAt: "asc" },
-  });
-}
-
-export async function countUnseenAppointmentsForClient(clientId: string) {
-  return db.appointment.count({ where: { clientId, clientSeenAt: null } });
+  return count > 0 ? { ok: true } : { ok: false, reason: "not_pending" };
 }
 
 // Called from the client — derives the user from the session.
@@ -151,55 +208,25 @@ export async function markAppointmentsSeenByClient() {
   });
 }
 
-export async function updateAppointment(
-  id: string,
-  input: z.infer<typeof updateAppointmentSchema>,
-) {
-  const data = updateAppointmentSchema.parse(input);
-  if (data.status === "CONFIRMED") {
-    const appt = await db.appointment.findUniqueOrThrow({ where: { id } });
-    const confirmed = await confirmedCountInWeek(
-      appt.clientId,
-      data.startAt ?? appt.startAt,
-      id,
-    );
-    if (confirmed >= WEEKLY_CONFIRMED_LIMIT) return { limitReached: true };
-  }
-  return db.appointment.update({
-    where: { id },
-    data: {
-      ...data,
-      // Accepting/declining is exactly what the client needs to be notified
-      // of — flag it unseen again even if they'd already checked this
-      // appointment before (e.g. it was reopened).
-      ...(data.status === "CONFIRMED" || data.status === "CANCELLED"
-        ? { clientSeenAt: null }
-        : {}),
-    },
-  });
-}
-
-export async function deleteAppointment(id: string) {
-  return db.appointment.delete({ where: { id } });
-}
-
-// Midnight of `date` in the server's local timezone.
-function startOfDay(date: Date) {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
-}
-
 // Client-initiated cancellation. Allowed only while the cancellation day is
 // strictly before the appointment day; on or after that day it's refused.
 export async function cancelAppointment(
   id: string,
-): Promise<{ ok: true } | { ok: false; reason: "not_found" | "too_late" }> {
+): Promise<
+  | { ok: true }
+  | { ok: false; reason: "unauthenticated" | "not_found" | "too_late" }
+> {
   const user = await getSessionUser();
-  if (!user) throw new Error("Not signed in");
+  if (!user) return { ok: false, reason: "unauthenticated" };
   const appt = await db.appointment.findUnique({ where: { id } });
-  if (appt?.clientId !== user.id) return { ok: false, reason: "not_found" };
-  if (startOfDay(new Date()) >= startOfDay(appt.startAt)) {
+  if (
+    appt?.clientId !== user.id ||
+    (appt.status !== "PENDING" && appt.status !== "CONFIRMED")
+  ) {
+    return { ok: false, reason: "not_found" };
+  }
+  // ISO day strings compare chronologically.
+  if (tunisParts(new Date()).day >= tunisParts(appt.startAt).day) {
     return { ok: false, reason: "too_late" };
   }
   await db.appointment.update({

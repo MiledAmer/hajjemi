@@ -1,6 +1,8 @@
-import { countUnseenAppointmentsForClient } from "@/server/appointments";
-import { searchBarberProfiles } from "@/server/barber-profiles";
-import { getSessionUser } from "@/server/users";
+import {
+  countUnseenAppointmentsForClient,
+  searchBarberProfiles,
+} from "@/server/queries";
+import { getSessionUser } from "@/server/session";
 import { Governorate } from "../../../generated/prisma";
 import { SearchClient } from "./_components/search-client";
 

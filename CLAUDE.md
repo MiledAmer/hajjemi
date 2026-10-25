@@ -47,6 +47,15 @@ check `package.json` before relying on them.
   fails the build (set `SKIP_ENV_VALIDATION=1` to bypass, e.g. for Docker builds).
   Env access from a Server Component (e.g. `src/app/**`) can use `@/env` directly; client components
   can only see `NEXT_PUBLIC_`-prefixed vars.
+- **Server code split (security-relevant)**: every export of a `"use server"` file is a public endpoint the
+  browser can call. Only `appointments.ts`, `barber-profiles.ts`, `barber-availability.ts`, `uploads.ts` and
+  `users.ts` carry the directive, and each action derives the caller from the Clerk session and checks
+  ownership itself (never trust ids/status/price from the client). Read helpers for server components live in
+  plain modules with no directive: `server/queries.ts` (data) and `server/session.ts` (`getSessionUser`,
+  `getSessionBarberProfile`); `server/subscriptions.ts` is also plain so a plan can only be activated from the
+  verified Flouci route. Expected failures return `{ ok: false, reason }` / `{ error }` instead of throwing
+  (thrown errors are scrubbed in production) and the client shows a message. Opening hours are Tunis
+  wall-clock; slot maths goes through `src/lib/booking.ts` (`tunisParts`), not the server's local timezone.
 - **Path alias**: `@/*` maps to `src/*` (see `tsconfig.json`); use it instead of relative `../../` imports.
 - **Routing**: Next.js App Router under `src/app/`. `src/app/layout.tsx` loads the `Geist` font and global
   styles (`src/styles/globals.css`, Tailwind v4 via `@tailwindcss/postcss`).

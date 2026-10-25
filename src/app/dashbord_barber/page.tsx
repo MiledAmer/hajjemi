@@ -1,7 +1,6 @@
-import { notFound } from "next/navigation";
-import { listAppointmentsByBarber } from "@/server/appointments";
-import { listAvailability } from "@/server/barber-availability";
-import { getSessionBarberProfile } from "@/server/users";
+import { redirect } from "next/navigation";
+import { listAppointmentsByBarber, listAvailability } from "@/server/queries";
+import { getSessionBarberProfile } from "@/server/session";
 import { DashboardClient } from "./_components/dashboard-client";
 
 // Always live data — accept/decline and profile edits must never serve a
@@ -9,8 +8,10 @@ import { DashboardClient } from "./_components/dashboard-client";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardBarberPage() {
+  // Signed-out visitors are already bounced by the middleware; anyone here
+  // without a barber profile is a client (or a half-created account).
   const profile = await getSessionBarberProfile();
-  if (!profile) notFound();
+  if (!profile) redirect("/search");
 
   const [appointments, availability] = await Promise.all([
     listAppointmentsByBarber(profile.id),

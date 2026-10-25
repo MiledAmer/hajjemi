@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useSignIn } from "@clerk/nextjs";
 import {
   Eye,
@@ -77,7 +77,7 @@ const validators: Record<string, (v: string) => string | null> = {
 export default function InscriptionBarbierPage() {
   const router = useRouter();
   const { signIn } = useSignIn();
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, startSubmit] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [cityChosen, setCityChosen] = useState(false);
@@ -88,7 +88,7 @@ export default function InscriptionBarbierPage() {
   function validateField(name: string, value: string) {
     setFieldErrors((cur) => ({ ...cur, [name]: validators[name]!(value) }));
   }
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     const form = new FormData(e.target as HTMLFormElement);
@@ -101,42 +101,46 @@ export default function InscriptionBarbierPage() {
     );
     setFieldErrors(errors);
     if (Object.values(errors).some(Boolean)) return;
-    setSubmitting(true);
-    try {
-      // Account creation happens fully server-side (Clerk + DB together).
-      const { error: signupError } = await signupUser({
-        role: "barbier",
-        name: field("manager_name"),
-        phone: field("phone"),
-        email: field("email"),
-        password: field("password"),
-        businessName: field("salon_name"),
-        governorate: field("city") as Governorate,
-        address: field("address").trim() || undefined,
-      });
-      if (signupError) {
-        setError(signupError);
-        return;
+    startSubmit(async () => {
+      try {
+        // Account creation happens fully server-side (Clerk + DB together).
+        const { error: signupError } = await signupUser({
+          role: "barbier",
+          name: field("manager_name"),
+          phone: field("phone"),
+          email: field("email"),
+          password: field("password"),
+          businessName: field("salon_name"),
+          governorate: field("city") as Governorate,
+          address: field("address").trim() || undefined,
+        });
+        if (signupError) {
+          setError(signupError);
+          return;
+        }
+        // Then a normal sign-in to open the session.
+        await signIn.reset();
+        const { error } = await signIn.password({
+          emailAddress: field("email"),
+          password: field("password"),
+        });
+        if (error || signIn.status !== "complete") {
+          setError("Compte créé — connectez-vous depuis la page de connexion.");
+          return;
+        }
+        const { error: finalizeError } = await signIn.finalize();
+        if (finalizeError) {
+          setError("Compte créé — connectez-vous depuis la page de connexion.");
+          return;
+        }
+        router.push("/dashbord_barber");
+      } catch (err) {
+        console.error("signup failed:", err);
+        setError(
+          "Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.",
+        );
       }
-      // Then a normal sign-in to open the session.
-      await signIn.reset();
-      const { error } = await signIn.password({
-        emailAddress: field("email"),
-        password: field("password"),
-      });
-      if (error || signIn.status !== "complete") {
-        setError("Compte créé — connectez-vous depuis la page de connexion.");
-        return;
-      }
-      const { error: finalizeError } = await signIn.finalize();
-      if (finalizeError) {
-        setError("Compte créé — connectez-vous depuis la page de connexion.");
-        return;
-      }
-      router.push("/dashbord_barber");
-    } finally {
-      setSubmitting(false);
-    }
+    });
   }
 
   return (

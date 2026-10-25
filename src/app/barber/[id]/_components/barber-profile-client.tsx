@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
-import { useAuth } from "@clerk/nextjs";
+import { useEffect, useState, useTransition } from "react";
+import { useAuth, useUser } from "@clerk/nextjs";
 import {
   ArrowLeft,
   ArrowRight,
@@ -26,27 +26,30 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  APPOINTMENT_DURATION_MINUTES,
+  SLOT_STEP_MINUTES,
+} from "@/lib/booking";
 import { GOVERNORATE_LABELS } from "@/lib/governorate";
 import { barberProfile as content, useLang } from "@/lib/tounsi";
 import { cn } from "@/lib/utils";
 import { createAppointment } from "@/server/appointments";
 import type {
-  Appointment,
   BarberAvailability,
   BarberProfile,
-  User as DbUser,
 } from "../../../../../generated/prisma";
 
-// ponytail: no Service catalog in the schema yet, so a booking is just a
-// day/hour with a fixed placeholder duration — price is set by the barber
-// out of band once the appointment is confirmed.
-const APPOINTMENT_DURATION_MINUTES = 30;
+type BusySlot = { startAt: Date; endAt: Date };
+
+function toInput(d: Date) {
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
 
 function nowForInput() {
   const d = new Date(Date.now() + 60 * 60 * 1000);
   d.setMinutes(0, 0, 0);
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return toInput(d);
 }
 
 const DAY_INDEX = [
@@ -84,8 +87,6 @@ function isSameDay(a: Date, b: Date) {
   );
 }
 
-const SLOT_STEP_MINUTES = 30;
-
 function formatSlotTime(minutes: number) {
   const h = Math.floor(minutes / 60)
     .toString()
@@ -99,7 +100,7 @@ function formatSlotTime(minutes: number) {
 /// minus slots that have already passed if the day is today.
 function getAvailableSlots(
   availability: BarberAvailability[],
-  appointments: Pick<Appointment, "startAt" | "endAt" | "status">[],
+  appointments: BusySlot[],
   date: Date,
   durationMinutes: number,
 ) {
@@ -107,12 +108,7 @@ function getAvailableSlots(
   const dayRanges = availability.filter((r) => r.dayOfWeek === day);
   const duration = Math.max(durationMinutes, SLOT_STEP_MINUTES);
   const now = Date.now();
-  const busy = appointments.filter(
-    (a) =>
-      a.status !== "CANCELLED" &&
-      a.status !== "NO_SHOW" &&
-      isSameDay(new Date(a.startAt), date),
-  );
+  const busy = appointments.filter((a) => isSameDay(new Date(a.startAt), date));
 
   const slots: number[] = [];
   for (const range of dayRanges) {
@@ -134,6 +130,30 @@ function getAvailableSlots(
     }
   }
   return slots;
+}
+
+/// First bookable slot within the next 30 days, so the page opens on
+/// something the client can actually book instead of a possibly closed day.
+function firstAvailableInput(
+  availability: BarberAvailability[],
+  busy: BusySlot[],
+) {
+  const day = new Date();
+  day.setHours(0, 0, 0, 0);
+  for (let i = 0; i < 30; i++, day.setDate(day.getDate() + 1)) {
+    const [first] = getAvailableSlots(
+      availability,
+      busy,
+      day,
+      APPOINTMENT_DURATION_MINUTES,
+    );
+    if (first !== undefined) {
+      const d = new Date(day);
+      d.setHours(Math.floor(first / 60), first % 60, 0, 0);
+      return toInput(d);
+    }
+  }
+  return nowForInput();
 }
 
 function withDate(iso: string, date: Date) {
@@ -248,14 +268,16 @@ function DatePicker({
 export function BarberProfileClient({
   profile,
   availability,
-  appointments,
+  busySlots,
 }: {
-  profile: BarberProfile & { user: DbUser };
+  profile: BarberProfile & { user: { name: string } };
   availability: BarberAvailability[];
-  appointments: Appointment[];
+  busySlots: BusySlot[];
 }) {
   const router = useRouter();
   const { isSignedIn } = useAuth();
+  const { user } = useUser();
+  const isBarber = user?.publicMetadata?.role === "barbier";
   const { lang, toggleLang } = useLang();
   const t = content[lang];
   const navLinks = [
@@ -263,34 +285,39 @@ export function BarberProfileClient({
     { label: t.navSearch, href: "/search" },
     { label: t.navPlans, href: "/plans" },
   ];
-  const open = isOpenNow(availability);
   const heroImage = profile.coverImageUrl ?? profile.avatarUrl;
 
   // Slots the client just requested this session — folded into the availability
   // calc so they disappear immediately (server already holds PENDING slots, but
   // the appointments prop isn't refetched until reload).
-  const [justBooked, setJustBooked] = useState<
-    Pick<Appointment, "startAt" | "endAt" | "status">[]
-  >([]);
-  const [startAtInput, setStartAtInput] = useState(nowForInput);
+  const [justBooked, setJustBooked] = useState<BusySlot[]>([]);
+  // Empty until mounted: "now" differs between the server render and the
+  // browser (time and timezone), so computing it during render would cause a
+  // hydration mismatch.
+  const [startAtInput, setStartAtInput] = useState("");
+  useEffect(() => {
+    setStartAtInput(firstAvailableInput(availability, busySlots));
+    // Mount only: later refreshes must not move the client's selection.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [bookingResult, setBookingResult] = useState<
     | { status: "success"; startAt: string }
-    | { status: "error" }
-    | { status: "limit" }
-    | { status: "duplicate" }
+    | { status: "error"; message: string }
     | null
   >(null);
 
+  const selectedDate = startAtInput ? new Date(startAtInput) : null;
+  const open = selectedDate !== null && isOpenNow(availability);
   const selectedDayOff =
-    !!startAtInput && isDayOff(availability, new Date(startAtInput));
-  const daySlots = startAtInput
+    selectedDate !== null && isDayOff(availability, selectedDate);
+  const daySlots = selectedDate
     ? getAvailableSlots(
         availability,
-        [...appointments, ...justBooked],
-        new Date(startAtInput),
+        [...busySlots, ...justBooked],
+        selectedDate,
         APPOINTMENT_DURATION_MINUTES,
       )
     : [];
@@ -306,6 +333,10 @@ export function BarberProfileClient({
       );
       return;
     }
+    if (isBarber) {
+      setBookingResult({ status: "error", message: t.barberCannotBook });
+      return;
+    }
     if (!startAtInput || selectedDayOff || !daySlots.includes(selectedMinutes))
       return;
     setConfirmOpen(true);
@@ -319,27 +350,37 @@ export function BarberProfileClient({
     const endAt = new Date(
       startAt.getTime() + APPOINTMENT_DURATION_MINUTES * 60_000,
     );
+    setBookingResult(null);
     startTransition(async () => {
       try {
         const result = await createAppointment({
           barberId: profile.id,
           startAt,
-          endAt,
-          totalPriceMillimes: 0,
-          status: "PENDING",
         });
-        if (result.duplicate) {
-          setBookingResult({ status: "duplicate" });
+        if (!result.ok) {
+          const messages = {
+            unauthenticated: t.sessionError,
+            forbidden: t.barberCannotBook,
+            invalid: t.bookingError,
+            unavailable: t.unavailableError,
+            conflict: t.slotTakenError,
+            duplicate: t.duplicateError,
+            limit: t.weeklyLimitError,
+          } as const;
+          setBookingResult({
+            status: "error",
+            message: messages[result.reason],
+          });
+          // The slot list may be stale (someone else booked, hours changed).
+          router.refresh();
           return;
         }
-        if (result.limitReached) {
-          setBookingResult({ status: "limit" });
-          return;
-        }
-        setJustBooked((cur) => [...cur, { startAt, endAt, status: "PENDING" }]);
+        setJustBooked((cur) => [...cur, { startAt, endAt }]);
         setBookingResult({ status: "success", startAt: startAtInput });
-      } catch {
-        setBookingResult({ status: "error" });
+        router.refresh();
+      } catch (e) {
+        console.error("createAppointment failed:", e);
+        setBookingResult({ status: "error", message: t.bookingError });
       }
     });
   }
@@ -556,10 +597,12 @@ export function BarberProfileClient({
               )}
             >
               <CalendarIcon className="size-4" />
-              {new Date(startAtInput).toLocaleString("fr-FR", {
-                dateStyle: "full",
-                timeStyle: "short",
-              })}
+              {selectedDate
+                ? selectedDate.toLocaleString("fr-FR", {
+                    dateStyle: "full",
+                    timeStyle: "short",
+                  })
+                : t.pickDate}
             </Button>
             {selectedDayOff && (
               <p className="text-destructive font-body-md">
@@ -575,9 +618,9 @@ export function BarberProfileClient({
               </DialogHeader>
               <DatePicker
                 availability={availability}
-                selected={new Date(startAtInput)}
+                selected={selectedDate ?? new Date()}
                 onSelect={(date) =>
-                  setStartAtInput(withDate(startAtInput, date))
+                  setStartAtInput(withDate(startAtInput || "T09:00", date))
                 }
                 prevMonthAria={t.prevMonthAria}
                 nextMonthAria={t.nextMonthAria}
@@ -633,18 +676,11 @@ export function BarberProfileClient({
           </Dialog>
 
           {bookingResult?.status === "error" && (
-            <p className="text-destructive font-body-md mt-stack-md">
-              {t.bookingError}
-            </p>
-          )}
-          {bookingResult?.status === "limit" && (
-            <p className="text-destructive font-body-md mt-stack-md">
-              {t.weeklyLimitError}
-            </p>
-          )}
-          {bookingResult?.status === "duplicate" && (
-            <p className="text-destructive font-body-md mt-stack-md">
-              {t.duplicateError}
+            <p
+              className="text-destructive font-body-md mt-stack-md"
+              role="alert"
+            >
+              {bookingResult.message}
             </p>
           )}
 

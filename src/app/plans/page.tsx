@@ -81,7 +81,12 @@ const salonFeatures = [
   { label: "Gestion d'équipe", icon: Users },
 ];
 
-export default function PlansPage() {
+export default async function PlansPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ payment?: string }>;
+}) {
+  const { payment } = await searchParams;
   return (
     <div className="bg-background font-body-md text-on-background selection:bg-primary-container selection:text-on-primary-container min-h-screen overflow-x-hidden antialiased">
       {/* Navbar */}
@@ -120,6 +125,16 @@ export default function PlansPage() {
           </div>
         </div>
       </header>
+
+      {payment === "failed" && (
+        <div
+          role="alert"
+          className="bg-destructive/15 text-destructive fixed top-16 z-40 w-full px-4 py-3 text-center text-sm font-medium"
+        >
+          Le paiement a échoué ou n&apos;a pas pu être vérifié. Votre abonnement
+          n&apos;a pas été modifié — réessayez.
+        </div>
+      )}
 
       <main className="pt-16 pb-32">
         {/* Hero Section */}

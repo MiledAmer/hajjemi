@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useAuth, useClerk, useSignIn } from "@clerk/nextjs";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 
@@ -12,6 +12,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getSessionRole } from "@/server/users";
 import { isValidEmail } from "@/lib/email";
+
+const NETWORK_ERROR =
+  "Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.";
 
 // Clerk errors come back in English; map the ones a login can hit to French.
 function frClerkError(error: unknown): string {
@@ -49,7 +52,7 @@ export default function ConnexionPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [pending, startTransition] = useTransition();
   const [emailError, setEmailError] = useState<string | null>(null);
 
   // Same email check as the signup pages: validated on blur.
@@ -66,7 +69,7 @@ export default function ConnexionPage() {
   const [newPassword, setNewPassword] = useState("");
   const [resetNotice, setResetNotice] = useState<string | null>(null);
 
-  async function sendResetCode(e: React.FormEvent) {
+  function sendResetCode(e: React.FormEvent) {
     e.preventDefault();
     if (!isValidEmail(email)) {
       setEmailError("Adresse e-mail invalide.");
@@ -74,57 +77,72 @@ export default function ConnexionPage() {
     }
     setError(null);
     setResetNotice(null);
-    setPending(true);
-    try {
-      await signIn.reset();
-      const { error: createError } = await signIn.create({ identifier: email });
-      if (createError) {
-        setError(frClerkError(createError));
-        return;
+    startTransition(async () => {
+      try {
+        await signIn.reset();
+        const { error: createError } = await signIn.create({
+          identifier: email,
+        });
+        if (createError) {
+          setError(frClerkError(createError));
+          return;
+        }
+        const { error: sendError } =
+          await signIn.resetPasswordEmailCode.sendCode();
+        if (sendError) {
+          setError(frClerkError(sendError));
+          return;
+        }
+        setResetStep("code");
+        setResetNotice("Un code a été envoyé à votre adresse e-mail.");
+      } catch (err) {
+        console.error("sendResetCode failed:", err);
+        setError(NETWORK_ERROR);
       }
-      const { error: sendError } = await signIn.resetPasswordEmailCode.sendCode();
-      if (sendError) {
-        setError(frClerkError(sendError));
-        return;
-      }
-      setResetStep("code");
-      setResetNotice("Un code a été envoyé à votre adresse e-mail.");
-    } finally {
-      setPending(false);
-    }
+    });
   }
 
-  async function submitNewPassword(e: React.FormEvent) {
+  function submitNewPassword(e: React.FormEvent) {
     e.preventDefault();
+    if (newPassword.length < 8) {
+      setError("Le mot de passe doit contenir au moins 8 caractères.");
+      return;
+    }
     setError(null);
     setResetNotice(null);
-    setPending(true);
     signingIn.current = true;
-    try {
-      const { error: verifyError } =
-        await signIn.resetPasswordEmailCode.verifyCode({ code: resetCode });
-      if (verifyError) {
-        setError(frClerkError(verifyError));
-        return;
+    startTransition(async () => {
+      try {
+        const { error: verifyError } =
+          await signIn.resetPasswordEmailCode.verifyCode({ code: resetCode });
+        if (verifyError) {
+          signingIn.current = false;
+          setError(frClerkError(verifyError));
+          return;
+        }
+        const { error: submitError } =
+          await signIn.resetPasswordEmailCode.submitPassword({
+            password: newPassword,
+          });
+        if (submitError) {
+          signingIn.current = false;
+          setError(frClerkError(submitError));
+          return;
+        }
+        const { error: finalizeError } = await signIn.finalize();
+        if (finalizeError) {
+          signingIn.current = false;
+          setError(frClerkError(finalizeError));
+          return;
+        }
+        const actualRole = await getSessionRole();
+        router.push(actualRole === "barbier" ? "/dashbord_barber" : "/search");
+      } catch (err) {
+        console.error("submitNewPassword failed:", err);
+        signingIn.current = false;
+        setError(NETWORK_ERROR);
       }
-      const { error: submitError } =
-        await signIn.resetPasswordEmailCode.submitPassword({
-          password: newPassword,
-        });
-      if (submitError) {
-        setError(frClerkError(submitError));
-        return;
-      }
-      const { error: finalizeError } = await signIn.finalize();
-      if (finalizeError) {
-        setError(frClerkError(finalizeError));
-        return;
-      }
-      const actualRole = await getSessionRole();
-      router.push(actualRole === "barbier" ? "/dashbord_barber" : "/search");
-    } finally {
-      setPending(false);
-    }
+    });
   }
 
   function openReset() {
@@ -141,58 +159,68 @@ export default function ConnexionPage() {
     setResetStep(null);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!isValidEmail(email)) {
       setEmailError("Adresse e-mail invalide.");
       return;
     }
     setError(null);
-    setPending(true);
     signingIn.current = true;
-    try {
-      // Clear any sign-in attempt left over from a previous failed submit.
-      await signIn.reset();
-      const { error } = await signIn.password({
-        emailAddress: email,
-        password,
-      });
-      if (error) {
-        console.error("signIn.password error:", error);
-        setError(frClerkError(error));
-        return;
-      }
-      if (signIn.status !== "complete") {
-        console.error("Unhandled sign-in status:", signIn.status);
-        setError(`Connexion incomplète (${signIn.status}). Réessayez.`);
-        return;
-      }
-      const { error: finalizeError } = await signIn.finalize();
-      if (finalizeError) {
-        console.error("signIn.finalize error:", finalizeError);
-        setError(frClerkError(finalizeError));
-        return;
-      }
-      // Real role comes from Clerk publicMetadata (server-side). If it
-      // doesn't match the selected tab, end the session and stay here.
-      const actualRole = await getSessionRole();
-      if (actualRole !== role) {
-        await signOut(() => {
-          setError("Ce compte ne correspond pas au profil sélectionné.");
+    startTransition(async () => {
+      try {
+        // Clear any sign-in attempt left over from a previous failed submit.
+        await signIn.reset();
+        const { error } = await signIn.password({
+          emailAddress: email,
+          password,
         });
-        return;
+        if (error) {
+          console.error("signIn.password error:", error);
+          signingIn.current = false;
+          setError(frClerkError(error));
+          return;
+        }
+        if (signIn.status !== "complete") {
+          console.error("Unhandled sign-in status:", signIn.status);
+          signingIn.current = false;
+          setError(`Connexion incomplète (${signIn.status}). Réessayez.`);
+          return;
+        }
+        const { error: finalizeError } = await signIn.finalize();
+        if (finalizeError) {
+          console.error("signIn.finalize error:", finalizeError);
+          signingIn.current = false;
+          setError(frClerkError(finalizeError));
+          return;
+        }
+        // Real role comes from Clerk publicMetadata (server-side). If it
+        // doesn't match the selected tab, end the session and stay here.
+        const actualRole = await getSessionRole();
+        if (actualRole !== role) {
+          await signOut();
+          signingIn.current = false;
+          setError("Ce compte ne correspond pas au profil sélectionné.");
+          return;
+        }
+        // Only same-site paths are honoured ("//host" would leave the site).
+        const redirectUrl = new URLSearchParams(window.location.search).get(
+          "redirect_url",
+        );
+        let target = role === "barbier" ? "/dashbord_barber" : "/search";
+        if (redirectUrl) {
+          const url = new URL(redirectUrl, window.location.origin);
+          if (url.origin === window.location.origin) {
+            target = url.pathname + url.search + url.hash;
+          }
+        }
+        router.push(target);
+      } catch (err) {
+        console.error("login failed:", err);
+        signingIn.current = false;
+        setError(NETWORK_ERROR);
       }
-      const redirectUrl = new URLSearchParams(window.location.search).get(
-        "redirect_url",
-      );
-      if (redirectUrl?.startsWith(window.location.origin)) {
-        router.push(redirectUrl.slice(window.location.origin.length));
-        return;
-      }
-      router.push(role === "barbier" ? "/dashbord_barber" : "/search");
-    } finally {
-      setPending(false);
-    }
+    });
   }
 
   return (

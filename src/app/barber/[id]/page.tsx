@@ -1,8 +1,13 @@
 import { notFound } from "next/navigation";
-import { listAppointmentsByBarber } from "@/server/appointments";
-import { listAvailability } from "@/server/barber-availability";
-import { getBarberProfile } from "@/server/barber-profiles";
+import {
+  getBarberProfile,
+  listAvailability,
+  listBusySlots,
+} from "@/server/queries";
 import { BarberProfileClient } from "./_components/barber-profile-client";
+
+// Booked slots change constantly — never serve a stale snapshot.
+export const dynamic = "force-dynamic";
 
 export default async function ProfilBarberPage({
   params,
@@ -10,19 +15,19 @@ export default async function ProfilBarberPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [profile, availability, appointments] = await Promise.all([
-    getBarberProfile(id),
-    listAvailability(id),
-    listAppointmentsByBarber(id),
-  ]);
-
+  const profile = await getBarberProfile(id);
   if (!profile) notFound();
+
+  const [availability, busySlots] = await Promise.all([
+    listAvailability(id),
+    listBusySlots(id),
+  ]);
 
   return (
     <BarberProfileClient
       profile={profile}
       availability={availability}
-      appointments={appointments}
+      busySlots={busySlots}
     />
   );
 }

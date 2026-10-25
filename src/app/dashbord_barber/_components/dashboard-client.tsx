@@ -1,6 +1,12 @@
 "use client";
 
-import { useMemo, useOptimistic, useState, useTransition } from "react";
+import {
+  useEffect,
+  useMemo,
+  useOptimistic,
+  useState,
+  useTransition,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useClerk } from "@clerk/nextjs";
 import {
@@ -21,7 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { dashboard as dashboardContent, useLang } from "@/lib/tounsi";
-import { updateAppointment } from "@/server/appointments";
+import { respondToAppointment } from "@/server/appointments";
 import { setDailyHours } from "@/server/barber-availability";
 import { updateBarberProfile } from "@/server/barber-profiles";
 import { uploadImage } from "@/server/uploads";
@@ -69,8 +75,7 @@ const navItems: { id: ViewId; icon: typeof LayoutDashboard }[] = [
 ];
 
 type AppointmentWithClient = Appointment & {
-  client: DbUser;
-  remainingThisWeek?: number | null;
+  client: Pick<DbUser, "id" | "name">;
 };
 
 function formatDay(date: Date) {
@@ -94,19 +99,6 @@ function isSameDay(a: Date, b: Date) {
     a.getMonth() === b.getMonth() &&
     a.getDate() === b.getDate()
   );
-}
-
-// Monday-00:00 of the week containing `date` — mirrors weekRange() on the
-// server so the optimistic weekly count matches what the refetch returns.
-function weekStart(date: Date) {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
-  return d.getTime();
-}
-
-function sameWeek(a: Date, b: Date) {
-  return weekStart(new Date(a)) === weekStart(new Date(b));
 }
 
 function formatMinutes(minutes: number) {
@@ -158,32 +150,21 @@ export function DashboardClient({
   const t = dashboardContent[lang];
   const [isPending, startTransition] = useTransition();
   const [pendingId, setPendingId] = useState<string | null>(null);
-  const [limitError, setLimitError] = useState(false);
+  const [requestError, setRequestError] = useState<string | null>(null);
+
+  // New requests arrive while the barber has the dashboard open: re-fetch the
+  // server data every 30s (only while the tab is visible).
+  useEffect(() => {
+    const id = setInterval(() => {
+      if (document.visibilityState === "visible") router.refresh();
+    }, 30_000);
+    return () => clearInterval(id);
+  }, [router]);
 
   const [optimisticAppointments, applyStatus] = useOptimistic(
     appointments,
-    (state, { id, status }: { id: string; status: Appointment["status"] }) => {
-      const target = state.find((a) => a.id === id);
-      return state.map((a) => {
-        if (a.id === id) return { ...a, status };
-        // Confirming an rdv uses one of the client's weekly slots, so their
-        // other still-pending requests that week lose one remaining slot.
-        if (
-          status === "CONFIRMED" &&
-          target &&
-          a.status === "PENDING" &&
-          a.clientId === target.clientId &&
-          a.remainingThisWeek != null &&
-          sameWeek(a.startAt, target.startAt)
-        ) {
-          return {
-            ...a,
-            remainingThisWeek: Math.max(a.remainingThisWeek - 1, 0),
-          };
-        }
-        return a;
-      });
-    },
+    (state, { id, status }: { id: string; status: Appointment["status"] }) =>
+      state.map((a) => (a.id === id ? { ...a, status } : a)),
   );
   const [optimisticProfile, applyProfilePatch] = useOptimistic(
     profile,
@@ -201,10 +182,9 @@ export function DashboardClient({
   async function uploadAvatarFile(file: File) {
     const formData = new FormData();
     formData.set("file", file);
-    formData.set("barberId", profile.id);
-    formData.set("kind", "avatar");
-    const { url } = await uploadImage(formData);
-    return url;
+    const result = await uploadImage(formData);
+    if (result.error !== undefined) throw new Error(result.error);
+    return result.url;
   }
 
   const [optimisticContact, applyContact] = useOptimistic(
@@ -246,8 +226,11 @@ export function DashboardClient({
 
   const todayCount = useMemo(() => {
     const today = new Date();
-    return optimisticAppointments.filter((a) =>
-      isSameDay(new Date(a.startAt), today),
+    return optimisticAppointments.filter(
+      (a) =>
+        isSameDay(new Date(a.startAt), today) &&
+        a.status !== "CANCELLED" &&
+        a.status !== "NO_SHOW",
     ).length;
   }, [optimisticAppointments]);
   const upcomingAppointments = useMemo(() => {
@@ -264,18 +247,35 @@ export function DashboardClient({
 
   function setStatus(id: string, status: "CONFIRMED" | "CANCELLED") {
     setPendingId(id);
-    setLimitError(false);
+    setRequestError(null);
     startTransition(async () => {
       applyStatus({ id, status });
-      const result = await updateAppointment(id, { status });
-      // router.refresh() below reverts the optimistic flip if it was refused.
-      if ("limitReached" in result && result.limitReached) setLimitError(true);
+      try {
+        const result = await respondToAppointment(id, status);
+        if (!result.ok) {
+          const messages = {
+            unauthenticated: t.sessionError,
+            not_found: t.requestGone,
+            not_pending: t.requestGone,
+            past: t.requestPast,
+            limit: t.weeklyLimitReached,
+          } as const;
+          setRequestError(messages[result.reason]);
+        }
+      } catch (e) {
+        console.error("respondToAppointment failed:", e);
+        setRequestError(t.requestError);
+      }
+      // Refetch either way: on success it syncs, on failure it reverts the
+      // optimistic flip.
       router.refresh();
       setPendingId(null);
     });
   }
 
-  function saveProfile(updated: {
+  /// Runs inside the edit dialog's transition (so the optimistic updates
+  /// below are legal) and resolves to an error message, or null on success.
+  async function saveProfile(updated: {
     name: string;
     bio: string;
     address: string;
@@ -283,28 +283,35 @@ export function DashboardClient({
     phone: string;
     email: string;
     days: Record<DayKey, DayHours>;
-  }) {
-    startTransition(async () => {
-      applyProfilePatch({
-        businessName: updated.name,
-        bio: updated.bio,
-        address: updated.address || null,
-        avatarUrl: updated.avatarUrl,
-      });
-      applyContact({ phone: updated.phone, email: updated.email,address: updated.address });
-      applyDays(updated.days);
-      await updateBarberProfile(profile.id, {
-        businessName: updated.name,
-        bio: updated.bio,
-        address: updated.address,
-        avatarUrl: updated.avatarUrl,
-      });
-      await updateBarberContact({
+  }): Promise<string | null> {
+    applyProfilePatch({
+      businessName: updated.name,
+      bio: updated.bio || null,
+      address: updated.address || null,
+      avatarUrl: updated.avatarUrl || null,
+    });
+    applyContact({
+      phone: updated.phone,
+      email: updated.email,
+      address: updated.address,
+    });
+    applyDays(updated.days);
+    try {
+      // Contact first: it's the step most likely to be refused (e-mail or
+      // phone already used), and failing it leaves nothing half-saved.
+      const contact = await updateBarberContact({
         phone: updated.phone,
         email: updated.email,
       });
-      await setDailyHours(
-        profile.id,
+      if (contact.error) return contact.error;
+      const saved = await updateBarberProfile({
+        businessName: updated.name,
+        bio: updated.bio,
+        address: updated.address,
+        avatarUrl: updated.avatarUrl || null,
+      });
+      if (saved.error) return saved.error;
+      const hours = await setDailyHours(
         DAY_KEYS.map((k) => ({
           day: k,
           open: updated.days[k].open,
@@ -312,8 +319,13 @@ export function DashboardClient({
           endMinute: hhmmToMinutes(updated.days[k].end),
         })),
       );
+      return hours.error;
+    } catch (e) {
+      console.error("saveProfile failed:", e);
+      return "Connexion impossible. Vérifiez votre réseau et réessayez.";
+    } finally {
       router.refresh();
-    });
+    }
   }
 
   return (
@@ -438,9 +450,12 @@ export function DashboardClient({
             <h1 className="font-headline-lg-mobile text-headline-lg-mobile mb-stack-lg">
               {t.requestsTitle}
             </h1>
-            {limitError && (
-              <p className="text-destructive font-body-md mb-stack-md">
-                {t.weeklyLimitReached}
+            {requestError && (
+              <p
+                className="text-destructive font-body-md mb-stack-md"
+                role="alert"
+              >
+                {requestError}
               </p>
             )}
             {pendingRequests.length === 0 && (
@@ -620,10 +635,9 @@ export function DashboardClient({
                     lang={lang}
                     profile={{
                       name: optimisticProfile.businessName,
-                      bio: optimisticProfile.bio ?? t.bio,
+                      bio: optimisticProfile.bio ?? "",
                       address: optimisticProfile.address ?? "",
-                      avatarUrl:
-                        optimisticProfile.avatarUrl ?? BARBER_PROFILE_PORTRAIT,
+                      avatarUrl: optimisticProfile.avatarUrl ?? "",
                       phone: optimisticContact.phone,
                       email: optimisticContact.email,
                       days: optimisticDays,

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useSignIn } from "@clerk/nextjs";
 import { Eye, EyeOff, Lock, Mail, Phone, User } from "lucide-react";
 
@@ -29,7 +29,7 @@ const validators: Record<string, (v: string) => string | null> = {
 export default function InscriptionClientPage() {
   const router = useRouter();
   const { signIn } = useSignIn();
-  const [submitting, setSubmitting] = useState(false);
+  const [submitting, startSubmit] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<
@@ -40,7 +40,7 @@ export default function InscriptionClientPage() {
     setFieldErrors((cur) => ({ ...cur, [name]: validators[name]!(value) }));
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     const form = new FormData(e.target as HTMLFormElement);
@@ -50,39 +50,43 @@ export default function InscriptionClientPage() {
     );
     setFieldErrors(errors);
     if (Object.values(errors).some(Boolean)) return;
-    setSubmitting(true);
-    try {
-      // Account creation happens fully server-side (Clerk + DB together).
-      const { error: signupError } = await signupUser({
-        role: "client",
-        name: field("fullname"),
-        phone: field("phone"),
-        email: field("email"),
-        password: field("password"),
-      });
-      if (signupError) {
-        setError(signupError);
-        return;
+    startSubmit(async () => {
+      try {
+        // Account creation happens fully server-side (Clerk + DB together).
+        const { error: signupError } = await signupUser({
+          role: "client",
+          name: field("fullname"),
+          phone: field("phone"),
+          email: field("email"),
+          password: field("password"),
+        });
+        if (signupError) {
+          setError(signupError);
+          return;
+        }
+        // Then a normal sign-in to open the session.
+        await signIn.reset();
+        const { error } = await signIn.password({
+          emailAddress: field("email"),
+          password: field("password"),
+        });
+        if (error || signIn.status !== "complete") {
+          setError("Compte créé — connectez-vous depuis la page de connexion.");
+          return;
+        }
+        const { error: finalizeError } = await signIn.finalize();
+        if (finalizeError) {
+          setError("Compte créé — connectez-vous depuis la page de connexion.");
+          return;
+        }
+        router.push("/search");
+      } catch (err) {
+        console.error("signup failed:", err);
+        setError(
+          "Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.",
+        );
       }
-      // Then a normal sign-in to open the session.
-      await signIn.reset();
-      const { error } = await signIn.password({
-        emailAddress: field("email"),
-        password: field("password"),
-      });
-      if (error || signIn.status !== "complete") {
-        setError("Compte créé — connectez-vous depuis la page de connexion.");
-        return;
-      }
-      const { error: finalizeError } = await signIn.finalize();
-      if (finalizeError) {
-        setError("Compte créé — connectez-vous depuis la page de connexion.");
-        return;
-      }
-      router.push("/search");
-    } finally {
-      setSubmitting(false);
-    }
+    });
   }
 
   return (

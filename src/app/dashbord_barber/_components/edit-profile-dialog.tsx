@@ -1,6 +1,6 @@
 "use client";
 
-import { type ChangeEvent, type FormEvent, useState } from "react";
+import { type ChangeEvent, type FormEvent, useState, useTransition } from "react";
 import { Camera, SquarePen } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -52,7 +52,8 @@ export function EditProfileDialog({
 }: {
   lang?: Lang;
   profile: EditableProfile;
-  onSave: (profile: EditableProfile) => void;
+  /** Resolves to an error message to show in the dialog, or null when saved. */
+  onSave: (profile: EditableProfile) => Promise<string | null>;
   onUploadAvatar: (file: File) => Promise<string>;
 }) {
   const s = strings[lang];
@@ -70,6 +71,8 @@ export function EditProfileDialog({
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [hoursError, setHoursError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [isSaving, startSaving] = useTransition();
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next);
@@ -85,6 +88,8 @@ export function EditProfileDialog({
       setPhoneError(null);
       setEmailError(null);
       setHoursError(null);
+      setFormError(null);
+      setAvatarError(null);
     }
   };
 
@@ -100,13 +105,22 @@ export function EditProfileDialog({
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    setIsUploadingAvatar(true);
     setAvatarError(null);
+    if (file.size > 5 * 1024 * 1024) {
+      setAvatarError("Image trop lourde (5 Mo maximum).");
+      return;
+    }
+    setIsUploadingAvatar(true);
     onUploadAvatar(file)
       .then(setAvatarUrl)
-      .catch((error: unknown) =>
-        setAvatarError(error instanceof Error ? error.message : "Échec de l'envoi"),
-      )
+      .catch((error: unknown) => {
+        console.error("avatar upload failed:", error);
+        setAvatarError(
+          error instanceof Error && error.message
+            ? error.message
+            : "Échec de l'envoi de la photo. Réessayez.",
+        );
+      })
       .finally(() => setIsUploadingAvatar(false));
   };
 
@@ -118,20 +132,38 @@ export function EditProfileDialog({
     setNameError(nameBad);
     setPhoneError(phoneBad ? "Le numéro doit contenir 8 chiffres." : null);
     setEmailError(emailBad ? "Adresse e-mail invalide." : null);
-    if (nameBad || !bio || phoneBad || emailBad || isUploadingAvatar) return;
+    if (nameBad || phoneBad || emailBad || isUploadingAvatar || isSaving) return;
     // An open day with end <= start is invalid — flag it so the barber sees why
     // the save was blocked instead of it failing silently.
+    const missingTime = DAY_KEYS.some(
+      (k) => days[k].open && (!days[k].start || !days[k].end),
+    );
     const badRange = DAY_KEYS.some(
       (k) => days[k].open && days[k].end <= days[k].start,
     );
     setHoursError(
-      badRange
-        ? "L'heure de fin doit être postérieure à l'heure de début."
-        : null,
+      missingTime
+        ? "Renseignez l'heure d'ouverture et de fermeture."
+        : badRange
+          ? "L'heure de fin doit être postérieure à l'heure de début."
+          : null,
     );
-    if (badRange) return;
-    onSave({ name, bio, address: address.trim(), avatarUrl, phone, email, days });
-    setOpen(false);
+    if (missingTime || badRange) return;
+    setFormError(null);
+    startSaving(async () => {
+      // The dialog stays open (with the error) if the save is refused.
+      const error = await onSave({
+        name: name.trim(),
+        bio: bio.trim(),
+        address: address.trim(),
+        avatarUrl,
+        phone: phone.trim(),
+        email: email.trim(),
+        days,
+      });
+      if (error) setFormError(error);
+      else setOpen(false);
+    });
   };
 
   return (
@@ -158,7 +190,7 @@ export function EditProfileDialog({
 
           <div className="relative mx-auto mb-2 size-24">
             <Avatar className="border-primary size-24 border-2 p-1">
-              <AvatarImage alt={s.changePhotoAria} src={avatarUrl} />
+              <AvatarImage alt={s.changePhotoAria} src={avatarUrl || undefined} />
               <AvatarFallback>{name[0]}</AvatarFallback>
             </Avatar>
             <label
@@ -171,7 +203,7 @@ export function EditProfileDialog({
             <input
               id="edit-profile-avatar"
               type="file"
-              accept="image/*"
+              accept="image/jpeg,image/png,image/webp"
               className="hidden"
               onChange={handleAvatarChange}
             />
@@ -201,8 +233,8 @@ export function EditProfileDialog({
             <Textarea
               id="edit-profile-bio"
               value={bio}
+              maxLength={500}
               onChange={(event) => setBio(event.target.value)}
-              required
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -306,16 +338,24 @@ export function EditProfileDialog({
             )}
           </div>
 
+          {formError && (
+            <p className="text-destructive font-label-sm" role="alert">
+              {formError}
+            </p>
+          )}
+
           <DialogFooter>
-            <DialogClose render={<Button type="button" variant="outline" />}>
+            <DialogClose
+              render={<Button type="button" variant="outline" disabled={isSaving} />}
+            >
               {s.cancel}
             </DialogClose>
             <Button
               type="submit"
-              disabled={isUploadingAvatar}
+              disabled={isUploadingAvatar || isSaving}
               className="font-bold"
             >
-              {s.save}
+              {isSaving ? "…" : s.save}
             </Button>
           </DialogFooter>
         </form>
