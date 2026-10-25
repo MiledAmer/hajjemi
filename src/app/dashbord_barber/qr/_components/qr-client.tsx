@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Camera, Download, X } from "lucide-react";
-import QRCode from "qrcode";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { renderQrPoster } from "@/lib/qr-poster";
 
 export function QrClient({
   barberId,
@@ -16,7 +16,10 @@ export function QrClient({
   businessName: string;
 }) {
   const router = useRouter();
+  // The printable A4 poster (PNG data URL), shown as the preview and
+  // downloaded as-is.
   const [dataUrl, setDataUrl] = useState<string>("");
+  const [posterError, setPosterError] = useState<string | null>(null);
   const [publicUrl, setPublicUrl] = useState<string>("");
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
@@ -27,19 +30,19 @@ export function QrClient({
   useEffect(() => {
     const url = `${window.location.origin}/barber/${barberId}`;
     setPublicUrl(url);
-    QRCode.toDataURL(url, { width: 320, margin: 2 })
+    renderQrPoster({ url, businessName })
       .then(setDataUrl)
       .catch((e: unknown) => {
-        console.error("QR generation failed:", e);
-        setScanError("Impossible de générer le QR code.");
+        console.error("QR poster generation failed:", e);
+        setPosterError("Impossible de générer l'affiche. Rechargez la page.");
       });
-  }, [barberId]);
+  }, [barberId, businessName]);
 
   function download() {
     if (!dataUrl) return;
     const a = document.createElement("a");
     a.href = dataUrl;
-    a.download = `hajjem-${businessName.replace(/\s+/g, "-").toLowerCase()}-qr.png`;
+    a.download = `hajjemi-affiche-a4-${businessName.replace(/\s+/g, "-").toLowerCase()}.png`;
     a.click();
   }
 
@@ -118,19 +121,25 @@ export function QrClient({
       <main className="px-container-margin pt-stack-lg mx-auto w-full max-w-md pb-20">
         <Card className="p-gutter gap-stack-lg flex flex-col items-center rounded-2xl">
           <p className="text-on-surface-variant font-body-md text-center">
-            Scannez ce code pour ouvrir la page publique de{" "}
+            Affiche A4 prête à imprimer pour{" "}
             <span className="text-on-surface font-bold">{businessName}</span>.
+            Vos clients scannent le code pour ouvrir votre page.
           </p>
 
           {dataUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={dataUrl}
-              alt="QR Code du barbier"
-              className="size-64 rounded-lg bg-white p-3"
+              alt="Affiche A4 avec le QR Code du barbier"
+              className="border-outline-variant aspect-[210/297] w-full max-w-72 rounded-lg border"
             />
-          ) : (
-            <div className="bg-surface-container size-64 animate-pulse rounded-lg" />
+          ) : posterError ? null : (
+            <div className="bg-surface-container aspect-[210/297] w-full max-w-72 animate-pulse rounded-lg" />
+          )}
+          {posterError && (
+            <p className="text-destructive font-body-md text-center" role="alert">
+              {posterError}
+            </p>
           )}
 
           <p className="text-on-surface-variant font-label-sm break-all text-center">
@@ -155,7 +164,7 @@ export function QrClient({
               className="bg-primary text-on-primary h-auto flex-1 gap-2 rounded-lg py-3 font-bold"
             >
               <Download className="size-5" />
-              Télécharger
+              Affiche A4
             </Button>
           </div>
         </Card>
