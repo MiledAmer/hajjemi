@@ -3,16 +3,44 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { useAuth, useClerk, useSignIn } from "@clerk/nextjs";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { useAuth, useSignIn } from "@clerk/nextjs";
+import { Eye, EyeOff, Lock, Mail, Scissors, User } from "lucide-react";
 
 import { Logo } from "@/components/logo";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getSessionRole } from "@/server/users";
 import { isValidEmail } from "@/lib/email";
+import { cn } from "@/lib/utils";
+
+// Where a freshly signed-in user lands, by role. A ?redirect_url= (set when a
+// protected page bounced them here) is honoured when it's a same-site path
+// the role can use: barbers only ever return to their own area or the plans
+// page, everything else sends them to their dashboard.
+function landingPath(role: "client" | "barbier") {
+  const home = role === "barbier" ? "/dashbord_barber" : "/search";
+  const redirectUrl = new URLSearchParams(window.location.search).get(
+    "redirect_url",
+  );
+  if (!redirectUrl) return home;
+  try {
+    const url = new URL(redirectUrl, window.location.origin);
+    if (url.origin !== window.location.origin) return home;
+    const path = url.pathname + url.search + url.hash;
+    if (
+      role === "barbier" &&
+      !url.pathname.startsWith("/dashbord_barber") &&
+      !url.pathname.startsWith("/plans")
+    ) {
+      return home;
+    }
+    return path;
+  } catch {
+    return home;
+  }
+}
 
 const NETWORK_ERROR =
   "Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.";
@@ -38,17 +66,18 @@ function frClerkError(error: unknown): string {
 export default function ConnexionPage() {
   const router = useRouter();
   const { signIn } = useSignIn();
-  const { signOut } = useClerk();
   const { isSignedIn } = useAuth();
 
   // Already signed in when landing here — no reason to see the login form.
-  // The ref keeps this from clobbering the redirect_url/role redirect that
-  // handleSubmit performs right after a login made on this page.
+  // The ref keeps this from clobbering the redirect that handleSubmit
+  // performs right after a login made on this page.
   const signingIn = useRef(false);
   useEffect(() => {
-    if (isSignedIn && !signingIn.current) router.replace("/search");
+    if (!isSignedIn || signingIn.current) return;
+    getSessionRole()
+      .then((role) => router.replace(landingPath(role ?? "client")))
+      .catch(() => router.replace("/search"));
   }, [isSignedIn, router]);
-  const [role, setRole] = useState<"client" | "barbier">("client");
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -137,7 +166,7 @@ export default function ConnexionPage() {
           return;
         }
         const actualRole = await getSessionRole();
-        router.push(actualRole === "barbier" ? "/dashbord_barber" : "/search");
+        router.push(landingPath(actualRole ?? "client"));
       } catch (err) {
         console.error("submitNewPassword failed:", err);
         signingIn.current = false;
@@ -195,27 +224,10 @@ export default function ConnexionPage() {
           setError(frClerkError(finalizeError));
           return;
         }
-        // Real role comes from Clerk publicMetadata (server-side). If it
-        // doesn't match the selected tab, end the session and stay here.
+        // The account's real role (Clerk publicMetadata, read server-side)
+        // decides where it lands — there is no role to pick on this page.
         const actualRole = await getSessionRole();
-        if (actualRole !== role) {
-          await signOut();
-          signingIn.current = false;
-          setError("Ce compte ne correspond pas au profil sélectionné.");
-          return;
-        }
-        // Only same-site paths are honoured ("//host" would leave the site).
-        const redirectUrl = new URLSearchParams(window.location.search).get(
-          "redirect_url",
-        );
-        let target = role === "barbier" ? "/dashbord_barber" : "/search";
-        if (redirectUrl) {
-          const url = new URL(redirectUrl, window.location.origin);
-          if (url.origin === window.location.origin) {
-            target = url.pathname + url.search + url.hash;
-          }
-        }
-        router.push(target);
+        router.push(landingPath(actualRole ?? "client"));
       } catch (err) {
         console.error("login failed:", err);
         signingIn.current = false;
@@ -260,23 +272,6 @@ export default function ConnexionPage() {
           <CardContent className="px-0">
             {resetStep === null ? (
               <>
-            <div className="bg-muted mb-stack-lg grid w-full grid-cols-2 rounded-lg p-[3px]">
-              {(["client", "barbier"] as const).map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setRole(r)}
-                  className={
-                    role === r
-                      ? "bg-background text-foreground rounded-md py-1.5 text-sm font-medium shadow-sm"
-                      : "text-foreground/60 hover:text-foreground rounded-md py-1.5 text-sm font-medium transition-colors"
-                  }
-                >
-                  {r === "client" ? "Client" : "Barbier"}
-                </button>
-              ))}
-            </div>
-
             <form className="space-y-gutter" onSubmit={handleSubmit} noValidate>
               {/* Email Field */}
               <div className="space-y-stack-sm">
@@ -489,22 +484,39 @@ export default function ConnexionPage() {
           </CardContent>
         </Card>
 
-        {/* Sign Up Link */}
-        <footer className="mt-stack-lg text-center">
-          <p className="font-body-md text-on-surface-variant">
-            Pas encore de compte ?{" "}
-            <Link
-              className="font-label-md ml-stack-sm text-primary hover:underline"
-              href={
-                role === "barbier"
-                  ? "/inscription-barbier"
-                  : "/inscription-client"
-              }
-            >
-              S&apos;inscrire
-            </Link>
-          </p>
-        </footer>
+        {/* Sign-up: a labelled divider, then two equal secondary actions —
+            clearly below the primary "Se connecter" so they don't compete. */}
+        {resetStep === null && (
+          <footer className="mt-stack-lg">
+            <div className="text-on-surface-variant mb-stack-md flex items-center gap-3">
+              <span className="bg-outline-variant/50 h-px flex-1" />
+              <span className="font-body-md text-sm">Pas encore de compte ?</span>
+              <span className="bg-outline-variant/50 h-px flex-1" />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <Link
+                href="/inscription-client"
+                className={cn(
+                  buttonVariants({ variant: "outline" }),
+                  "border-primary/50 text-primary hover:bg-primary/10 h-auto flex-col gap-1 rounded-lg py-3",
+                )}
+              >
+                <User className="size-5" />
+                <span className="font-label-md">Je suis client</span>
+              </Link>
+              <Link
+                href="/inscription-barbier"
+                className={cn(
+                  buttonVariants({ variant: "outline" }),
+                  "border-primary/50 text-primary hover:bg-primary/10 h-auto flex-col gap-1 rounded-lg py-3",
+                )}
+              >
+                <Scissors className="size-5" />
+                <span className="font-label-md">Je suis barbier</span>
+              </Link>
+            </div>
+          </footer>
+        )}
       </main>
 
       {/* Footer Decorative Line */}
