@@ -145,9 +145,7 @@ export function SearchClient({
             <Logo className="size-11" />
           </h1>
           <div className="gap-stack-lg hidden items-center md:flex">
-            <Link href="/">
-              <Logo className="size-11" />
-            </Link>
+            <Logo className="size-11" />
             {navLinks.map((link) => (
               <Link
                 key={link.href}
